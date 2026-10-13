@@ -51,15 +51,16 @@ local function attachMesh(model: Model, body: BasePart, template: MeshPart, heig
 	return mesh
 end
 
--- Turns a ghost into its mesh: scaled to `heightScale` × the ghost's size, semi-transparent,
--- glowing `glowColor`, and animated. Returns the label height and the mesh, or nil if the
--- mesh is missing (the ghost then keeps the simple look).
+-- Turns a ghost into its mesh: scaled to `heightScale` × the ghost's size, see-through by
+-- `transparency` (0.2 unless given), glowing `glowColor`, and animated. Returns the label
+-- height and the mesh, or nil if the mesh is missing (the ghost then keeps the simple look).
 local function meshGhost(
 	model: Model,
 	body: BasePart,
 	def,
 	heightScale: number,
-	glowColor: Color3
+	glowColor: Color3,
+	transparency: number?
 ): (number?, MeshPart?)
 	local template = getMeshTemplate(def.id)
 	if not template then
@@ -69,7 +70,7 @@ local function meshGhost(
 	local height = def.size * heightScale
 	body.Transparency = 1 -- the mesh is the ghost; the body just carries prompts and the label
 	local mesh = attachMesh(model, body, template, height, 0.2)
-	mesh.Transparency = 0.2
+	mesh.Transparency = transparency or 0.2
 
 	local light = body:FindFirstChildOfClass("PointLight")
 	if light then
@@ -106,6 +107,18 @@ end
 -- Boo: a chubby, cheeky white ghost with arms up, rosy cheeks and its tongue sticking out.
 function GhostModels.boo(model: Model, body: BasePart, def): number?
 	return (meshGhost(model, body, def, 1.3, Color3.fromRGB(225, 235, 255)))
+end
+
+-- Sheet Ghost: someone hiding under a white bedsheet with eye holes, with their bare feet
+-- showing underneath. Solid (not see-through), unlike the others.
+function GhostModels.sheet_ghost(model: Model, body: BasePart, def): number?
+	local labelHeight, mesh = meshGhost(model, body, def, 1.4, Color3.fromRGB(235, 235, 245), 0)
+	if not mesh then
+		return nil
+	end
+	-- Cloth shouldn't stretch like a flame; it just bobs and sways.
+	mesh:SetAttribute("Flicker", false)
+	return labelHeight
 end
 
 return GhostModels

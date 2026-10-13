@@ -17,6 +17,7 @@ type Animated = {
 	baseC0: CFrame,
 	mesh: BasePart,
 	baseSize: Vector3,
+	flicker: boolean, -- flame-like stretch; off for ghosts that set the mesh's "Flicker" to false
 	light: PointLight?,
 	baseBrightness: number,
 	phase: number, -- so ghosts don't all move in sync
@@ -36,6 +37,7 @@ local function track(model: Instance)
 		baseC0 = weld.C0,
 		mesh = mesh,
 		baseSize = mesh.Size,
+		flicker = mesh:GetAttribute("Flicker") ~= false,
 		light = light,
 		baseBrightness = if light then light.Brightness else 0,
 		phase = math.random() * 100,
@@ -64,11 +66,13 @@ local function animate()
 		ghost.weld.C0 = ghost.baseC0 * CFrame.new(0, bob, 0) * CFrame.Angles(0, yaw, roll)
 
 		-- Flicker like a flame: stretch taller and thinner, then back (keeping its volume).
-		local stretch = 1 + math.sin(t * 6) * 0.04 + math.sin(t * 9.7) * 0.02
-		local thin = 1 / math.sqrt(stretch)
-		ghost.mesh.Size = ghost.baseSize * Vector3.new(thin, stretch, thin)
+		if ghost.flicker then
+			local stretch = 1 + math.sin(t * 6) * 0.04 + math.sin(t * 9.7) * 0.02
+			local thin = 1 / math.sqrt(stretch)
+			ghost.mesh.Size = ghost.baseSize * Vector3.new(thin, stretch, thin)
+		end
 
-		if ghost.light then
+		if ghost.light and ghost.flicker then
 			ghost.light.Brightness = ghost.baseBrightness * (0.85 + 0.15 * math.sin(t * 7.3))
 		end
 	end
