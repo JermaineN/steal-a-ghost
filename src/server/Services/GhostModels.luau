@@ -51,25 +51,43 @@ local function attachMesh(model: Model, body: BasePart, template: MeshPart, heig
 	return mesh
 end
 
--- Wisp: a cute but eerie little ghost of icy blue spirit-fire with a flame crest on its head.
-function GhostModels.wisp(model: Model, body: BasePart, def): number?
-	local template = getMeshTemplate("wisp")
+-- Turns a ghost into its mesh: scaled to `heightScale` × the ghost's size, semi-transparent,
+-- glowing `glowColor`, and animated. Returns the label height and the mesh, or nil if the
+-- mesh is missing (the ghost then keeps the simple look).
+local function meshGhost(
+	model: Model,
+	body: BasePart,
+	def,
+	heightScale: number,
+	glowColor: Color3
+): (number?, MeshPart?)
+	local template = getMeshTemplate(def.id)
 	if not template then
-		return nil
+		return nil, nil
 	end
 
-	local height = def.size * 1.5
+	local height = def.size * heightScale
 	body.Transparency = 1 -- the mesh is the ghost; the body just carries prompts and the label
 	local mesh = attachMesh(model, body, template, height, 0.2)
 	mesh.Transparency = 0.2
 
-	-- A cold blue glow, and embers drifting up off its flames.
 	local light = body:FindFirstChildOfClass("PointLight")
 	if light then
-		light.Color = Color3.fromRGB(120, 190, 255)
+		light.Color = glowColor
 		light.Brightness = 2
 		light.Range = def.size * 3.5
 	end
+	return height / 2 + 0.2 + 1.5, mesh
+end
+
+-- Wisp: a cute but eerie little ghost of icy blue spirit-fire with a flame crest on its head.
+function GhostModels.wisp(model: Model, body: BasePart, def): number?
+	local labelHeight, mesh = meshGhost(model, body, def, 1.5, Color3.fromRGB(120, 190, 255))
+	if not mesh then
+		return nil
+	end
+
+	-- Embers drifting up off its flames.
 	local embers = Instance.new("ParticleEmitter")
 	embers.Color = ColorSequence.new(Color3.fromRGB(215, 240, 255), Color3.fromRGB(110, 180, 255))
 	embers.LightEmission = 1
@@ -82,7 +100,12 @@ function GhostModels.wisp(model: Model, body: BasePart, def): number?
 	embers.EmissionDirection = Enum.NormalId.Top
 	embers.Parent = mesh
 
-	return height / 2 + 0.2 + 1.5
+	return labelHeight
+end
+
+-- Boo: a chubby, cheeky white ghost with arms up, rosy cheeks and its tongue sticking out.
+function GhostModels.boo(model: Model, body: BasePart, def): number?
+	return (meshGhost(model, body, def, 1.3, Color3.fromRGB(225, 235, 255)))
 end
 
 return GhostModels
