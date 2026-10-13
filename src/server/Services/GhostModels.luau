@@ -167,6 +167,33 @@ function GhostModels.banshee(model: Model, body: BasePart, def): number?
 	return labelHeight
 end
 
+-- Phantom Knight: a chibi suit of silver armour haunted by teal ghost-light, with a ghost-flame
+-- plume, a teal cape and a raised sword. Only slightly see-through so the armour stays clean.
+function GhostModels.phantom_knight(model: Model, body: BasePart, def): number?
+	local ghostTeal = Color3.fromRGB(110, 255, 215)
+	local labelHeight, mesh = meshGhost(model, body, def, 1.2, ghostTeal, 0.1)
+	if not mesh then
+		return nil
+	end
+	-- Armour shouldn't stretch like a flame; it just floats, bobs and sways.
+	mesh:SetAttribute("Flicker", false)
+
+	-- Faint teal ghost-wisps rising off the armour.
+	local wisps = Instance.new("ParticleEmitter")
+	wisps.Color = ColorSequence.new(Color3.fromRGB(200, 255, 240), ghostTeal)
+	wisps.LightEmission = 1
+	wisps.Size = NumberSequence.new(0.3, 0)
+	wisps.Transparency = NumberSequence.new(0.3, 1)
+	wisps.Lifetime = NumberRange.new(0.8, 1.5)
+	wisps.Rate = 5
+	wisps.Speed = NumberRange.new(0.4, 1)
+	wisps.SpreadAngle = Vector2.new(20, 20)
+	wisps.EmissionDirection = Enum.NormalId.Top
+	wisps.Parent = mesh
+
+	return labelHeight
+end
+
 -- Sheet Ghost: someone hiding under a white bedsheet with eye holes, with their bare feet
 -- showing underneath. Solid (not see-through), unlike the others.
 function GhostModels.sheet_ghost(model: Model, body: BasePart, def): number?
