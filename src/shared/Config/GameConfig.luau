@@ -6,6 +6,9 @@ return {
 
 	-- Economy
 	StartingCash = 100,
+	-- Extra cash for testing, ONLY when playing in Studio (live servers ignore it).
+	-- A test profile is never saved. Set to 0 to test with normal starting cash.
+	StudioTestCash = 1000000,
 	SellRefund = 0.5, -- selling a ghost returns 50% of its price
 	IncomeTickSeconds = 1,
 

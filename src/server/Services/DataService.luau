@@ -2,6 +2,7 @@
 -- In Studio, saving only works with Game Settings > Security > "Enable Studio Access to API Services".
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Notify = require(script.Parent.Parent.Util.Notify)
@@ -85,7 +86,15 @@ function DataService.playerAdded(player: Player): boolean
 	if not player.Parent then
 		return false
 	end
-	if not canSave then
+
+	-- Studio-only test money (GameConfig.StudioTestCash). A boosted profile is never saved,
+	-- so test money can't leak into anyone's real save data. Live servers never run this.
+	local testCash = GameConfig.StudioTestCash
+	if RunService:IsStudio() and testCash and testCash > 0 then
+		data.cash = math.max(data.cash, testCash)
+		canSave = false
+		Notify.send(player, "Studio test cash is on (progress won't be saved).", "info")
+	elseif not canSave then
 		Notify.send(player, "Progress won't be saved this session.", "error")
 	end
 
