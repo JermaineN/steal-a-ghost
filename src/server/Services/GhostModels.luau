@@ -138,6 +138,35 @@ function GhostModels.poltergeist(model: Model, body: BasePart, def): number?
 	return labelHeight
 end
 
+-- Banshee: a little wailing ghost girl with blue-violet flame hair rising straight up, glowing
+-- white eyes and a torn white dress. Only slightly see-through, so her colours stay clean.
+-- She keeps the flame flicker, since her hair is fire.
+function GhostModels.banshee(model: Model, body: BasePart, def): number?
+	local labelHeight, mesh = meshGhost(model, body, def, 1.3, Color3.fromRGB(150, 120, 255), 0.1)
+	if not mesh then
+		return nil
+	end
+
+	-- Faint lavender mist trailing down off her dress.
+	local mist = Instance.new("ParticleEmitter")
+	mist.Color = ColorSequence.new(Color3.fromRGB(215, 205, 255))
+	mist.LightEmission = 0.4
+	mist.Size = NumberSequence.new(0.6, 1.4)
+	mist.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.3, 0.75),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	mist.Lifetime = NumberRange.new(1.2, 2)
+	mist.Rate = 6
+	mist.Speed = NumberRange.new(0.2, 0.5)
+	mist.SpreadAngle = Vector2.new(30, 30)
+	mist.EmissionDirection = Enum.NormalId.Bottom
+	mist.Parent = mesh
+
+	return labelHeight
+end
+
 -- Sheet Ghost: someone hiding under a white bedsheet with eye holes, with their bare feet
 -- showing underneath. Solid (not see-through), unlike the others.
 function GhostModels.sheet_ghost(model: Model, body: BasePart, def): number?
