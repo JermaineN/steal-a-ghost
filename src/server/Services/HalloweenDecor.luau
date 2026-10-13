@@ -17,8 +17,6 @@ local STONE = Color3.fromRGB(95, 90, 105)
 local DEAD_WOOD = Color3.fromRGB(50, 38, 34)
 local IRON = Color3.fromRGB(22, 20, 28)
 
-local FENCE_MARGIN_X = 30 -- studs between the walkway ends and the fence
-local FENCE_HALF_Z = 125 -- fence distance from the walkway, front to back
 local CLIFF_GAP_X = 30 -- studs between the fence's short sides and the cliffs
 local CLIFF_GAP_Z = 60 -- room for the mansion and big trees between the fence and the cliffs
 local CLIFF_HEIGHT = NumberRange.new(80, 140)
@@ -174,19 +172,10 @@ local function makeLampPost(parent: Instance, position: Vector3, facing: Vector3
 	makePumpkin(parent, CFrame.lookAt(top, top + facing), 0.8, 20)
 end
 
--- Stone pillars with pumpkins on each side of a base's entrance.
+-- Glowing pumpkins on top of each base's two entrance pillars.
 local function decoratePlot(parent: Instance, plot)
-	local half = plot.size / 2
-	for _, side in { -1, 1 } do
-		local base = plot.cframe * CFrame.new(side * (half + 0.5), 0, -half)
-		makePart(parent, {
-			Name = "GatePillar",
-			Size = Vector3.new(2.4, 11, 2.4),
-			CFrame = base * CFrame.new(0, 5.5, 0),
-			Color = STONE,
-			Material = Enum.Material.Slate,
-		})
-		makePumpkin(parent, base * CFrame.new(0, 12.1, 0), 0.6, 12)
+	for _, top in plot.gateTops do
+		makePumpkin(parent, top * CFrame.new(0, 0.8, 0), 0.6, 12)
 	end
 end
 
@@ -604,7 +593,15 @@ local function makeCliffs(halfX: number, halfZ: number)
 	end
 end
 
-function HalloweenDecor.build(mapFolder: Folder, plots: { any }, walkwayLength: number)
+-- `fenceHalfX`/`fenceHalfZ` are the map's edges (MapBuilder puts invisible walls there);
+-- the iron fence is drawn along them.
+function HalloweenDecor.build(
+	mapFolder: Folder,
+	plots: { any },
+	walkwayLength: number,
+	fenceHalfX: number,
+	fenceHalfZ: number
+)
 	setupLighting()
 
 	-- Build everything in a folder outside the game first, then add it in one go (faster).
@@ -628,22 +625,21 @@ function HalloweenDecor.build(mapFolder: Folder, plots: { any }, walkwayLength: 
 		decoratePlot(decor, plot)
 	end
 
-	local fenceHalfX = walkwayEnd + FENCE_MARGIN_X
 	makeGraveyard(decor, 1, fenceHalfX)
 	makeGraveyard(decor, -1, fenceHalfX)
-	makeFence(decor, fenceHalfX, FENCE_HALF_Z)
+	makeFence(decor, fenceHalfX, fenceHalfZ)
 
 	-- Scenery outside the fence: a mansion on one side, giant dead trees on the other.
-	makeMansion(decor, Vector3.new(0, 0, FENCE_HALF_Z + 30), Vector3.new(0, 0, -1))
+	makeMansion(decor, Vector3.new(0, 0, fenceHalfZ + 30), Vector3.new(0, 0, -1))
 	for x = -120, 120, 60 do
 		makeDeadTree(
 			decor,
-			Vector3.new(x + random:NextNumber(-10, 10), 0, -(FENCE_HALF_Z + 25)),
+			Vector3.new(x + random:NextNumber(-10, 10), 0, -(fenceHalfZ + 25)),
 			random:NextNumber(28, 36)
 		)
 	end
 
-	makeCliffs(fenceHalfX + CLIFF_GAP_X, FENCE_HALF_Z + CLIFF_GAP_Z)
+	makeCliffs(fenceHalfX + CLIFF_GAP_X, fenceHalfZ + CLIFF_GAP_Z)
 
 	decor.Parent = mapFolder
 end
