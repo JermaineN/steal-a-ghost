@@ -9,6 +9,7 @@ local Format = require(ReplicatedStorage.Shared.Format)
 local Billboard = require(script.Parent.Parent.Util.Billboard)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local DataService = require(script.Parent.DataService)
+local GhostModels = require(script.Parent.GhostModels)
 local PlotService = require(script.Parent.PlotService)
 
 local GhostService = {}
@@ -41,28 +42,35 @@ local function buildModel(def, infoText: string): Model
 	body.Parent = model
 	model.PrimaryPart = body
 
-	for _, side in { -1, 1 } do
-		local eye = Instance.new("Part")
-		eye.Name = "Eye"
-		eye.Shape = Enum.PartType.Ball
-		eye.Size = Vector3.one * def.size * 0.2
-		eye.Color = Color3.new(0, 0, 0)
-		eye.Anchored = true
-		eye.CanCollide = false
-		eye.CastShadow = false
-		eye.CFrame = CFrame.new(side * def.size * 0.2, def.size * 0.12, -def.size * 0.42)
-		eye.Parent = model
-	end
-
 	local light = Instance.new("PointLight")
 	light.Color = rarity.color
 	light.Range = def.size * 3
 	light.Brightness = 1.5
 	light.Parent = body
 
+	-- Ghosts with a detailed look (see GhostModels) add their own parts around the body and
+	-- return the label height (or nil if their mesh is missing); the rest get two simple eyes.
+	local customLook = GhostModels[def.id]
+	local labelHeight = if customLook then customLook(model, body, def) else nil
+	if not labelHeight then
+		labelHeight = def.size / 2 + 1.8
+		for _, side in { -1, 1 } do
+			local eye = Instance.new("Part")
+			eye.Name = "Eye"
+			eye.Shape = Enum.PartType.Ball
+			eye.Size = Vector3.one * def.size * 0.2
+			eye.Color = Color3.new(0, 0, 0)
+			eye.Anchored = true
+			eye.CanCollide = false
+			eye.CastShadow = false
+			eye.CFrame = CFrame.new(side * def.size * 0.2, def.size * 0.12, -def.size * 0.42)
+			eye.Parent = model
+		end
+	end
+
 	Billboard.create(body, {
 		size = UDim2.fromOffset(180, 66),
-		offset = Vector3.new(0, def.size / 2 + 1.8, 0),
+		offset = Vector3.new(0, labelHeight, 0),
 		maxDistance = 70,
 		lines = {
 			{ text = def.name },

@@ -33,9 +33,15 @@ local function getAliveRoot(player: Player): (BasePart?, Humanoid?)
 	return nil, nil
 end
 
+-- Animated meshes (see GhostModels) are never anchored or welded here: their own weld to the
+-- body holds them, and the client animates that weld.
+local function isAnimated(part: BasePart): boolean
+	return part:GetAttribute("Animated") == true
+end
+
 local function setAnchored(model: Model, anchored: boolean)
 	for _, part in model:GetDescendants() do
-		if part:IsA("BasePart") then
+		if part:IsA("BasePart") and not isAnimated(part) then
 			part.Anchored = anchored
 			part.Massless = not anchored
 		end
@@ -56,7 +62,7 @@ local function attach(model: Model, root: BasePart): { WeldConstraint }
 		table.insert(welds, constraint)
 	end
 	for _, part in model:GetDescendants() do
-		if part:IsA("BasePart") and part ~= body then
+		if part:IsA("BasePart") and part ~= body and not isAnimated(part) then
 			weld(body, part)
 		end
 	end
