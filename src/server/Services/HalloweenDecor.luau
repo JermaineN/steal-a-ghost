@@ -3,7 +3,7 @@
 -- Visual only: nothing here changes gameplay. Turn it off with GameConfig.HalloweenMap = false.
 local Lighting = game:GetService("Lighting")
 
-local Billboard = require(script.Parent.Parent.Util.Billboard)
+local GhostPortal = require(script.Parent.GhostPortal)
 local Parts = require(script.Parent.Parent.Util.Parts)
 
 local HalloweenDecor = {}
@@ -389,66 +389,6 @@ local function makeFence(parent: Instance, halfX: number, halfZ: number)
 	end
 end
 
--- A stone arch with a swirling purple portal across the walkway. Ghosts appear from (or vanish into) it.
-local function makePortal(parent: Instance, position: Vector3, label: string?)
-	local towardMap = Vector3.new(-math.sign(position.X), 0, 0)
-	for _, side in { -1, 1 } do
-		makePart(parent, {
-			Name = "PortalPillar",
-			Size = Vector3.new(2.5, 15, 2.5),
-			Position = position + Vector3.new(0, 7.5, side * 8.5),
-			Color = STONE,
-			Material = Enum.Material.Slate,
-		})
-		local top = position + Vector3.new(0, 18.6, side * 8.5)
-		makePumpkin(parent, CFrame.lookAt(top, top + towardMap), 0.8)
-	end
-	local beam = makePart(parent, {
-		Name = "PortalBeam",
-		Size = Vector3.new(3, 2.5, 19.5),
-		Position = position + Vector3.new(0, 16.25, 0),
-		Color = STONE,
-		Material = Enum.Material.Slate,
-	})
-
-	-- A Cylinder's round faces point along X, which is the walkway direction.
-	local disc = makePart(parent, {
-		Name = "PortalDisc",
-		Shape = Enum.PartType.Cylinder,
-		Size = Vector3.new(0.4, 13, 13),
-		Position = position + Vector3.new(0, 7.5, 0),
-		Color = PURPLE,
-		Material = Enum.Material.Neon,
-		Transparency = 0.35,
-		CanCollide = false,
-		CanQuery = false,
-		CastShadow = false,
-	})
-	addLight(disc, PURPLE, 30, 3)
-
-	local swirl = Instance.new("ParticleEmitter")
-	swirl.Color = ColorSequence.new(PURPLE, SPIRIT_GREEN)
-	swirl.LightEmission = 1
-	swirl.Size = NumberSequence.new(1.2, 0)
-	swirl.Transparency = NumberSequence.new(0.2, 1)
-	swirl.Lifetime = NumberRange.new(1.5, 2.5)
-	swirl.Rate = 25
-	swirl.Speed = NumberRange.new(1, 3)
-	swirl.SpreadAngle = Vector2.new(180, 180)
-	swirl.RotSpeed = NumberRange.new(-90, 90)
-	swirl.Parent = disc
-
-	if label then
-		Billboard.create(beam, {
-			size = UDim2.fromOffset(360, 70),
-			offset = Vector3.new(0, 6, 0),
-			maxDistance = 400,
-			font = Enum.Font.Creepster,
-			lines = { { text = label, color = GLOW_ORANGE } },
-		})
-	end
-end
-
 -- A haunted mansion outside the fence, as scenery. `facing` points toward the map.
 local function makeMansion(parent: Instance, origin: Vector3, facing: Vector3)
 	local frame = CFrame.lookAt(origin, origin + facing)
@@ -611,8 +551,9 @@ function HalloweenDecor.build(
 	restyleGround(mapFolder, decor, walkwayLength)
 
 	local walkwayEnd = walkwayLength / 2
-	makePortal(decor, Vector3.new(-walkwayEnd, 0, 0), "Ghost Portal")
-	makePortal(decor, Vector3.new(walkwayEnd, 0, 0))
+	-- Ghost portals at both ends of the walkway, facing the map.
+	GhostPortal.build(decor, Vector3.new(-walkwayEnd, 0, 0), Vector3.xAxis, "Ghost Portal")
+	GhostPortal.build(decor, Vector3.new(walkwayEnd, 0, 0), -Vector3.xAxis)
 
 	-- Pumpkin lamps along both sides of the walkway: halfway between neighbouring bases,
 	-- plus one past each end of the row.
