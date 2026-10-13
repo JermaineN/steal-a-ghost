@@ -4,8 +4,9 @@
 -- how high above the body's center the name label should sit, or nil to use the simple look.
 --
 -- The 3D meshes are made in Studio and kept in ServerStorage.GhostMeshes, named by ghost id.
--- They can't live in git, so they're saved with the place file. If one is missing, the ghost
--- falls back to the simple look instead of breaking.
+-- Each is either one MeshPart, or a Model of several MeshParts (e.g. a mesh split into pieces
+-- so one piece could be removed). They can't live in git, so they're saved with the place
+-- file. If one is missing, the ghost falls back to the simple look instead of breaking.
 local CollectionService = game:GetService("CollectionService")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -14,41 +15,87 @@ local GhostModels = {}
 -- Clients animate every model with this tag (see client GhostAnimation).
 GhostModels.ANIMATED_TAG = "AnimatedGhost"
 
-local function getMeshTemplate(id: string): MeshPart?
+local function getMeshTemplate(id: string): Instance?
 	local folder = ServerStorage:FindFirstChild("GhostMeshes")
-	local mesh = folder and folder:FindFirstChild(id)
-	if mesh and mesh:IsA("MeshPart") then
-		return mesh
+	local template = folder and folder:FindFirstChild(id)
+	if template and (template:IsA("MeshPart") or template:IsA("Model")) then
+		return template
 	end
 	return nil
 end
 
--- Copies a mesh, scales it to `height` studs tall, and joins it to the body with a Weld that
--- the client animation moves. Returns the mesh.
-local function attachMesh(model: Model, body: BasePart, template: MeshPart, height: number, offsetY: number): MeshPart
-	local mesh = template:Clone()
+-- Makes a mesh piece purely visual and held by welds (not anchored), so it can be animated.
+local function makeVisual(part: BasePart)
+	part.Anchored = false
+	part.Massless = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	-- Tells StealService to leave this part's welds alone when a ghost is carried.
+	part:SetAttribute("Animated", true)
+end
+
+-- Copies a mesh template, scales it to `height` studs tall, and centres it `offsetY` above the
+-- body. The main piece (renamed "Visual") is joined to the body with a Weld that the client
+-- animation moves; any other pieces are welded to the main piece and move with it.
+-- Returns the main piece and a list of every piece.
+local function attachMesh(
+	model: Model,
+	body: BasePart,
+	template: Instance,
+	height: number,
+	offsetY: number
+): (MeshPart, { BasePart })
+	local center = body.CFrame * CFrame.new(0, offsetY, 0)
+	local mesh: MeshPart
+	local pieces: { BasePart } = {}
+
+	if template:IsA("MeshPart") then
+		mesh = template:Clone()
+		mesh.Size = template.Size * (height / template.Size.Y)
+		mesh.CFrame = center
+		table.insert(pieces, mesh)
+	else
+		local copy = (template :: Model):Clone()
+		copy:ScaleTo(copy:GetScale() * height / copy:GetExtentsSize().Y)
+		copy:PivotTo(center)
+		-- The biggest piece is the main one.
+		for _, part in copy:GetDescendants() do
+			if part:IsA("BasePart") then
+				table.insert(pieces, part)
+				if not mesh or part.Size.Magnitude > mesh.Size.Magnitude then
+					mesh = part :: MeshPart
+				end
+			end
+		end
+		for _, part in pieces do
+			part.Parent = model
+			if part ~= mesh then
+				local hold = Instance.new("WeldConstraint")
+				hold.Part0 = mesh
+				hold.Part1 = part
+				hold.Parent = part
+			end
+		end
+		copy:Destroy()
+	end
+
 	mesh.Name = "Visual"
-	mesh.Size = template.Size * (height / template.Size.Y)
-	mesh.Anchored = false -- held in place by the weld instead, so it can be animated
-	mesh.Massless = true
-	mesh.CanCollide = false
-	mesh.CanQuery = false
-	mesh.CanTouch = false
-	mesh.CastShadow = false
-	mesh.CFrame = body.CFrame * CFrame.new(0, offsetY, 0)
-	-- Tells StealService to leave this part's weld alone when a ghost is carried.
-	mesh:SetAttribute("Animated", true)
+	for _, part in pieces do
+		makeVisual(part)
+	end
 
 	local weld = Instance.new("Weld")
 	weld.Name = "AnimationWeld"
 	weld.Part0 = body
 	weld.Part1 = mesh
-	weld.C0 = CFrame.new(0, offsetY, 0)
+	weld.C0 = body.CFrame:ToObjectSpace(mesh.CFrame)
 	weld.Parent = mesh
 
 	mesh.Parent = model
 	CollectionService:AddTag(model, GhostModels.ANIMATED_TAG)
-	return mesh
+	return mesh, pieces
 end
 
 -- Turns a ghost into its mesh: scaled to `heightScale` × the ghost's size, see-through by
@@ -69,8 +116,10 @@ local function meshGhost(
 
 	local height = def.size * heightScale
 	body.Transparency = 1 -- the mesh is the ghost; the body just carries prompts and the label
-	local mesh = attachMesh(model, body, template, height, 0.2)
-	mesh.Transparency = transparency or 0.2
+	local mesh, pieces = attachMesh(model, body, template, height, 0.2)
+	for _, piece in pieces do
+		piece.Transparency = transparency or 0.2
+	end
 
 	local light = body:FindFirstChildOfClass("PointLight")
 	if light then
@@ -190,6 +239,44 @@ function GhostModels.phantom_knight(model: Model, body: BasePart, def): number?
 	wisps.SpreadAngle = Vector2.new(20, 20)
 	wisps.EmissionDirection = Enum.NormalId.Top
 	wisps.Parent = mesh
+
+	return labelHeight
+end
+
+-- Wraith: a dark hooded spirit with horn-like hood points, a shadowed face with glowing eyes,
+-- and a tattered cloak. A red glow tints its eyes and surroundings; dark smoke trails off it.
+function GhostModels.wraith(model: Model, body: BasePart, def): number?
+	local labelHeight, mesh = meshGhost(model, body, def, 1.15, Color3.fromRGB(255, 40, 40), 0.1)
+	if not mesh then
+		return nil
+	end
+	-- A cloak shouldn't stretch like a flame; it just floats, bobs and sways.
+	mesh:SetAttribute("Flicker", false)
+
+	-- Keep the red glow dim and close, so the Wraith itself still looks dark.
+	local light = body:FindFirstChildOfClass("PointLight")
+	if light then
+		light.Color = Color3.fromRGB(200, 20, 20)
+		light.Brightness = 0.8
+		light.Range = def.size * 1.6
+	end
+
+	-- Dark smoke drifting down off its tattered hem.
+	local smoke = Instance.new("ParticleEmitter")
+	smoke.Color = ColorSequence.new(Color3.fromRGB(35, 30, 40))
+	smoke.LightEmission = 0
+	smoke.Size = NumberSequence.new(0.6, 1.6)
+	smoke.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.3, 0.6),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	smoke.Lifetime = NumberRange.new(1.2, 2)
+	smoke.Rate = 8
+	smoke.Speed = NumberRange.new(0.2, 0.5)
+	smoke.SpreadAngle = Vector2.new(30, 30)
+	smoke.EmissionDirection = Enum.NormalId.Bottom
+	smoke.Parent = mesh
 
 	return labelHeight
 end
