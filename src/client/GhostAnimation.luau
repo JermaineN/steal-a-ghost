@@ -1,6 +1,7 @@
 -- Animates ghost meshes on this player's screen: a gentle bob up and down, a slow sway, and a
 -- flame-like flicker (a quick stretch/squash and a pulsing glow). Ghosts whose mesh sets the
--- "Walk" attribute (the Spectre King) waddle from foot to foot instead, as if walking.
+-- "Walk" attribute (the Spectre King) waddle from foot to foot instead, as if walking, while
+-- they're on the walkway; after being bought they float and sway like the others.
 -- The server tags these ghosts "AnimatedGhost" (see server GhostModels) and holds each mesh to
 -- the ghost's invisible body with a Weld. Changing that weld here only moves the mesh on this
 -- device, so the animation is smooth and nothing extra is sent over the network.
@@ -19,7 +20,7 @@ type Animated = {
 	mesh: BasePart,
 	baseSize: Vector3,
 	flicker: boolean, -- flame-like stretch; off for ghosts that set the mesh's "Flicker" to false
-	walk: boolean, -- waddle-walk instead of floating; on when the mesh's "Walk" is true
+	walk: boolean, -- waddle-walk instead of floating (see track)
 	light: PointLight?,
 	baseBrightness: number,
 	phase: number, -- so ghosts don't all move in sync
@@ -40,7 +41,8 @@ local function track(model: Instance)
 		mesh = mesh,
 		baseSize = mesh.Size,
 		flicker = mesh:GetAttribute("Flicker") ~= false,
-		walk = mesh:GetAttribute("Walk") == true,
+		-- Only on the walkway: once bought, a ghost has an owner and floats like the rest.
+		walk = mesh:GetAttribute("Walk") == true and model:GetAttribute("OwnerUserId") == nil,
 		light = light,
 		baseBrightness = if light then light.Brightness else 0,
 		phase = math.random() * 100,
