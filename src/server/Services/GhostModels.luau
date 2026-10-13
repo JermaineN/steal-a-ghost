@@ -99,7 +99,8 @@ local function attachMesh(
 end
 
 -- Turns a ghost into its mesh: scaled to `heightScale` × the ghost's size, see-through by
--- `transparency` (0.2 unless given), glowing `glowColor`, and animated. Returns the label
+-- `transparency` (0.2 unless given), raised `lift` studs (for tall ghosts whose feet would
+-- otherwise sink into the ground), glowing `glowColor`, and animated. Returns the label
 -- height and the mesh, or nil if the mesh is missing (the ghost then keeps the simple look).
 local function meshGhost(
 	model: Model,
@@ -107,7 +108,8 @@ local function meshGhost(
 	def,
 	heightScale: number,
 	glowColor: Color3,
-	transparency: number?
+	transparency: number?,
+	lift: number?
 ): (number?, MeshPart?)
 	local template = getMeshTemplate(def.id)
 	if not template then
@@ -115,8 +117,9 @@ local function meshGhost(
 	end
 
 	local height = def.size * heightScale
+	local offsetY = 0.2 + (lift or 0)
 	body.Transparency = 1 -- the mesh is the ghost; the body just carries prompts and the label
-	local mesh, pieces = attachMesh(model, body, template, height, 0.2)
+	local mesh, pieces = attachMesh(model, body, template, height, offsetY)
 	for _, piece in pieces do
 		piece.Transparency = transparency or 0.2
 	end
@@ -127,7 +130,7 @@ local function meshGhost(
 		light.Brightness = 2
 		light.Range = def.size * 3.5
 	end
-	return height / 2 + 0.2 + 1.5, mesh
+	return height / 2 + offsetY + 1.5, mesh
 end
 
 -- Wisp: a cute but eerie little ghost of icy blue spirit-fire with a flame crest on its head.
@@ -217,10 +220,10 @@ function GhostModels.banshee(model: Model, body: BasePart, def): number?
 end
 
 -- Phantom Knight: a chibi suit of silver armour haunted by teal ghost-light, with a ghost-flame
--- plume, a teal cape and a raised sword. Only slightly see-through so the armour stays clean.
+-- plume, a teal cape and a raised sword. Fully solid.
 function GhostModels.phantom_knight(model: Model, body: BasePart, def): number?
 	local ghostTeal = Color3.fromRGB(110, 255, 215)
-	local labelHeight, mesh = meshGhost(model, body, def, 1.2, ghostTeal, 0.1)
+	local labelHeight, mesh = meshGhost(model, body, def, 1.2, ghostTeal, 0)
 	if not mesh then
 		return nil
 	end
@@ -277,6 +280,44 @@ function GhostModels.wraith(model: Model, body: BasePart, def): number?
 	smoke.SpreadAngle = Vector2.new(30, 30)
 	smoke.EmissionDirection = Enum.NormalId.Bottom
 	smoke.Parent = mesh
+
+	return labelHeight
+end
+
+-- Spectre King: the rarest ghost. A chunky blue spectral king with a ghostly beard, a jewelled
+-- gold crown, a crimson tunic, a fur-trimmed royal cape, a sceptre and golden boots.
+-- Much bigger than the other ghosts, fully solid, glowing gold, and it waddles as if
+-- walking (the client's walk animation) instead of the usual float.
+function GhostModels.spectre_king(model: Model, body: BasePart, def): number?
+	local heightScale = 1.5
+	-- Ghosts float with their centre 4 studs up; lift the King so his boots stay above the ground.
+	local lift = def.size * heightScale / 2 - 2.6
+	local gold = Color3.fromRGB(255, 215, 90)
+	local labelHeight, mesh = meshGhost(model, body, def, heightScale, gold, 0, lift)
+	if not mesh then
+		return nil
+	end
+	mesh:SetAttribute("Flicker", false)
+	mesh:SetAttribute("Walk", true)
+
+	local light = body:FindFirstChildOfClass("PointLight")
+	if light then
+		light.Brightness = 2.5
+		light.Range = def.size * 3
+	end
+
+	-- Royal gold sparkles drifting off him.
+	local sparkles = Instance.new("ParticleEmitter")
+	sparkles.Color = ColorSequence.new(Color3.fromRGB(255, 245, 200), gold)
+	sparkles.LightEmission = 1
+	sparkles.Size = NumberSequence.new(0.3, 0)
+	sparkles.Transparency = NumberSequence.new(0.1, 1)
+	sparkles.Lifetime = NumberRange.new(1, 1.8)
+	sparkles.Rate = 8
+	sparkles.Speed = NumberRange.new(0.3, 0.8)
+	sparkles.SpreadAngle = Vector2.new(180, 180)
+	sparkles.Acceleration = Vector3.new(0, 0.5, 0)
+	sparkles.Parent = mesh
 
 	return labelHeight
 end

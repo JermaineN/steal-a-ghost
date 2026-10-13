@@ -1,5 +1,6 @@
 -- Animates ghost meshes on this player's screen: a gentle bob up and down, a slow sway, and a
--- flame-like flicker (a quick stretch/squash and a pulsing glow).
+-- flame-like flicker (a quick stretch/squash and a pulsing glow). Ghosts whose mesh sets the
+-- "Walk" attribute (the Spectre King) waddle from foot to foot instead, as if walking.
 -- The server tags these ghosts "AnimatedGhost" (see server GhostModels) and holds each mesh to
 -- the ghost's invisible body with a Weld. Changing that weld here only moves the mesh on this
 -- device, so the animation is smooth and nothing extra is sent over the network.
@@ -18,6 +19,7 @@ type Animated = {
 	mesh: BasePart,
 	baseSize: Vector3,
 	flicker: boolean, -- flame-like stretch; off for ghosts that set the mesh's "Flicker" to false
+	walk: boolean, -- waddle-walk instead of floating; on when the mesh's "Walk" is true
 	light: PointLight?,
 	baseBrightness: number,
 	phase: number, -- so ghosts don't all move in sync
@@ -38,6 +40,7 @@ local function track(model: Instance)
 		mesh = mesh,
 		baseSize = mesh.Size,
 		flicker = mesh:GetAttribute("Flicker") ~= false,
+		walk = mesh:GetAttribute("Walk") == true,
 		light = light,
 		baseBrightness = if light then light.Brightness else 0,
 		phase = math.random() * 100,
@@ -59,11 +62,25 @@ local function animate()
 		end
 		local t = now + ghost.phase
 
-		-- Bob and sway.
-		local bob = math.sin(t * 2) * 0.25
-		local roll = math.rad(6) * math.sin(t * 1.3)
-		local yaw = math.rad(8) * math.sin(t * 0.9)
-		ghost.weld.C0 = ghost.baseC0 * CFrame.new(0, bob, 0) * CFrame.Angles(0, yaw, roll)
+		if ghost.walk then
+			-- Waddle walk: rock from foot to foot (pivoting at the feet), bounce up on each step,
+			-- turn slightly into each stride, and lean a little forward.
+			local step = t * 4
+			local feet = ghost.baseSize.Y / 2
+			local rock = math.rad(8) * math.sin(step)
+			local bounce = math.abs(math.sin(step)) * 0.35
+			local turn = math.rad(5) * math.sin(step)
+			ghost.weld.C0 = ghost.baseC0
+				* CFrame.new(0, bounce - feet, 0)
+				* CFrame.Angles(math.rad(-4), turn, rock)
+				* CFrame.new(0, feet, 0)
+		else
+			-- Bob and sway.
+			local bob = math.sin(t * 2) * 0.25
+			local roll = math.rad(6) * math.sin(t * 1.3)
+			local yaw = math.rad(8) * math.sin(t * 0.9)
+			ghost.weld.C0 = ghost.baseC0 * CFrame.new(0, bob, 0) * CFrame.Angles(0, yaw, roll)
+		end
 
 		-- Flicker like a flame: stretch taller and thinner, then back (keeping its volume).
 		if ghost.flicker then
