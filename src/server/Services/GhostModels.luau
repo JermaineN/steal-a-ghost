@@ -109,6 +109,35 @@ function GhostModels.boo(model: Model, body: BasePart, def): number?
 	return (meshGhost(model, body, def, 1.3, Color3.fromRGB(225, 235, 255)))
 end
 
+-- Poltergeist: a grinning, mischievous blob of glowing green slime with big round eyes.
+function GhostModels.poltergeist(model: Model, body: BasePart, def): number?
+	local slimeGreen = Color3.fromRGB(90, 255, 110)
+	local labelHeight, mesh = meshGhost(model, body, def, 1, slimeGreen)
+	if not mesh then
+		return nil
+	end
+
+	-- An extra-strong green glow, and little glowing motes of slime drifting off it.
+	local light = body:FindFirstChildOfClass("PointLight")
+	if light then
+		light.Brightness = 3
+		light.Range = def.size * 4
+	end
+	local motes = Instance.new("ParticleEmitter")
+	motes.Color = ColorSequence.new(Color3.fromRGB(190, 255, 170), slimeGreen)
+	motes.LightEmission = 1
+	motes.Size = NumberSequence.new(0.2, 0)
+	motes.Transparency = NumberSequence.new(0.2, 1)
+	motes.Lifetime = NumberRange.new(1, 1.8)
+	motes.Rate = 5
+	motes.Speed = NumberRange.new(0.3, 0.8)
+	motes.SpreadAngle = Vector2.new(180, 180)
+	motes.Acceleration = Vector3.new(0, 0.4, 0)
+	motes.Parent = mesh
+
+	return labelHeight
+end
+
 -- Sheet Ghost: someone hiding under a white bedsheet with eye holes, with their bare feet
 -- showing underneath. Solid (not see-through), unlike the others.
 function GhostModels.sheet_ghost(model: Model, body: BasePart, def): number?
