@@ -7,13 +7,16 @@ local TweenService = game:GetService("TweenService")
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
-local Billboard = require(script.Parent.Parent.Util.Billboard)
+local GhostLabel = require(script.Parent.Parent.Util.GhostLabel)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local DataService = require(script.Parent.DataService)
 local GhostModels = require(script.Parent.GhostModels)
 local PlotService = require(script.Parent.PlotService)
 
 local GhostService = {}
+
+local PRICE_GOLD = Color3.fromRGB(255, 210, 80)
+local INCOME_GREEN = Color3.fromRGB(130, 255, 150)
 
 -- StealService sets this, so this module doesn't have to require it (that would be a require loop).
 GhostService.onStealPromptTriggered = function(_thief: Player, _owner: Player, _slot: number) end
@@ -22,7 +25,8 @@ type Entry = { id: string, model: Model, carried: boolean }
 local placed: { [Player]: { [number]: Entry } } = {}
 local walkwayFolder: Folder
 
-local function buildModel(def, infoText: string): Model
+-- `infoLines` are shown under the name: price and income on the walkway, income in a base.
+local function buildModel(def, infoLines: { GhostLabel.InfoLine }): Model
 	local rarity = GhostConfig.Rarities[def.rarity]
 	local model = Instance.new("Model")
 	model.Name = def.name
@@ -69,16 +73,7 @@ local function buildModel(def, infoText: string): Model
 		end
 	end
 
-	Billboard.create(body, {
-		size = UDim2.fromOffset(180, 66),
-		offset = Vector3.new(0, labelHeight, 0),
-		maxDistance = 70,
-		lines = {
-			{ text = def.name },
-			{ text = def.rarity, color = rarity.color },
-			{ text = infoText, color = Color3.fromRGB(120, 255, 140) },
-		},
-	})
+	GhostLabel.create(body, def, rarity, infoLines, labelHeight + 0.4)
 
 	return model
 end
@@ -142,7 +137,10 @@ end
 
 local function spawnWalkwayGhost(startCFrame: CFrame, endCFrame: CFrame)
 	local def = pickRandomGhost()
-	local model = buildModel(def, "$" .. Format.cash(def.price))
+	local model = buildModel(def, {
+		{ text = "$" .. Format.cash(def.price), color = PRICE_GOLD },
+		{ text = "+$" .. Format.cash(def.income) .. "/s", color = INCOME_GREEN },
+	})
 	model:PivotTo(startCFrame)
 	model.Parent = walkwayFolder
 
@@ -214,7 +212,7 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string)
 		return
 	end
 
-	local model = buildModel(def, "$" .. Format.cash(def.income) .. "/s")
+	local model = buildModel(def, { { text = "+$" .. Format.cash(def.income) .. "/s", color = INCOME_GREEN } })
 	model:SetAttribute("OwnerUserId", owner.UserId)
 	model:SetAttribute("GhostId", ghostId)
 	model:SetAttribute("Carried", false)
