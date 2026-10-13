@@ -614,8 +614,26 @@ function HalloweenDecor.build(
 	makePortal(decor, Vector3.new(-walkwayEnd, 0, 0), "Ghost Portal")
 	makePortal(decor, Vector3.new(walkwayEnd, 0, 0))
 
-	-- Pumpkin lamps along both sides of the walkway, in the gaps between bases.
-	for x = -walkwayEnd + 30, walkwayEnd - 30, 50 do
+	-- Pumpkin lamps along both sides of the walkway: halfway between neighbouring bases,
+	-- plus one past each end of the row.
+	local plotXs = {}
+	for _, plot in plots do
+		local x = plot.cframe.Position.X
+		if not table.find(plotXs, x) then
+			table.insert(plotXs, x)
+		end
+	end
+	table.sort(plotXs)
+	local lampXs = {}
+	for index = 1, #plotXs - 1 do
+		table.insert(lampXs, (plotXs[index] + plotXs[index + 1]) / 2)
+	end
+	if #plotXs >= 2 then
+		local gap = plotXs[2] - plotXs[1]
+		table.insert(lampXs, plotXs[1] - gap / 2)
+		table.insert(lampXs, plotXs[#plotXs] + gap / 2)
+	end
+	for _, x in lampXs do
 		for _, side in { -1, 1 } do
 			makeLampPost(decor, Vector3.new(x, 0, side * 9), Vector3.new(0, 0, -side))
 		end
@@ -631,7 +649,7 @@ function HalloweenDecor.build(
 
 	-- Scenery outside the fence: a mansion on one side, giant dead trees on the other.
 	makeMansion(decor, Vector3.new(0, 0, fenceHalfZ + 30), Vector3.new(0, 0, -1))
-	for x = -120, 120, 60 do
+	for x = -fenceHalfX + 65, fenceHalfX - 65, 60 do
 		makeDeadTree(
 			decor,
 			Vector3.new(x + random:NextNumber(-10, 10), 0, -(fenceHalfZ + 25)),

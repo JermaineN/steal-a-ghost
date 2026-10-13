@@ -11,7 +11,7 @@ local GraveyardBase = require(script.Parent.GraveyardBase)
 local MapBuilder = {}
 
 local PLOT_SIZE = 40
-local PLOT_SPACING = 50
+local PLOT_SPACING = 80 -- center to center; bases are about 44 wide, so this leaves a ~36 stud gap
 local PLOT_DISTANCE = 42 -- walkway center to plot center
 local WALL_HEIGHT = 16.5 -- height of the lock barrier
 local PILLAR_HEIGHT = 18
@@ -227,11 +227,26 @@ function MapBuilder.build()
 	if not workspace:FindFirstChild("Baseplate") then
 		makePart(mapFolder, {
 			Name = "Ground",
-			Size = Vector3.new(512, 2, 512),
+			Size = Vector3.new(1024, 2, 1024),
 			Position = Vector3.new(0, -1, 0),
 			Color = Color3.fromRGB(40, 36, 52),
 			Material = Enum.Material.Slate,
 		})
+	end
+
+	-- Hide the place's spawn pad. Roblox still spawns players there, but PlotService moves
+	-- them to their own base straight away, so it only needs to exist, not be seen.
+	for _, spawnLocation in workspace:GetDescendants() do
+		if spawnLocation:IsA("SpawnLocation") then
+			spawnLocation.Transparency = 1
+			spawnLocation.CanCollide = false
+			spawnLocation.CastShadow = false
+			for _, child in spawnLocation:GetChildren() do
+				if child:IsA("Decal") then
+					child.Transparency = 1
+				end
+			end
+		end
 	end
 
 	local perSide = math.ceil(GameConfig.PlotCount / 2)
