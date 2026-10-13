@@ -1,6 +1,7 @@
 -- Ghost models, the walkway shop, and the ghosts sitting in each player's base.
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
@@ -98,7 +99,14 @@ end
 -- Walkway shop
 ---------------------------------------------------------------------------
 
+-- Studio-only testing boost (GameConfig.StudioBoostSpawns): every ghost equally likely, and
+-- they spawn twice as often. Live servers always use the normal rates.
+local boostSpawns = RunService:IsStudio() and GameConfig.StudioBoostSpawns == true
+
 local function pickRandomGhost()
+	if boostSpawns then
+		return GhostConfig.Ghosts[math.random(#GhostConfig.Ghosts)]
+	end
 	local total = 0
 	for _, def in GhostConfig.Ghosts do
 		total += def.spawnWeight
@@ -284,10 +292,15 @@ function GhostService.start(map)
 	walkwayFolder.Name = "WalkwayGhosts"
 	walkwayFolder.Parent = workspace
 
+	local spawnInterval = GameConfig.WalkwaySpawnInterval
+	if boostSpawns then
+		spawnInterval /= 2
+		print("[GhostService] Studio spawn boost is on: every ghost equally likely, spawning twice as often.")
+	end
 	task.spawn(function()
 		while true do
 			spawnWalkwayGhost(map.walkwayStart, map.walkwayEnd)
-			task.wait(GameConfig.WalkwaySpawnInterval)
+			task.wait(spawnInterval)
 		end
 	end)
 end

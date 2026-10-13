@@ -15,6 +15,9 @@ return {
 	-- Walkway shop (ghosts float past and players buy them)
 	WalkwaySpawnInterval = 2.5, -- seconds between new ghosts
 	WalkwaySpeed = 10, -- studs per second
+	-- Testing only, ONLY when playing in Studio (live servers ignore it): true makes every ghost
+	-- equally likely to spawn and halves the spawn interval. Set to false for normal rates.
+	StudioBoostSpawns = true,
 
 	-- Stealing
 	StealHoldSeconds = 1.5, -- how long the thief holds E to grab a ghost
