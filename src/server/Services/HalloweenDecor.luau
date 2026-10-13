@@ -19,6 +19,10 @@ local IRON = Color3.fromRGB(22, 20, 28)
 
 local FENCE_MARGIN_X = 30 -- studs between the walkway ends and the fence
 local FENCE_HALF_Z = 125 -- fence distance from the walkway, front to back
+local CLIFF_GAP_X = 30 -- studs between the fence's short sides and the cliffs
+local CLIFF_GAP_Z = 60 -- room for the mansion and big trees between the fence and the cliffs
+local CLIFF_HEIGHT = NumberRange.new(80, 140)
+local CLIFF_DEPTH = NumberRange.new(40, 60)
 
 -- Same seed every server, so the graveyard always looks the same.
 local random = Random.new(1031)
@@ -37,12 +41,14 @@ end
 -- Night time, purple haze, a big moon, and a slight purple tint.
 local function setupLighting()
 	Lighting.ClockTime = 21.5
-	Lighting.Brightness = 2
-	Lighting.Ambient = Color3.fromRGB(70, 55, 100)
-	Lighting.OutdoorAmbient = Color3.fromRGB(120, 95, 160)
+	Lighting.Brightness = 0.2 -- sun/moon strength; barely visible at night
+	-- Overall brightness, like a camera's exposure. This is the one to tune: try -0.5 (darker) to 1 (brighter).
+	Lighting.ExposureCompensation = -0.5
+	Lighting.Ambient = Color3.fromRGB(90, 75, 120)
+	Lighting.OutdoorAmbient = Color3.fromRGB(145, 120, 185)
 
 	local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere")
-	atmosphere.Density = 0.38
+	atmosphere.Density = 0.32
 	atmosphere.Offset = 0.15
 	atmosphere.Color = Color3.fromRGB(110, 80, 150)
 	atmosphere.Decay = Color3.fromRGB(60, 25, 70)
@@ -58,6 +64,7 @@ local function setupLighting()
 	local tint = Instance.new("ColorCorrectionEffect")
 	tint.Name = "HalloweenTint"
 	tint.TintColor = Color3.fromRGB(235, 220, 255)
+	tint.Brightness = 0.05
 	tint.Contrast = 0.1
 	tint.Saturation = 0.15
 	tint.Parent = Lighting
@@ -531,6 +538,72 @@ local function makeMansion(parent: Instance, origin: Vector3, facing: Vector3)
 	})
 end
 
+-- A ring of tall rock cliffs (made of Terrain) around the whole map, so players can't see
+-- the flat ground beyond it. `halfX`/`halfZ` are the distances from the map center to the
+-- cliffs' inner faces.
+local function makeCliffs(halfX: number, halfZ: number)
+	local terrain = workspace.Terrain
+	-- Dark purple-grey rock. This recolors these materials for all terrain in the place.
+	terrain:SetMaterialColor(Enum.Material.Rock, Color3.fromRGB(70, 62, 82))
+	terrain:SetMaterialColor(Enum.Material.Slate, Color3.fromRGB(58, 52, 70))
+	terrain:SetMaterialColor(Enum.Material.Basalt, Color3.fromRGB(45, 40, 55))
+	local materials = { Enum.Material.Rock, Enum.Material.Slate, Enum.Material.Basalt }
+
+	-- Its own seed, so the cliffs don't change the layout of the graveyard and trees.
+	local cliffRandom = Random.new(666)
+
+	-- One entry per side: where its inner face is, which way is "outward", and how long it is.
+	local sides = {
+		{ face = Vector3.new(0, 0, halfZ), outward = Vector3.zAxis, length = halfX * 2 },
+		{ face = Vector3.new(0, 0, -halfZ), outward = -Vector3.zAxis, length = halfX * 2 },
+		{ face = Vector3.new(halfX, 0, 0), outward = Vector3.xAxis, length = halfZ * 2 },
+		{ face = Vector3.new(-halfX, 0, 0), outward = -Vector3.xAxis, length = halfZ * 2 },
+	}
+	for _, side in sides do
+		local along = side.outward:Cross(Vector3.yAxis)
+		-- Run a bit past each end so the corners are closed.
+		local reach = side.length / 2 + 40
+		for distance = -reach, reach, 18 do
+			local edge = side.face + along * (distance + cliffRandom:NextNumber(-4, 4))
+
+			-- A big tilted rock slab. Lots of these overlapping make a jagged cliff wall.
+			local height = cliffRandom:NextNumber(CLIFF_HEIGHT.Min, CLIFF_HEIGHT.Max)
+			local depth = cliffRandom:NextNumber(CLIFF_DEPTH.Min, CLIFF_DEPTH.Max)
+			local center = edge + side.outward * (depth / 2 + cliffRandom:NextNumber(0, 8))
+			local slab = CFrame.lookAt(center, center + side.outward)
+				* CFrame.Angles(
+					math.rad(cliffRandom:NextNumber(-8, 8)),
+					math.rad(cliffRandom:NextNumber(-15, 15)),
+					math.rad(cliffRandom:NextNumber(-6, 6))
+				)
+			terrain:FillBlock(
+				slab + Vector3.new(0, height / 2 - 6, 0),
+				Vector3.new(cliffRandom:NextNumber(26, 40), height, depth),
+				materials[cliffRandom:NextInteger(1, #materials)]
+			)
+
+			-- A lower ledge sticking out in front, so the wall looks stepped instead of flat.
+			if cliffRandom:NextNumber() < 0.6 then
+				local ledgeHeight = cliffRandom:NextNumber(20, 45)
+				local ledgeCenter = edge + side.outward * cliffRandom:NextNumber(0, 6)
+				terrain:FillBlock(
+					CFrame.lookAt(ledgeCenter, ledgeCenter + side.outward)
+							* CFrame.Angles(0, math.rad(cliffRandom:NextNumber(-15, 15)), 0)
+						+ Vector3.new(0, ledgeHeight / 2 - 4, 0),
+					Vector3.new(cliffRandom:NextNumber(18, 30), ledgeHeight, cliffRandom:NextNumber(14, 22)),
+					Enum.Material.Rock
+				)
+			end
+
+			-- Fallen boulders at the foot of the cliff.
+			if cliffRandom:NextNumber() < 0.5 then
+				local boulder = edge - side.outward * cliffRandom:NextNumber(2, 6)
+				terrain:FillBall(boulder, cliffRandom:NextNumber(4, 8), Enum.Material.Slate)
+			end
+		end
+	end
+end
+
 function HalloweenDecor.build(mapFolder: Folder, plots: { any }, walkwayLength: number)
 	setupLighting()
 
@@ -569,6 +642,8 @@ function HalloweenDecor.build(mapFolder: Folder, plots: { any }, walkwayLength: 
 			random:NextNumber(28, 36)
 		)
 	end
+
+	makeCliffs(fenceHalfX + CLIFF_GAP_X, FENCE_HALF_Z + CLIFF_GAP_Z)
 
 	decor.Parent = mapFolder
 end
