@@ -2,7 +2,7 @@
 local Billboard = {}
 
 type Line = { text: string, color: Color3? }
-type Options = { size: UDim2, offset: Vector3?, maxDistance: number?, lines: { Line } }
+type Options = { size: UDim2, offset: Vector3?, maxDistance: number?, font: Enum.Font?, lines: { Line } }
 
 function Billboard.create(adornee: BasePart, options: Options): { TextLabel }
 	local gui = Instance.new("BillboardGui")
@@ -25,7 +25,7 @@ function Billboard.create(adornee: BasePart, options: Options): { TextLabel }
 		label.LayoutOrder = index
 		label.BackgroundTransparency = 1
 		label.Size = UDim2.fromScale(1, 1 / #options.lines)
-		label.Font = Enum.Font.FredokaOne
+		label.Font = options.font or Enum.Font.FredokaOne
 		label.TextScaled = true
 		label.Text = line.text
 		label.TextColor3 = line.color or Color3.new(1, 1, 1)

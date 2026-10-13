@@ -4,6 +4,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Billboard = require(script.Parent.Parent.Util.Billboard)
+local Parts = require(script.Parent.Parent.Util.Parts)
+local HalloweenDecor = require(script.Parent.HalloweenDecor)
 
 local MapBuilder = {}
 
@@ -21,17 +23,7 @@ local PLOT_COLORS = {
 	Color3.fromRGB(90, 60, 70),
 }
 
-local function makePart(parent: Instance, props: { [string]: any }): Part
-	local part = Instance.new("Part")
-	part.Anchored = true
-	part.TopSurface = Enum.SurfaceType.Smooth
-	part.BottomSurface = Enum.SurfaceType.Smooth
-	for key, value in props do
-		(part :: any)[key] = value
-	end
-	part.Parent = parent
-	return part
-end
+local makePart = Parts.make
 
 local function buildPlot(mapFolder: Folder, index: number, plotCFrame: CFrame)
 	local model = Instance.new("Model")
@@ -194,6 +186,10 @@ function MapBuilder.build()
 		-- Face the plot toward the walkway.
 		local plotCFrame = CFrame.lookAt(center, Vector3.new(x, 0, 0))
 		table.insert(plots, buildPlot(mapFolder, index, plotCFrame))
+	end
+
+	if GameConfig.HalloweenMap then
+		HalloweenDecor.build(mapFolder, plots, walkwayLength)
 	end
 
 	local startPosition = Vector3.new(-walkwayLength / 2, WALKWAY_HEIGHT, 0)
