@@ -1,9 +1,9 @@
--- The floating card above each ghost: its name, a coloured rarity badge (gold for Legendary,
--- rainbow for Mythic), and lines of info (price and income on the walkway, income in a base).
+-- The floating text above each ghost (no card or border): its name, a coloured rarity badge
+-- (gold for Legendary, rainbow for Mythic), and lines of info (price and income on the walkway,
+-- income in a base). Text has a thick black outline so it reads over anything.
 local GhostLabel = {}
 
-local CARD = Color3.fromRGB(28, 16, 44)
-local OUTLINE = Color3.fromRGB(20, 8, 30)
+local BADGE_TEXT = Color3.fromRGB(28, 16, 44)
 
 -- Special badge colours for the top rarities; the rest use their rarity colour.
 local BADGE_GRADIENTS = {
@@ -26,13 +26,21 @@ local function textLabel(parent: Instance, props: { [string]: any }): TextLabel
 	label.BackgroundTransparency = 1
 	label.Font = Enum.Font.FredokaOne
 	label.TextScaled = true
-	label.TextStrokeColor3 = OUTLINE
-	label.TextStrokeTransparency = 0.3
+	label.TextStrokeTransparency = 1
 	for key, value in props do
 		(label :: any)[key] = value
 	end
 	label.Parent = parent
 	return label
+end
+
+-- A thick black outline around a label's text.
+local function outline(label: TextLabel, thickness: number)
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.new(0, 0, 0)
+	stroke.Thickness = thickness
+	stroke.LineJoinMode = Enum.LineJoinMode.Round
+	stroke.Parent = label
 end
 
 export type InfoLine = { text: string, color: Color3 }
@@ -53,27 +61,16 @@ function GhostLabel.create(adornee: BasePart, def, rarity, infoLines: { InfoLine
 	gui.LightInfluence = 0
 	gui.Adornee = adornee
 
-	local card = Instance.new("Frame")
-	card.Size = UDim2.fromScale(1, 1)
-	card.BackgroundColor3 = CARD
-	card.BackgroundTransparency = 0.3
-	card.Parent = gui
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 12)
-	corner.Parent = card
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = rarity.color
-	stroke.Thickness = 2
-	stroke.Transparency = 0.2
-	stroke.Parent = card
+	local card = gui -- everything floats directly in the billboard; no background or border
 
-	textLabel(card, {
+	local nameLabel = textLabel(card, {
 		Name = "GhostName",
 		Position = UDim2.new(0, 8, 0, 4),
 		Size = UDim2.new(1, -16, 0, 26),
 		TextColor3 = Color3.new(1, 1, 1),
 		Text = def.name,
 	})
+	outline(nameLabel, 2.5)
 
 	-- Rarity badge: a rounded pill in the rarity's colour.
 	local badge = Instance.new("Frame")
@@ -94,19 +91,19 @@ function GhostLabel.create(adornee: BasePart, def, rarity, infoLines: { InfoLine
 	textLabel(badge, {
 		Position = UDim2.fromOffset(6, 3),
 		Size = UDim2.new(1, -12, 1, -6),
-		TextColor3 = CARD,
-		TextStrokeTransparency = 1,
+		TextColor3 = BADGE_TEXT,
 		Text = string.upper(def.rarity),
 	})
 
 	for index, line in infoLines do
-		textLabel(card, {
+		local infoLabel = textLabel(card, {
 			Name = "Info" .. index,
 			Position = UDim2.new(0, 8, 0, 58 + (index - 1) * INFO_LINE_HEIGHT),
 			Size = UDim2.new(1, -16, 0, INFO_LINE_HEIGHT),
 			TextColor3 = line.color,
 			Text = line.text,
 		})
+		outline(infoLabel, 2.5)
 	end
 
 	gui.Parent = adornee

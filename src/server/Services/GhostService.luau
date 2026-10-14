@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
+local Theme = require(ReplicatedStorage.Shared.Theme)
 local GhostLabel = require(script.Parent.Parent.Util.GhostLabel)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local DataService = require(script.Parent.DataService)
@@ -14,9 +15,6 @@ local GhostModels = require(script.Parent.GhostModels)
 local PlotService = require(script.Parent.PlotService)
 
 local GhostService = {}
-
-local PRICE_GOLD = Color3.fromRGB(255, 210, 80)
-local INCOME_GREEN = Color3.fromRGB(130, 255, 150)
 
 -- StealService sets this, so this module doesn't have to require it (that would be a require loop).
 GhostService.onStealPromptTriggered = function(_thief: Player, _owner: Player, _slot: number) end
@@ -138,8 +136,8 @@ end
 local function spawnWalkwayGhost(startCFrame: CFrame, endCFrame: CFrame)
 	local def = pickRandomGhost()
 	local model = buildModel(def, {
-		{ text = "$" .. Format.cash(def.price), color = PRICE_GOLD },
-		{ text = "+$" .. Format.cash(def.income) .. "/s", color = INCOME_GREEN },
+		{ text = "$" .. Format.cash(def.price), color = Theme.MoneyGreen },
+		{ text = "+$" .. Format.cash(def.income) .. "/s", color = Theme.PreviewIncomeYellow },
 	})
 	model:PivotTo(startCFrame)
 	model.Parent = walkwayFolder
@@ -212,7 +210,7 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string)
 		return
 	end
 
-	local model = buildModel(def, { { text = "+$" .. Format.cash(def.income) .. "/s", color = INCOME_GREEN } })
+	local model = buildModel(def, { { text = "+$" .. Format.cash(def.income) .. "/s", color = Theme.MoneyGreen } })
 	model:SetAttribute("OwnerUserId", owner.UserId)
 	model:SetAttribute("GhostId", ghostId)
 	model:SetAttribute("Carried", false)

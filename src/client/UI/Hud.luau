@@ -1,11 +1,12 @@
--- On-screen HUD: a Halloween-styled cash panel (the number counts up, and big gains/spends
--- float a "+$X" / "-$X" off it), an income badge, and sliding message toasts.
+-- On-screen HUD: a big outlined cash number in the bottom-left (it counts up, pops, and big
+-- gains/spends float a "+$X" / "-$X" off it) with the income under it, and sliding toasts.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Theme = require(ReplicatedStorage.Shared.Theme)
 
 local player = Players.LocalPlayer
 
@@ -13,10 +14,8 @@ local Hud = {}
 
 local PANEL_DARK = Color3.fromRGB(28, 16, 44)
 local PANEL_LIGHT = Color3.fromRGB(62, 34, 92)
-local PUMPKIN = Color3.fromRGB(255, 140, 30)
-local GOLD = Color3.fromRGB(255, 205, 70)
-local CASH_GREEN = Color3.fromRGB(140, 255, 150)
-local SPEND_RED = Color3.fromRGB(255, 110, 110)
+local CASH_GREEN = Theme.MoneyGreen
+local SPEND_RED = Theme.SpendRed
 
 local TOAST_STYLES = {
 	info = { color = Color3.fromRGB(190, 140, 255), icon = "i" },
@@ -67,91 +66,75 @@ local function text(props: { [string]: any }): TextLabel
 	return new("TextLabel", props)
 end
 
-local function buildCashPanel(gui: ScreenGui)
-	local panel = new("Frame", {
-		Name = "CashPanel",
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 10),
-		Size = UDim2.fromOffset(280, 58),
-		BackgroundColor3 = Color3.new(1, 1, 1),
+-- A thick black outline around a label's text (chunkier than the built-in text stroke).
+local function outline(label: TextLabel, thickness: number): UIStroke
+	label.TextStrokeTransparency = 1
+	return new("UIStroke", {
+		Color = Color3.new(0, 0, 0),
+		Thickness = thickness,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual,
+		LineJoinMode = Enum.LineJoinMode.Round,
+		Parent = label,
+	})
+end
+
+-- Big outlined cash number in the bottom-left corner, with the income line under it.
+local function buildCashDisplay(gui: ScreenGui)
+	local display = new("Frame", {
+		Name = "CashDisplay",
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0, 18, 1, -14),
+		Size = UDim2.fromOffset(340, 96),
+		BackgroundTransparency = 1,
 		Parent = gui,
 	})
-	corner(panel, 16)
-	gradient(panel, PANEL_LIGHT, PANEL_DARK)
-	local panelStroke = stroke(panel, PUMPKIN, 2.5)
-
-	-- Gold coin on the left.
-	local coin = new("Frame", {
-		Name = "Coin",
-		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.new(0, 8, 0.5, 0),
-		Size = UDim2.fromOffset(42, 42),
-		BackgroundColor3 = Color3.new(1, 1, 1),
-		Parent = panel,
-	})
-	corner(coin, 21)
-	gradient(coin, Color3.fromRGB(255, 235, 140), Color3.fromRGB(230, 150, 30))
-	stroke(coin, Color3.fromRGB(150, 85, 10), 2)
-	text({
-		Text = "$",
-		Size = UDim2.fromScale(1, 1),
-		TextColor3 = Color3.fromRGB(120, 60, 0),
-		TextStrokeTransparency = 1,
-		Parent = coin,
-	})
+	-- Used to "pop" the number when cash jumps.
+	local pop = new("UIScale", { Parent = display })
 
 	local cashLabel = text({
 		Name = "Cash",
-		Position = UDim2.fromOffset(58, 6),
-		Size = UDim2.new(1, -68, 1, -12),
+		Size = UDim2.new(1, 0, 0, 64),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextColor3 = CASH_GREEN,
 		Text = "$0",
-		Parent = panel,
+		Parent = display,
 	})
+	outline(cashLabel, 4)
 
-	-- Income badge hanging under the panel.
-	local incomeBadge = new("Frame", {
-		Name = "IncomeBadge",
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 74),
-		Size = UDim2.fromOffset(150, 26),
-		BackgroundColor3 = PANEL_DARK,
-		BackgroundTransparency = 0.15,
-		Parent = gui,
-	})
-	corner(incomeBadge, 13)
-	stroke(incomeBadge, CASH_GREEN, 1.5, 0.4)
 	local incomeLabel = text({
 		Name = "Income",
-		Position = UDim2.fromOffset(8, 3),
-		Size = UDim2.new(1, -16, 1, -6),
+		Position = UDim2.fromOffset(2, 66),
+		Size = UDim2.new(1, -2, 0, 26),
+		TextXAlignment = Enum.TextXAlignment.Left,
 		TextColor3 = CASH_GREEN,
-		Text = "+$0/s",
-		Parent = incomeBadge,
+		Text = "Income: +$0/s",
+		Parent = display,
 	})
+	outline(incomeLabel, 2.5)
 
-	return panel, panelStroke, cashLabel, incomeLabel
+	return display, pop, cashLabel, incomeLabel
 end
 
--- A "+$X" / "-$X" that floats up off the cash panel and fades away.
-local function floatAmount(panel: Frame, amount: number)
+-- A "+$X" / "-$X" that floats up off the cash number and fades away.
+local function floatAmount(display: Frame, amount: number)
 	local gain = amount > 0
-	-- Starts just right of the panel and drifts upward.
+	-- Starts just above the cash number and drifts upward.
 	local label = text({
-		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.new(1, 10, 0.5, 0),
-		Size = UDim2.fromOffset(140, 30),
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.fromOffset(6, -2),
+		Size = UDim2.fromOffset(200, 34),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextColor3 = if gain then CASH_GREEN else SPEND_RED,
 		Text = (if gain then "+$" else "-$") .. Format.cash(math.abs(amount)),
 		ZIndex = 5,
-		Parent = panel,
+		Parent = display,
 	})
+	local labelOutline = outline(label, 3)
+	TweenService:Create(labelOutline, TweenInfo.new(1.2), { Transparency = 1 }):Play()
 	local rise = TweenService:Create(
 		label,
 		TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ Position = label.Position + UDim2.fromOffset(0, -30), TextTransparency = 1, TextStrokeTransparency = 1 }
+		{ Position = label.Position + UDim2.fromOffset(0, -36), TextTransparency = 1 }
 	)
 	rise.Completed:Connect(function()
 		label:Destroy()
@@ -262,11 +245,11 @@ function Hud.start()
 		Parent = player:WaitForChild("PlayerGui"),
 	})
 
-	local panel, panelStroke, cashLabel, incomeLabel = buildCashPanel(gui)
+	local display, pop, cashLabel, incomeLabel = buildCashDisplay(gui)
 	buildToasts(gui)
 
 	local function updateIncome()
-		incomeLabel.Text = "+$" .. Format.cash(player:GetAttribute("IncomePerSecond") or 0) .. "/s"
+		incomeLabel.Text = "Income: +$" .. Format.cash(player:GetAttribute("IncomePerSecond") or 0) .. "/s"
 	end
 	player:GetAttributeChangedSignal("IncomePerSecond"):Connect(updateIncome)
 	updateIncome()
@@ -292,10 +275,10 @@ function Hud.start()
 			-- Ignore the steady income ticks; only call out purchases, sales and other big changes.
 			local income = player:GetAttribute("IncomePerSecond") or 0
 			if math.abs(change) > income * 1.5 then
-				floatAmount(panel, change)
-				-- Flash the border green for gains, red for spends.
-				panelStroke.Color = if change > 0 then CASH_GREEN else SPEND_RED
-				TweenService:Create(panelStroke, TweenInfo.new(0.6), { Color = PUMPKIN }):Play()
+				floatAmount(display, change)
+				-- A quick pop of the number.
+				pop.Scale = 1.12
+				TweenService:Create(pop, TweenInfo.new(0.35, Enum.EasingStyle.Back), { Scale = 1 }):Play()
 			end
 		end)
 	end)

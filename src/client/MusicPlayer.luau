@@ -1,5 +1,5 @@
 -- Background music: plays GameConfig.MusicTracks in a shuffled loop, and adds a small round
--- button (bottom-left) that mutes/unmutes it. Music only plays on this player's device.
+-- button (bottom-right) that mutes/unmutes it. Music only plays on this player's device.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
@@ -32,8 +32,8 @@ local function buildButton(onClick: () -> ()): (TextButton, UIStroke)
 
 	local button = Instance.new("TextButton")
 	button.Name = "Toggle"
-	button.AnchorPoint = Vector2.new(0, 1)
-	button.Position = UDim2.new(0, 14, 1, -14)
+	button.AnchorPoint = Vector2.new(1, 1)
+	button.Position = UDim2.new(1, -14, 1, -14)
 	button.Size = UDim2.fromOffset(48, 48)
 	button.BackgroundColor3 = PANEL_DARK
 	button.BackgroundTransparency = 0.1
