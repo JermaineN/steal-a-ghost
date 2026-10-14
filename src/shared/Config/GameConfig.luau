@@ -11,6 +11,9 @@ return {
 	StudioTestCash = 0,
 	SellRefund = 0.5, -- selling a ghost returns 50% of its price
 	IncomeTickSeconds = 1,
+	-- Each ghost's income piles up on the green pad in front of its grave until the owner
+	-- steps on the pad to collect it.
+	CollectPadMargin = 0.5, -- extra studs around a pad that still count as standing on it
 
 	-- Walkway shop (ghosts float past and players buy them)
 	WalkwaySpawnInterval = 2.5, -- seconds between new ghosts

@@ -23,6 +23,7 @@ local function newData()
 	return {
 		cash = GameConfig.StartingCash,
 		ghosts = {}, -- ["slotNumber"] = ghostId (string keys so DataStores accept it)
+		stored = {}, -- ["slotNumber"] = uncollected cash waiting on that slot's collect pad
 	}
 end
 
@@ -158,6 +159,32 @@ function DataService.setGhost(player: Player, slot: number, ghostId: string?)
 	if profile then
 		profile.data.ghosts[tostring(slot)] = ghostId
 	end
+end
+
+-- Uncollected cash on a slot's collect pad.
+function DataService.getStored(player: Player, slot: number): number
+	local profile = profiles[player]
+	return if profile then profile.data.stored[tostring(slot)] or 0 else 0
+end
+
+function DataService.addStored(player: Player, slot: number, amount: number)
+	local profile = profiles[player]
+	if profile then
+		local key = tostring(slot)
+		profile.data.stored[key] = (profile.data.stored[key] or 0) + amount
+	end
+end
+
+-- Moves a slot's stored cash into the player's balance. Returns how much was collected.
+function DataService.collectStored(player: Player, slot: number): number
+	local profile = profiles[player]
+	local amount = DataService.getStored(player, slot)
+	if not profile or amount <= 0 then
+		return 0
+	end
+	profile.data.stored[tostring(slot)] = nil
+	DataService.addCash(player, amount)
+	return amount
 end
 
 function DataService.getGhosts(player: Player): { [string]: string }

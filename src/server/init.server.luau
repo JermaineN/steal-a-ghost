@@ -19,7 +19,7 @@ DataService.start()
 GhostService.start(map)
 StealService.start()
 LockService.start(map.plots)
-EconomyService.start()
+EconomyService.start(map.plots)
 
 -- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).
 local function applyWalkSpeed(character: Model)

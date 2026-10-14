@@ -3,6 +3,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
+local Theme = require(ReplicatedStorage.Shared.Theme)
 local Billboard = require(script.Parent.Parent.Util.Billboard)
 local Parts = require(script.Parent.Parent.Util.Parts)
 local HalloweenDecor = require(script.Parent.HalloweenDecor)
@@ -33,6 +34,44 @@ local PLOT_COLORS = {
 }
 
 local makePart = Parts.make
+
+-- The green pad in front of a grave where that ghost's income piles up. It's drawn fullbright:
+-- every visible face is painted with a SurfaceGui that ignores scene lighting, so the pad looks
+-- like neon in the dark but doesn't light up anything around it.
+-- EconomyService flashes the "Glow" fills when the pad is collected.
+local PAD_BRIGHTNESS = 1.6 -- above 1 pushes the colour past normal, like neon
+
+local function makeCollectPad(model: Model, slot: number, cframe: CFrame): Part
+	local pad = makePart(model, {
+		Name = "CollectPad" .. slot,
+		Size = Vector3.new(4, 0.4, 2.5),
+		CFrame = cframe,
+		Color = Theme.MoneyGreen,
+		Material = Enum.Material.SmoothPlastic,
+		CastShadow = false,
+	})
+
+	for _, face in
+		{ Enum.NormalId.Top, Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right }
+	do
+		local surface = Instance.new("SurfaceGui")
+		surface.Name = "PadSurface" .. face.Name
+		surface.Face = face
+		surface.LightInfluence = 0
+		surface.Brightness = PAD_BRIGHTNESS
+		surface.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+		surface.PixelsPerStud = 20
+		local glow = Instance.new("Frame")
+		glow.Name = "Glow"
+		glow.Size = UDim2.fromScale(1, 1)
+		glow.BorderSizePixel = 0
+		glow.BackgroundColor3 = Theme.MoneyGreen
+		glow.Parent = surface
+		surface.Parent = pad
+	end
+
+	return pad
+end
 
 local function buildPlot(mapFolder: Folder, index: number, plotCFrame: CFrame)
 	local model = Instance.new("Model")
@@ -166,13 +205,16 @@ local function buildPlot(mapFolder: Folder, index: number, plotCFrame: CFrame)
 	})[1]
 
 	-- 10 graves in two well-spaced rows. Each has a tombstone behind it; the ghost floats above the grave.
+	-- A bright green collect pad sits in front of each grave, where that ghost's income piles up.
 	local slots = {}
+	local collectPads = {}
 	local graveRandom = Random.new(index)
 	for _, z in GRAVE_ROWS do
 		for column = -2, 2 do
 			local x = column * GRAVE_SPACING
 			GraveyardBase.makeGrave(model, plotCFrame, Vector3.new(x, 1, z), #slots + 1, graveRandom)
 			table.insert(slots, at(x, 4, z))
+			table.insert(collectPads, makeCollectPad(model, #slots, at(x, 1.2, z - 4.5)))
 		end
 	end
 
@@ -205,6 +247,7 @@ local function buildPlot(mapFolder: Folder, index: number, plotCFrame: CFrame)
 		lockLabel = lockLabel,
 		signLabel = signLabel,
 		slots = slots,
+		collectPads = collectPads, -- collectPads[slot] is the pad in front of that grave
 		gateTops = gateTops, -- tops of the two entrance pillars (for decorations)
 		spawnCFrame = at(0, 4, -10),
 		ejectCFrame = at(0, 4, -half - 8),
