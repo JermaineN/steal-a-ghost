@@ -2,11 +2,11 @@
 -- its grave. The owner steps on a pad to move that money into their balance.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
+local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local DataService = require(script.Parent.DataService)
 local GhostService = require(script.Parent.GhostService)
@@ -18,6 +18,8 @@ local EconomyService = {}
 -- and a "COLLECT" line above it that only shows while there's money to pick up.
 type PadLabel = { amount: TextLabel, collect: TextLabel }
 local padLabels: { [any]: { PadLabel } } = {}
+-- Whether the owner was standing on each pad last update (to spot the step onto it).
+local ownerWasOn: { [BasePart]: boolean } = {}
 
 -- Text with a thick black outline.
 local function outlinedText(gui: BillboardGui, props: { [string]: any }): TextLabel
@@ -81,16 +83,6 @@ local function isStandingOn(player: Player, pad: BasePart): boolean
 		and offset.Y < 6
 end
 
--- A quick white flash so the owner sees the pad was collected.
-local function flashPad(pad: BasePart)
-	for _, glow in pad:GetDescendants() do
-		if glow:IsA("Frame") and glow.Name == "Glow" then
-			glow.BackgroundColor3 = Color3.new(1, 1, 1)
-			TweenService:Create(glow, TweenInfo.new(0.4), { BackgroundColor3 = Theme.MoneyGreen }):Play()
-		end
-	end
-end
-
 -- Every income tick: each ghost in a base (not being carried off) adds to its pad.
 local function incomeTick()
 	for _, player in Players:GetPlayers() do
@@ -123,8 +115,15 @@ local function updatePads(plots)
 				label.collect.Text = ""
 				continue
 			end
-			if isStandingOn(owner, pad) and DataService.collectStored(owner, slot) > 0 then
-				flashPad(pad)
+			-- Only the owner is checked, so nobody else can collect this pad. The owner's device
+			-- shows the collect (CollectEffect): a flash every time, plus the cha-ching and cash
+			-- burst on the step onto the pad, so they don't repeat every second while standing.
+			-- Other players get nothing.
+			local onPad = isStandingOn(owner, pad)
+			local justStepped = onPad and not ownerWasOn[pad]
+			ownerWasOn[pad] = onPad
+			if onPad and DataService.collectStored(owner, slot) > 0 then
+				Remotes.CashCollected:FireClient(owner, pad, justStepped)
 			end
 			local stored = DataService.getStored(owner, slot)
 			-- Empty graves show nothing unless money is still waiting there (e.g. a ghost was sold).
