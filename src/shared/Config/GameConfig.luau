@@ -14,6 +14,10 @@ return {
 	-- Each ghost's income piles up on the green pad in front of its grave until the owner
 	-- steps on the pad to collect it.
 	CollectPadMargin = 0.5, -- extra studs around a pad that still count as standing on it
+	-- Collecting plays a "cha-ching" and bursts cash out of the pad.
+	CollectSoundId = 101396758527961, -- "Cash Register Cha Ching" from the Creator Store
+	CollectSoundVolume = 0.6,
+	CollectCashPieces = 10, -- bills and coins in each burst
 
 	-- Walkway shop (ghosts float past and players buy them)
 	WalkwaySpawnInterval = 2.5, -- seconds between new ghosts

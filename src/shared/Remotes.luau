@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 
 local EVENT_NAMES = {
 	"Notify", -- server -> client: show a message toast (message, kind)
+	"CashCollected", -- server -> the pad's owner only: they collected a collect pad (pad)
 }
 
 local folder
