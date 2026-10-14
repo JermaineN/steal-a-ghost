@@ -1,12 +1,14 @@
--- The floating text above each ghost (no card or border): its name, a coloured rarity badge
--- (gold for Legendary, rainbow for Mythic), and lines of info (price and income on the walkway,
--- income in a base). Text has a thick black outline so it reads over anything.
+-- The floating text above each ghost (no card or border): its name, its rarity in the rarity's
+-- colour (gold for Legendary, rainbow for Mythic), and lines of info (price and income on the
+-- walkway, income in a base). Text has a thick black outline so it reads over anything.
+local TextService = game:GetService("TextService")
+
 local GhostLabel = {}
 
-local BADGE_TEXT = Color3.fromRGB(28, 16, 44)
+local RARITY_TEXT_SIZE = 21
 
--- Special badge colours for the top rarities; the rest use their rarity colour.
-local BADGE_GRADIENTS = {
+-- Special text colours for the top rarities; the rest use their rarity colour.
+local RARITY_GRADIENTS = {
 	Legendary = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 240, 150)),
 		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 190, 40)),
@@ -72,28 +74,29 @@ function GhostLabel.create(adornee: BasePart, def, rarity, infoLines: { InfoLine
 	})
 	outline(nameLabel, 2.5)
 
-	-- Rarity badge: a rounded pill in the rarity's colour.
-	local badge = Instance.new("Frame")
-	badge.Name = "RarityBadge"
-	badge.AnchorPoint = Vector2.new(0.5, 0)
-	badge.Position = UDim2.new(0.5, 0, 0, 32)
-	badge.Size = UDim2.fromOffset(104, 22)
-	badge.BackgroundColor3 = if BADGE_GRADIENTS[def.rarity] then Color3.new(1, 1, 1) else rarity.color
-	badge.Parent = card
-	local badgeCorner = Instance.new("UICorner")
-	badgeCorner.CornerRadius = UDim.new(0, 11)
-	badgeCorner.Parent = badge
-	if BADGE_GRADIENTS[def.rarity] then
-		local gradient = Instance.new("UIGradient")
-		gradient.Color = BADGE_GRADIENTS[def.rarity]
-		gradient.Parent = badge
-	end
-	textLabel(badge, {
-		Position = UDim2.fromOffset(6, 3),
-		Size = UDim2.new(1, -12, 1, -6),
-		TextColor3 = BADGE_TEXT,
-		Text = string.upper(def.rarity),
+	-- Rarity: the word itself in the rarity's colour, with a black outline.
+	-- A UIGradient on a TextLabel tints the text, so gradient rarities start from white text.
+	-- The label is sized to the word so a gradient spans exactly the letters.
+	local gradientColors = RARITY_GRADIENTS[def.rarity]
+	local rarityText = string.upper(def.rarity)
+	local textWidth =
+		TextService:GetTextSize(rarityText, RARITY_TEXT_SIZE, Enum.Font.FredokaOne, Vector2.new(1000, 100)).X
+	local rarityLabel = textLabel(card, {
+		Name = "Rarity",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 31),
+		Size = UDim2.fromOffset(textWidth + 2, 24),
+		TextScaled = false,
+		TextSize = RARITY_TEXT_SIZE,
+		TextColor3 = if gradientColors then Color3.new(1, 1, 1) else rarity.color,
+		Text = rarityText,
 	})
+	outline(rarityLabel, 2.5)
+	if gradientColors then
+		local gradient = Instance.new("UIGradient")
+		gradient.Color = gradientColors
+		gradient.Parent = rarityLabel
+	end
 
 	for index, line in infoLines do
 		local infoLabel = textLabel(card, {
