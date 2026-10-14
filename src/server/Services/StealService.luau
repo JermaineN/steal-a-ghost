@@ -167,7 +167,7 @@ function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
 		end),
 	}
 	carries[thief] = carry
-	humanoid.WalkSpeed = carry.originalSpeed * GameConfig.CarrySpeedMultiplier
+	humanoid.WalkSpeed = GameConfig.CarryWalkSpeed
 
 	local def = GhostConfig.byId[entry.id]
 	Notify.send(thief, "Run back to your base!", "info")

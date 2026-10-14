@@ -21,7 +21,9 @@ return {
 
 	-- Stealing
 	StealHoldSeconds = 1.5, -- how long the thief holds E to grab a ghost
-	CarrySpeedMultiplier = 0.75, -- thieves are slower while carrying
+	-- Walk speeds in studs per second (Roblox's default is 16).
+	WalkSpeed = 24.5, -- increased from the default
+	CarryWalkSpeed = 13, -- decreased from the default, while carrying a stolen ghost
 	TagDistance = 6, -- owner this close to the thief = ghost goes home
 	StealCooldownSeconds = 3, -- after a failed steal
 

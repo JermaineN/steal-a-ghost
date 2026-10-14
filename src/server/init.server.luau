@@ -1,5 +1,8 @@
 -- Server entry point: builds the map, starts every service, and handles players joining/leaving.
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 
 local Services = script.Services
 local MapBuilder = require(Services.MapBuilder)
@@ -18,7 +21,19 @@ StealService.start()
 LockService.start(map.plots)
 EconomyService.start()
 
+-- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).
+local function applyWalkSpeed(character: Model)
+	local humanoid = character:WaitForChild("Humanoid", 10)
+	if humanoid and humanoid:IsA("Humanoid") then
+		humanoid.WalkSpeed = GameConfig.WalkSpeed
+	end
+end
+
 local function onPlayerAdded(player: Player)
+	player.CharacterAdded:Connect(applyWalkSpeed)
+	if player.Character then
+		task.spawn(applyWalkSpeed, player.Character)
+	end
 	PlotService.playerAdded(player)
 	if DataService.playerAdded(player) then
 		GhostService.loadGhosts(player)
