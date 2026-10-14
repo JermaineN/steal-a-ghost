@@ -32,7 +32,7 @@ return {
 
 	-- Background music: Roblox-licensed tracks (free to use in any experience), played in a
 	-- shuffled loop. Swap an ID for any other audio from the Creator Store.
-	MusicVolume = 0.3,
+	MusicVolume = 0.24,
 	MusicTracks = {
 		111631783838916, -- Spooky cartoon music
 		137626560269194, -- Foggy Nights

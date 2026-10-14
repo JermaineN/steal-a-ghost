@@ -39,9 +39,9 @@ end
 -- Night time, purple haze, a big moon, and a slight purple tint.
 local function setupLighting()
 	Lighting.ClockTime = 21.5
-	Lighting.Brightness = 0.2 -- sun/moon strength; barely visible at night
+	Lighting.Brightness = 0.7 -- sun/moon strength; barely visible at night
 	-- Overall brightness, like a camera's exposure. This is the one to tune: try -0.5 (darker) to 1 (brighter).
-	Lighting.ExposureCompensation = -0.5
+	Lighting.ExposureCompensation = 0
 	Lighting.Ambient = Color3.fromRGB(90, 75, 120)
 	Lighting.OutdoorAmbient = Color3.fromRGB(145, 120, 185)
 
