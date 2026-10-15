@@ -297,9 +297,12 @@ end
 
 -- Rows of graves, dead trees, pumpkins and spirits between the back of the bases and the fence.
 -- `side` is 1 for the +Z half of the map and -1 for the -Z half.
-local function makeGraveyard(parent: Instance, side: number, halfX: number)
+-- `fenceHalfZ` is the distance to the map edge; the rows sit a fixed distance in front of it,
+-- so they stay behind the bases wherever the bases are.
+local function makeGraveyard(parent: Instance, side: number, halfX: number, fenceHalfZ: number)
+	local startZ = fenceHalfZ - 53 -- the first row of graves; everything else is placed from here
 	for row = 0, 3 do
-		local z = side * (72 + row * 10)
+		local z = side * (startZ + row * 10)
 		for x = -halfX + 15, halfX - 15, 13 do
 			if random:NextNumber() < 0.65 then
 				local position = Vector3.new(x + random:NextNumber(-3, 3), -0.2, z + random:NextNumber(-2, 2))
@@ -316,17 +319,25 @@ local function makeGraveyard(parent: Instance, side: number, halfX: number)
 
 	-- A line of big trees near the fence, plus a few among the graves.
 	for x = -halfX + 20, halfX - 20, 45 do
-		makeDeadTree(parent, Vector3.new(x + random:NextNumber(-8, 8), 0, side * 115), random:NextNumber(14, 20))
+		makeDeadTree(
+			parent,
+			Vector3.new(x + random:NextNumber(-8, 8), 0, side * (startZ + 43)),
+			random:NextNumber(14, 20)
+		)
 	end
 	for _ = 1, 3 do
-		local position = Vector3.new(random:NextNumber(-halfX + 20, halfX - 20), 0, side * random:NextNumber(77, 97))
+		local position =
+			Vector3.new(random:NextNumber(-halfX + 20, halfX - 20), 0, side * (startZ + random:NextNumber(5, 25)))
 		makeDeadTree(parent, position, random:NextNumber(10, 14))
 	end
 
 	for _ = 1, 8 do
 		local scale = random:NextNumber(0.6, 1.1)
-		local position =
-			Vector3.new(random:NextNumber(-halfX + 10, halfX - 10), 1.3 * scale, side * random:NextNumber(68, 110))
+		local position = Vector3.new(
+			random:NextNumber(-halfX + 10, halfX - 10),
+			1.3 * scale,
+			side * (startZ + random:NextNumber(-4, 38))
+		)
 		makePumpkin(parent, CFrame.lookAt(position, Vector3.new(position.X, position.Y, 0)), scale)
 	end
 
@@ -336,7 +347,7 @@ local function makeGraveyard(parent: Instance, side: number, halfX: number)
 			Vector3.new(
 				random:NextNumber(-halfX + 20, halfX - 20),
 				random:NextNumber(3, 6),
-				side * random:NextNumber(70, 105)
+				side * (startZ + random:NextNumber(-2, 33))
 			)
 		)
 	end
@@ -584,8 +595,8 @@ function HalloweenDecor.build(
 		decoratePlot(decor, plot)
 	end
 
-	makeGraveyard(decor, 1, fenceHalfX)
-	makeGraveyard(decor, -1, fenceHalfX)
+	makeGraveyard(decor, 1, fenceHalfX, fenceHalfZ)
+	makeGraveyard(decor, -1, fenceHalfX, fenceHalfZ)
 	makeFence(decor, fenceHalfX, fenceHalfZ)
 
 	-- Scenery outside the fence: a mansion on one side, giant dead trees on the other.

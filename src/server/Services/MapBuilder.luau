@@ -12,14 +12,16 @@ local GraveyardBase = require(script.Parent.GraveyardBase)
 local MapBuilder = {}
 
 local PLOT_SIZE = 40
-local PLOT_SPACING = 80 -- center to center; bases are about 44 wide, so this leaves a ~36 stud gap
-local PLOT_DISTANCE = 42 -- walkway center to plot center
+local PLOT_SPACING = 104 -- center to center; bases are about 44 wide, so this leaves a ~60 stud gap
+local PLOT_DISTANCE = 58 -- walkway center to plot center: a 32-stud gap between the walkway edge and the base
 local WALL_HEIGHT = 16.5 -- height of the lock barrier
 local PILLAR_HEIGHT = 18
 local GATE_PILLAR_HEIGHT = 21 -- the two pillars at the entrance
 local INVISIBLE_WALL_HEIGHT = 300 -- reaches high into the sky, so nobody can jump or climb over
 local BOUNDARY_MARGIN_X = 30 -- studs from the walkway ends to the edge of the map
-local BOUNDARY_HALF_Z = 125 -- distance from the walkway to the map's front and back edges
+-- Distance from the walkway to the map's front and back edges; leaves room behind the bases
+-- for the graveyard decorations.
+local BOUNDARY_HALF_Z = PLOT_DISTANCE + 83
 local WALKWAY_HEIGHT = 4 -- height ghosts float at on the walkway
 local GRAVE_ROWS = { -1, 12 } -- plot-local Z of the two rows of graves (front row, back row)
 local GRAVE_SPACING = 8 -- studs between graves in a row
