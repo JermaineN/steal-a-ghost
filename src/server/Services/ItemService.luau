@@ -1,7 +1,9 @@
 -- Items: tools that sit in each player's inventory (Roblox's built-in Backpack, the hotbar at the
 -- bottom of the screen). Number keys equip/unequip them: slot 1 is the first tool, and so on.
--- Every player starts with a Bat in slot 1. A hit knocks the player over (RagdollService), and a
--- thief who gets hit drops the stolen ghost, which flies home.
+-- - Bat (slot 1, everyone): a hit knocks the player over (RagdollService).
+-- - Cage (slot 2, only players in GameConfig.CageAllowedUserIds): the closest player hit is
+--   frozen inside a cage (CageService). Long cooldown.
+-- Either way, a thief who gets hit drops the stolen ghost, which flies home.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,12 +12,15 @@ local StarterPack = game:GetService("StarterPack")
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Notify = require(script.Parent.Parent.Util.Notify)
+local CageService = require(script.Parent.CageService)
 local RagdollService = require(script.Parent.RagdollService)
 local StealService = require(script.Parent.StealService)
 
 local ItemService = {}
 
 local lastSwing: { [Player]: number } = {}
+local cageReadyAt: { [Player]: number } = {}
+local cageTemplate: Tool
 
 local function getAliveRoot(player: Player): BasePart?
 	local character = player.Character
@@ -27,20 +32,20 @@ local function getAliveRoot(player: Player): BasePart?
 	return nil
 end
 
-local function hitPlayer(swinger: Player, target: Player, direction: Vector3)
+-- If the target is carrying a stolen ghost, it flies home.
+local function dropStolenGhost(swinger: Player, target: Player, verb: string)
 	local carry = StealService.getCarry(target)
-	if carry then
-		local owner = carry.owner
-		StealService.returnGhost(target, swinger.DisplayName .. " bonked you! The ghost flew home.")
-		if owner == swinger then
-			Notify.send(owner, "You got your ghost back!", "success")
-		else
-			Notify.send(swinger, "You bonked a thief!", "success")
-			Notify.send(owner, swinger.DisplayName .. " got your ghost back!", "success")
-		end
+	if not carry then
+		return
 	end
-	local push = direction * GameConfig.BatKnockbackSpeed + Vector3.new(0, GameConfig.BatKnockbackLift, 0)
-	RagdollService.knock(target, push)
+	local owner = carry.owner
+	StealService.returnGhost(target, swinger.DisplayName .. " " .. verb .. " you! The ghost flew home.")
+	if owner == swinger then
+		Notify.send(owner, "You got your ghost back!", "success")
+	else
+		Notify.send(swinger, "You " .. verb .. " a thief!", "success")
+		Notify.send(owner, swinger.DisplayName .. " got your ghost back!", "success")
+	end
 end
 
 -- The bonk, played from the hit player so everyone nearby hears it. A sound played on the
@@ -61,47 +66,104 @@ local function playBonk(target: Player)
 	Debris:AddItem(sound, 4)
 end
 
--- The moment the bat reaches the front: hits everyone within reach and roughly in front of the
--- swinger, using server positions.
-local function checkHits(swinger: Player, tool: Tool)
-	local root = getAliveRoot(swinger)
-	-- They may have put the bat away or been knocked over during the wind-up.
-	if
-		not root
-		or tool.Parent ~= swinger.Character
-		or RagdollService.isRagdolled(swinger)
-		or StealService.getCarry(swinger)
-	then
-		return
-	end
+-- Can't hit players who are already knocked over or caged.
+local function canBeHit(target: Player): boolean
+	return RagdollService.canKnock(target) and not CageService.isCaged(target)
+end
+
+-- Players within `range` and roughly in front of the swinger (server positions), closest first.
+-- Each comes with the flat direction from the swinger to them.
+type Target = { player: Player, direction: Vector3, distance: number }
+local function findTargets(swinger: Player, root: BasePart, range: number): { Target }
+	local targets = {}
 	for _, target in Players:GetPlayers() do
 		local targetRoot = getAliveRoot(target)
-		if target == swinger or not targetRoot or not RagdollService.canKnock(target) then
+		if target == swinger or not targetRoot or not canBeHit(target) then
 			continue
 		end
 		local offset = targetRoot.Position - root.Position
 		local flat = Vector3.new(offset.X, 0, offset.Z)
 		local inFront = flat.Magnitude < 2 or root.CFrame.LookVector:Dot(flat.Unit) > 0
-		if offset.Magnitude <= GameConfig.BatRange and inFront then
-			-- Push away from the swinger (straight ahead of them if standing on top of each other).
+		if offset.Magnitude <= range and inFront then
+			-- Straight ahead of the swinger if standing on top of each other.
 			local direction = if flat.Magnitude > 0.1 then flat.Unit else root.CFrame.LookVector
-			playBonk(target)
-			hitPlayer(swinger, target, direction)
+			table.insert(targets, { player = target, direction = direction, distance = offset.Magnitude })
 		end
+	end
+	table.sort(targets, function(a, b)
+		return a.distance < b.distance
+	end)
+	return targets
+end
+
+-- What each item does when its swing lands.
+local function batHits(swinger: Player, targets: { Target })
+	for _, target in targets do
+		playBonk(target.player)
+		dropStolenGhost(swinger, target.player, "bonked")
+		local push = target.direction * GameConfig.BatKnockbackSpeed + Vector3.new(0, GameConfig.BatKnockbackLift, 0)
+		RagdollService.knock(target.player, push)
 	end
 end
 
--- Called on the server when a player swings their bat (clicks while it's equipped).
+local function cageHits(swinger: Player, targets: { Target })
+	local target = targets[1] -- only the closest one
+	if not target then
+		return
+	end
+	dropStolenGhost(swinger, target.player, "caged")
+	if CageService.trap(target.player) then
+		Notify.send(target.player, swinger.DisplayName .. " caged you!", "error")
+		Notify.send(swinger, "You caged " .. target.player.DisplayName .. "!", "success")
+	end
+end
+
+local ITEMS = {
+	Bat = { range = GameConfig.BatRange, onHit = batHits },
+	Cage = { range = GameConfig.CageRange, onHit = cageHits },
+}
+
+-- The moment the swing reaches the front.
+local function checkHits(swinger: Player, tool: Tool)
+	local root = getAliveRoot(swinger)
+	-- They may have put the item away, been knocked over, caged, or grabbed a ghost meanwhile.
+	if
+		not root
+		or tool.Parent ~= swinger.Character
+		or RagdollService.isRagdolled(swinger)
+		or CageService.isCaged(swinger)
+		or StealService.getCarry(swinger)
+	then
+		return
+	end
+	local item = ITEMS[tool.Name]
+	item.onHit(swinger, findTargets(swinger, root, item.range))
+end
+
+-- Called on the server when a player clicks while holding an item.
 local function swing(tool: Tool)
 	local character = tool.Parent
 	local swinger = Players:GetPlayerFromCharacter(character)
-	-- Thieves carrying a ghost can't use items (StealService also keeps them from holding one).
-	if not swinger or RagdollService.isRagdolled(swinger) or StealService.getCarry(swinger) then
+	-- Thieves carrying a ghost and caged players can't use items (they can't hold one either).
+	if
+		not swinger
+		or RagdollService.isRagdolled(swinger)
+		or CageService.isCaged(swinger)
+		or StealService.getCarry(swinger)
+	then
 		return
 	end
 	local now = os.clock()
 	if now - (lastSwing[swinger] or 0) < GameConfig.BatSwingCooldown then
 		return
+	end
+	if tool.Name == "Cage" then
+		local readyAt = cageReadyAt[swinger] or 0
+		if now < readyAt then
+			Notify.send(swinger, "Cage ready in " .. math.ceil(readyAt - now) .. "s", "error")
+			return
+		end
+		cageReadyAt[swinger] = now + GameConfig.CageCooldownSeconds
 	end
 	lastSwing[swinger] = now
 
@@ -115,6 +177,17 @@ local function swing(tool: Tool)
 	task.delay(GameConfig.BatHitDelay, checkHits, swinger, tool)
 end
 
+-- Welds `part` to `handle` and adds it to the tool.
+local function addWelded(tool: Tool, handle: BasePart, part: BasePart)
+	part.CanCollide = false
+	part.Massless = true
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = handle
+	weld.Part1 = part
+	weld.Parent = part
+	part.Parent = tool
+end
+
 -- Builds the bat: a thin grip (the Handle, which the hand holds) and a thicker barrel.
 local function buildBat(): Tool
 	local tool = Instance.new("Tool")
@@ -124,8 +197,8 @@ local function buildBat(): Tool
 	tool.CanBeDropped = false -- otherwise Backspace drops it on the ground
 	-- Where the hand holds the grip; the tilt points the bat up instead of straight ahead.
 	tool.Grip = CFrame.new(0, 0, 0.6) * CFrame.Angles(math.rad(-60), 0, 0)
+	tool:SetAttribute("Cooldown", GameConfig.BatSwingCooldown) -- read by BatSwing on the client
 
-	local wood = Color3.fromRGB(150, 100, 60)
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"
 	handle.Size = Vector3.new(0.3, 0.3, 1.6)
@@ -138,19 +211,75 @@ local function buildBat(): Tool
 	local barrel = Instance.new("Part")
 	barrel.Name = "Barrel"
 	barrel.Size = Vector3.new(0.5, 0.5, 2.6)
-	barrel.Color = wood
+	barrel.Color = Color3.fromRGB(150, 100, 60)
 	barrel.Material = Enum.Material.Wood
-	barrel.CanCollide = false
-	barrel.Massless = true
 	-- The barrel sticks out past the grip, away from the hand.
 	barrel.CFrame = handle.CFrame * CFrame.new(0, 0, -(handle.Size.Z + barrel.Size.Z) / 2)
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = handle
-	weld.Part1 = barrel
-	weld.Parent = barrel
-	barrel.Parent = tool
+	addWelded(tool, handle, barrel)
 
 	return tool
+end
+
+-- Builds the handheld cage: an orange ring (the Handle) with a small iron cage hanging below it.
+local function buildCage(): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = "Cage"
+	tool.ToolTip = "Click to swing. Traps the closest player in a cage"
+	tool.TextureId = GameConfig.CageIcon
+	tool.CanBeDropped = false
+	tool:SetAttribute("Cooldown", GameConfig.CageCooldownSeconds) -- read by BatSwing on the client
+
+	local iron = Color3.fromRGB(45, 46, 52)
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.6, 0.2, 0.6)
+	handle.Color = Color3.fromRGB(255, 140, 30)
+	handle.Material = Enum.Material.Neon
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	-- Cage body below the hand: roof, floor and corner/middle bars.
+	local size = Vector3.new(1.4, 1.6, 1.4)
+	local top = handle.CFrame * CFrame.new(0, -0.3, 0)
+	local function piece(partSize: Vector3, offset: Vector3)
+		local part = Instance.new("Part")
+		part.Size = partSize
+		part.Color = iron
+		part.Material = Enum.Material.Metal
+		part.CFrame = top * CFrame.new(offset)
+		addWelded(tool, handle, part)
+	end
+	piece(Vector3.new(size.X, 0.15, size.Z), Vector3.new(0, 0, 0))
+	piece(Vector3.new(size.X, 0.15, size.Z), Vector3.new(0, -size.Y, 0))
+	for _, x in { -1, 0, 1 } do
+		for _, z in { -1, 0, 1 } do
+			if x ~= 0 or z ~= 0 then -- bars around the edge, none in the middle
+				piece(Vector3.new(0.1, size.Y, 0.1), Vector3.new(x * size.X / 2, -size.Y / 2, z * size.Z / 2))
+			end
+		end
+	end
+
+	return tool
+end
+
+-- Gives the cage to an allowed player each time their character spawns. Waits until the bat is
+-- in their current Backpack (loading can take a while), so the cage lands in slot 2.
+local function giveCage(player: Player, character: Model)
+	if not table.find(GameConfig.CageAllowedUserIds, player.UserId) then
+		return
+	end
+	while player.Parent and player.Character == character do
+		local backpack = player:FindFirstChildOfClass("Backpack")
+		local hasBat = backpack and (backpack:FindFirstChild("Bat") or character:FindFirstChild("Bat"))
+		if backpack and hasBat then
+			if not backpack:FindFirstChild("Cage") and not character:FindFirstChild("Cage") then
+				cageTemplate:Clone().Parent = backpack
+			end
+			return
+		end
+		task.wait(0.2)
+	end
 end
 
 function ItemService.start()
@@ -158,10 +287,11 @@ function ItemService.start()
 	-- so the bat comes back after a respawn.
 	local bat = buildBat()
 	bat.Parent = StarterPack
+	cageTemplate = buildCage()
 
-	-- Tool.Activated fires on the server too, so each copy of the bat is wired up here.
+	-- Tool.Activated fires on the server too, so each copy of an item is wired up here.
 	local function onToolAdded(item: Instance)
-		if item:IsA("Tool") and item.Name == "Bat" and not item:GetAttribute("Wired") then
+		if item:IsA("Tool") and ITEMS[item.Name] and not item:GetAttribute("Wired") then
 			item:SetAttribute("Wired", true)
 			item.Activated:Connect(function()
 				swing(item)
@@ -169,26 +299,33 @@ function ItemService.start()
 		end
 	end
 	-- Each spawn gives the player a brand-new Backpack, so watch for those too.
-	local function onBackpack(backpack: Instance)
-		if backpack:IsA("Backpack") then
-			backpack.ChildAdded:Connect(onToolAdded)
-			for _, item in backpack:GetChildren() do
-				onToolAdded(item)
+	local function watchPlayer(player: Player)
+		local function onBackpack(backpack: Instance)
+			if backpack:IsA("Backpack") then
+				backpack.ChildAdded:Connect(onToolAdded)
+				for _, item in backpack:GetChildren() do
+					onToolAdded(item)
+				end
 			end
 		end
-	end
-	local function watchBackpack(player: Player)
 		player.ChildAdded:Connect(onBackpack)
 		for _, child in player:GetChildren() do
 			onBackpack(child)
 		end
+		player.CharacterAdded:Connect(function(character)
+			giveCage(player, character)
+		end)
+		if player.Character then
+			task.spawn(giveCage, player, player.Character)
+		end
 	end
-	Players.PlayerAdded:Connect(watchBackpack)
+	Players.PlayerAdded:Connect(watchPlayer)
 	for _, player in Players:GetPlayers() do
-		watchBackpack(player)
+		watchPlayer(player)
 	end
 	Players.PlayerRemoving:Connect(function(player)
 		lastSwing[player] = nil
+		cageReadyAt[player] = nil
 	end)
 end
 

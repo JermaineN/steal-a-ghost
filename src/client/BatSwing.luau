@@ -1,4 +1,4 @@
--- The bat swing animation, made in code: twists the waist and moves the right arm through a
+-- The swing animation for the Bat and the Cage, made in code: twists the waist and moves the right arm through a
 -- wind-up, the hit, and a follow-through, then back to the normal pose.
 --
 -- Roblox's Animator sets each joint's Transform (its current pose) every frame. Right after it
@@ -84,12 +84,13 @@ end
 
 function BatSwing.start()
 	local player = Players.LocalPlayer
-	local lastSwing = 0
+	local lastSwing = 0 -- any item
+	local lastUse: { [string]: number } = {} -- per item, for its own cooldown
 
-	-- Your own swing plays as soon as you click. The server checks the same cooldown and does
-	-- the actual hitting.
+	-- Your own swing plays as soon as you click. The server checks the same cooldowns and does
+	-- the actual hitting. Swingable items carry a "Cooldown" attribute (set in ItemService).
 	local function onToolAdded(item: Instance)
-		if item:IsA("Tool") and item.Name == "Bat" and not item:GetAttribute("SwingWired") then
+		if item:IsA("Tool") and item:GetAttribute("Cooldown") and not item:GetAttribute("SwingWired") then
 			item:SetAttribute("SwingWired", true) -- only on this device
 			item.Activated:Connect(function()
 				local character = player.Character
@@ -100,10 +101,12 @@ function BatSwing.start()
 					or not humanoid
 					or humanoid:GetState() == Enum.HumanoidStateType.Physics -- knocked over
 					or now - lastSwing < GameConfig.BatSwingCooldown
+					or now - (lastUse[item.Name] or -math.huge) < item:GetAttribute("Cooldown")
 				then
 					return
 				end
 				lastSwing = now
+				lastUse[item.Name] = now
 				BatSwing.play(character)
 			end)
 		end

@@ -63,6 +63,18 @@ return {
 	BatHitSound = { soundId = 137041944943141, volume = 0.8, pitch = 1 }, -- "bonk" (DEGG_20)
 	BatHitImmunitySeconds = 1, -- after getting up, can't be knocked over again for this long
 
+	-- Cage (slot 2, only for the players listed below): swing it like the bat; the closest player
+	-- hit drops any stolen ghost and is frozen inside a cage
+	-- UserIds of who gets the Cage. A UserId is the number in a player's profile link
+	-- (roblox.com/users/<UserId>/profile). Studio test players: Player1 = -1, Player2 = -2.
+	CageAllowedUserIds = {
+		5783726738, -- the game's owner
+	},
+	CageIcon = "rbxassetid://83040114543592", -- hotbar picture (source: assets/cage-icon.png)
+	CageRange = 8, -- studs in front of the swinger that count as a hit
+	CageSeconds = 8, -- how long a caged player stays stuck
+	CageCooldownSeconds = 12, -- after each use (hit or miss) before the cage can be used again
+
 	-- Base lock
 	LockDurationSeconds = 60,
 	LockCooldownSeconds = 10, -- wait time after a lock ends before locking again
