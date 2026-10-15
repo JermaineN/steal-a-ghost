@@ -19,9 +19,41 @@ local GhostService = {}
 -- StealService sets this, so this module doesn't have to require it (that would be a require loop).
 GhostService.onStealPromptTriggered = function(_thief: Player, _owner: Player, _slot: number) end
 
-type Entry = { id: string, model: Model, carried: boolean }
+-- `carried`: a thief is running off with it. `arriving`: just bought, still flying to its grave.
+type Entry = { id: string, model: Model, carried: boolean, arriving: boolean }
 local placed: { [Player]: { [number]: Entry } } = {}
 local walkwayFolder: Folder
+
+-- Turns a model to face `destination` (turning flat, without tilting), then moves it there in a
+-- straight line at `speed` studs per second and calls `onArrived`. A tweened CFrameValue drives
+-- the model (a tween smoothly changes a value over time). Stops quietly if the model is
+-- destroyed first.
+local function flyTo(model: Model, destination: Vector3, speed: number, onArrived: () -> ())
+	local start = model:GetPivot().Position
+	local flat = Vector3.new(destination.X - start.X, 0, destination.Z - start.Z)
+	local facing = if flat.Magnitude > 0.1 then CFrame.lookAt(Vector3.zero, flat) else model:GetPivot().Rotation
+	model:PivotTo(CFrame.new(start) * facing)
+
+	local mover = Instance.new("CFrameValue")
+	mover.Value = model:GetPivot()
+	mover.Changed:Connect(function(cframe)
+		if model.Parent then
+			model:PivotTo(cframe)
+		end
+	end)
+	local info = TweenInfo.new(math.max((destination - start).Magnitude / speed, 0.05), Enum.EasingStyle.Linear)
+	local tween = TweenService:Create(mover, info, { Value = CFrame.new(destination) * facing })
+	tween.Completed:Connect(function(state)
+		mover:Destroy()
+		if state == Enum.PlaybackState.Completed and model.Parent then
+			onArrived()
+		end
+	end)
+	model.Destroying:Connect(function()
+		tween:Cancel()
+	end)
+	tween:Play()
+end
 
 -- `infoLines` are shown under the name: price and income on the walkway, income in a base.
 local function buildModel(def, infoLines: { GhostLabel.InfoLine }): Model
@@ -128,9 +160,11 @@ local function tryBuy(player: Player, def, model: Model)
 		return
 	end
 	model:SetAttribute("Sold", true)
+	local boughtAt = model:GetPivot()
 	model:Destroy()
-	GhostService.placeGhost(player, slot, def.id)
-	Notify.send(player, "You bought " .. def.name .. "!", "success")
+	-- It's yours (and saved) right away, then flies from where you bought it to its grave.
+	GhostService.placeGhost(player, slot, def.id, boughtAt)
+	Notify.send(player, "You bought " .. def.name .. "! It's flying to your base.", "success")
 end
 
 local function spawnWalkwayGhost(startCFrame: CFrame, endCFrame: CFrame)
@@ -148,25 +182,10 @@ local function spawnWalkwayGhost(startCFrame: CFrame, endCFrame: CFrame)
 		tryBuy(player, def, model)
 	end)
 
-	-- Tween a CFrameValue and move the model along with it.
-	local mover = Instance.new("CFrameValue")
-	mover.Value = startCFrame
-	mover.Changed:Connect(function(cframe)
-		if model.Parent then
-			model:PivotTo(cframe)
-		end
-	end)
-	local distance = (endCFrame.Position - startCFrame.Position).Magnitude
-	local tweenInfo = TweenInfo.new(distance / GameConfig.WalkwaySpeed, Enum.EasingStyle.Linear)
-	local tween = TweenService:Create(mover, tweenInfo, { Value = endCFrame })
-	tween.Completed:Connect(function()
-		mover:Destroy()
+	-- Float down the walkway, and vanish at the far end if nobody buys it.
+	flyTo(model, endCFrame.Position, GameConfig.WalkwaySpeed, function()
 		model:Destroy()
 	end)
-	model.Destroying:Connect(function()
-		tween:Cancel()
-	end)
-	tween:Play()
 end
 
 ---------------------------------------------------------------------------
@@ -192,18 +211,36 @@ function GhostService.firstFreeSlot(player: Player): number?
 	return nil
 end
 
--- Cash per second from every ghost in the base (ghosts being carried off don't count).
+-- True when the ghost is sitting on its grave: not being carried off by a thief and not still
+-- flying in after being bought. Only then does it earn, and only then can it be stolen or sold.
+function GhostService.isInBase(entry: Entry): boolean
+	return not entry.carried and not entry.arriving
+end
+
+-- Cash per second from every ghost sitting in the base.
 function GhostService.getIncome(player: Player): number
 	local total = 0
 	for _, entry in placed[player] or {} do
-		if not entry.carried then
+		if GhostService.isInBase(entry) then
 			total += GhostConfig.byId[entry.id].income
 		end
 	end
 	return total
 end
 
-function GhostService.placeGhost(owner: Player, slot: number, ghostId: string)
+-- Where a newly bought ghost flies to: just in front of its base's gate. It flies straight
+-- there over the open ground between the walkway and the bases, so it never crosses a fence,
+-- and then appears on its grave (so it can't clip through the base's walls or tombstones).
+local function arrivalPoint(plot): Vector3
+	local inFront = plot.size / 2 + GameConfig.GhostArrivalSnapDistance
+	return (plot.cframe * CFrame.new(0, 4, -inFront)).Position
+end
+
+-- `arriveFrom`: where the ghost was bought. If given, it flies from there to the front of the
+-- base (see arrivalPoint), then appears on its grave; it can't earn, be stolen or be sold until
+-- then. Otherwise it appears on its grave straight away (loading a saved base, or a thief
+-- delivering a stolen ghost).
+function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, arriveFrom: CFrame?)
 	local plot = PlotService.getPlot(owner)
 	local def = GhostConfig.byId[ghostId]
 	if not plot or not def or not plot.slots[slot] then
@@ -214,7 +251,8 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string)
 	model:SetAttribute("OwnerUserId", owner.UserId)
 	model:SetAttribute("GhostId", ghostId)
 	model:SetAttribute("Carried", false)
-	model:PivotTo(plot.slots[slot])
+	model:SetAttribute("Arriving", arriveFrom ~= nil)
+	model:PivotTo(arriveFrom or plot.slots[slot])
 
 	-- Both prompts exist on every ghost; the client hides the one that doesn't apply to you.
 	-- The server re-checks everything, so a hacked client can't sell someone else's ghost.
@@ -231,9 +269,18 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string)
 	CollectionService:AddTag(model, "PlacedGhost")
 	model.Parent = plot.ghostFolder
 
+	local entry: Entry = { id = ghostId, model = model, carried = false, arriving = arriveFrom ~= nil }
 	placed[owner] = placed[owner] or {}
-	placed[owner][slot] = { id = ghostId, model = model, carried = false }
+	placed[owner][slot] = entry
 	DataService.setGhost(owner, slot, ghostId)
+
+	if arriveFrom then
+		flyTo(model, arrivalPoint(plot), GameConfig.GhostTravelSpeed, function()
+			model:PivotTo(plot.slots[slot])
+			entry.arriving = false
+			model:SetAttribute("Arriving", false)
+		end)
+	end
 end
 
 function GhostService.removeGhost(owner: Player, slot: number)
@@ -251,7 +298,7 @@ function GhostService.trySell(player: Player, owner: Player, slot: number)
 		return
 	end
 	local entry = GhostService.getEntry(owner, slot)
-	if not entry or entry.carried then
+	if not entry or not GhostService.isInBase(entry) then
 		return
 	end
 	local def = GhostConfig.byId[entry.id]

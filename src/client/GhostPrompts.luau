@@ -15,13 +15,15 @@ local function setup(model: Model)
 		return
 	end
 
+	-- No buttons while the ghost is being carried off or is still flying in after being bought.
 	local function update()
 		local mine = model:GetAttribute("OwnerUserId") == player.UserId
-		local carried = model:GetAttribute("Carried") == true
-		steal.Enabled = not mine and not carried
-		sell.Enabled = mine and not carried
+		local busy = model:GetAttribute("Carried") == true or model:GetAttribute("Arriving") == true
+		steal.Enabled = not mine and not busy
+		sell.Enabled = mine and not busy
 	end
 	model:GetAttributeChangedSignal("Carried"):Connect(update)
+	model:GetAttributeChangedSignal("Arriving"):Connect(update)
 	update()
 end
 

@@ -22,6 +22,11 @@ return {
 	-- Walkway shop (ghosts float past and players buy them)
 	WalkwaySpawnInterval = 2.5, -- seconds between new ghosts
 	WalkwaySpeed = 10, -- studs per second
+	-- A bought ghost flies from the walkway toward its owner's base, facing where it's going.
+	-- Once it reaches the front of the base it appears on its grave. It can't earn, be stolen
+	-- or be sold until then.
+	GhostTravelSpeed = 12, -- studs per second (a third of the old 35)
+	GhostArrivalSnapDistance = 6, -- studs in front of the base's gate where it appears on its grave
 	-- Testing only, ONLY when playing in Studio (live servers ignore it): true makes every ghost
 	-- equally likely to spawn and halves the spawn interval. Set to false for normal rates.
 	StudioBoostSpawns = false,

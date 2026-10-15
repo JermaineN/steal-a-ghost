@@ -136,7 +136,7 @@ function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
 	end
 	local entry = GhostService.getEntry(owner, slot)
 	local ownerPlot = PlotService.getPlot(owner)
-	if not entry or entry.carried or not ownerPlot then
+	if not entry or not GhostService.isInBase(entry) or not ownerPlot then
 		return
 	end
 	if PlotService.isLocked(ownerPlot) then

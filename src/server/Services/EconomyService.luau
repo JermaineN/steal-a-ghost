@@ -93,7 +93,7 @@ local function incomeTick()
 		local income = 0
 		for slot = 1, if plot then #plot.slots else 0 do
 			local entry = GhostService.getEntry(player, slot)
-			if entry and not entry.carried then
+			if entry and GhostService.isInBase(entry) then
 				local slotIncome = GhostConfig.byId[entry.id].income
 				income += slotIncome
 				DataService.addStored(player, slot, slotIncome * GameConfig.IncomeTickSeconds)
