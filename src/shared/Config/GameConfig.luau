@@ -31,6 +31,14 @@ return {
 	-- bidding). Each re-buy costs this much more of the ghost's original price than the last
 	-- ($100 -> $150 -> $200 ...), and whoever loses the ghost gets back what they paid.
 	RepurchaseMarkup = 0.5,
+
+	-- Banner across the top of everyone's screen when a top-rarity ghost spawns on the walkway
+	-- (gold for Legendary, a bigger rainbow one for Mythic). Sounds are free Creator Store audio
+	-- (the Mythic one is a Roblox-licensed APM Music track); swap the IDs for any other audio.
+	RareSpawnAnnouncements = {
+		Legendary = { soundId = 104000340117740, volume = 0.6, seconds = 4 }, -- "Notification Chime"
+		Mythic = { soundId = 9047100306, volume = 0.6, seconds = 6 }, -- "Hustler Sting 2"
+	},
 	-- Testing only, ONLY when playing in Studio (live servers ignore it): true makes every ghost
 	-- equally likely to spawn and halves the spawn interval. Set to false for normal rates.
 	StudioBoostSpawns = false,

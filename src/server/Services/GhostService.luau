@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
+local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local GhostLabel = require(script.Parent.Parent.Util.GhostLabel)
 local Notify = require(script.Parent.Parent.Util.Notify)
@@ -188,6 +189,11 @@ local function spawnWalkwayGhost(startCFrame: CFrame, endCFrame: CFrame)
 	})
 	model:PivotTo(startCFrame)
 	model.Parent = walkwayFolder
+
+	-- Everyone gets a banner when a top-rarity ghost appears (client RareSpawnBanner).
+	if GameConfig.RareSpawnAnnouncements[def.rarity] then
+		Remotes.RareSpawn:FireAllClients(def.id)
+	end
 
 	local buyText = def.name .. " ($" .. Format.cash(def.price) .. ")"
 	local prompt = makePrompt(model.PrimaryPart, "BuyPrompt", "Buy", buyText, 0.25)
