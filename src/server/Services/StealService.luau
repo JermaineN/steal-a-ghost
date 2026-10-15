@@ -1,5 +1,7 @@
 -- Stealing: grab a ghost from someone else's base and carry it back to yours.
 -- The steal fails if the thief dies, gets hit with a bat (ItemService), or the base locks with them inside.
+-- While carrying, the thief can't jump or hold items, and their device hides the hotbar (CarryControls
+-- reads the "Carrying" attribute set here).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -18,7 +20,10 @@ type Carry = {
 	welds: { WeldConstraint },
 	humanoid: Humanoid,
 	originalSpeed: number,
+	originalJumpPower: number,
+	originalJumpHeight: number,
 	diedConnection: RBXScriptConnection,
+	toolConnection: RBXScriptConnection,
 }
 local carries: { [Player]: Carry } = {}
 local cooldownUntil: { [Player]: number } = {}
@@ -72,7 +77,7 @@ local function attach(model: Model, root: BasePart): { WeldConstraint }
 	return welds
 end
 
--- Stops the carry (removes welds, restores speed). Returns the carry info, or nil if there was none.
+-- Stops the carry (removes welds, restores speed, jumping and items). Returns the carry info, or nil if there was none.
 local function endCarry(thief: Player): Carry?
 	local carry = carries[thief]
 	if not carry then
@@ -84,9 +89,13 @@ local function endCarry(thief: Player): Carry?
 		weld:Destroy()
 	end
 	carry.diedConnection:Disconnect()
+	carry.toolConnection:Disconnect()
 	if carry.humanoid.Parent then
 		carry.humanoid.WalkSpeed = carry.originalSpeed
+		carry.humanoid.JumpPower = carry.originalJumpPower
+		carry.humanoid.JumpHeight = carry.originalJumpHeight
 	end
+	thief:SetAttribute("Carrying", nil)
 	return carry
 end
 
@@ -155,6 +164,9 @@ function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
 
 	entry.carried = true
 	entry.model:SetAttribute("Carried", true)
+	-- Put away whatever they're holding, and keep putting it away if they try to equip something.
+	humanoid:UnequipTools()
+	local character = humanoid.Parent :: Model
 	local carry: Carry = {
 		owner = owner,
 		slot = slot,
@@ -162,12 +174,26 @@ function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
 		welds = attach(entry.model, root),
 		humanoid = humanoid,
 		originalSpeed = humanoid.WalkSpeed,
+		originalJumpPower = humanoid.JumpPower,
+		originalJumpHeight = humanoid.JumpHeight,
 		diedConnection = humanoid.Died:Connect(function()
 			StealService.returnGhost(thief, "You dropped the ghost!")
+		end),
+		-- Equipping a tool moves it into the character.
+		toolConnection = character.ChildAdded:Connect(function(child)
+			if child:IsA("Tool") then
+				task.defer(function()
+					humanoid:UnequipTools()
+				end)
+			end
 		end),
 	}
 	carries[thief] = carry
 	humanoid.WalkSpeed = GameConfig.CarryWalkSpeed
+	-- Jump strength 0 = no jumping (whichever of the two settings the character uses).
+	humanoid.JumpPower = 0
+	humanoid.JumpHeight = 0
+	thief:SetAttribute("Carrying", true)
 
 	local def = GhostConfig.byId[entry.id]
 	Notify.send(thief, "Run back to your base!", "info")

@@ -66,7 +66,12 @@ end
 local function checkHits(swinger: Player, tool: Tool)
 	local root = getAliveRoot(swinger)
 	-- They may have put the bat away or been knocked over during the wind-up.
-	if not root or tool.Parent ~= swinger.Character or RagdollService.isRagdolled(swinger) then
+	if
+		not root
+		or tool.Parent ~= swinger.Character
+		or RagdollService.isRagdolled(swinger)
+		or StealService.getCarry(swinger)
+	then
 		return
 	end
 	for _, target in Players:GetPlayers() do
@@ -90,7 +95,8 @@ end
 local function swing(tool: Tool)
 	local character = tool.Parent
 	local swinger = Players:GetPlayerFromCharacter(character)
-	if not swinger or RagdollService.isRagdolled(swinger) then
+	-- Thieves carrying a ghost can't use items (StealService also keeps them from holding one).
+	if not swinger or RagdollService.isRagdolled(swinger) or StealService.getCarry(swinger) then
 		return
 	end
 	local now = os.clock()
