@@ -35,6 +35,7 @@ local function onPlayerAdded(player: Player)
 		task.spawn(applyWalkSpeed, player.Character)
 	end
 	PlotService.playerAdded(player)
+	LockService.playerAdded(player)
 	if DataService.playerAdded(player) then
 		GhostService.loadGhosts(player)
 	end
