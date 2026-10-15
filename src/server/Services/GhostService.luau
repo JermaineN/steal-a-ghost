@@ -20,7 +20,20 @@ local GhostService = {}
 GhostService.onStealPromptTriggered = function(_thief: Player, _owner: Player, _slot: number) end
 
 -- `carried`: a thief is running off with it. `arriving`: just bought, still flying to its grave.
-type Entry = { id: string, model: Model, carried: boolean, arriving: boolean }
+-- `paid` and `buyCount` only matter while arriving: what the owner paid (refunded if someone
+-- re-buys it), and how many times it has been re-bought so far (sets the next re-buy price).
+type Entry = {
+	id: string,
+	model: Model,
+	carried: boolean,
+	arriving: boolean,
+	paid: number,
+	buyCount: number,
+}
+
+-- A ghost that was just bought: where it was bought, what the buyer paid, and how many times it
+-- has been re-bought in flight (0 for a first purchase from the walkway).
+type Arrival = { from: CFrame, paid: number, buyCount: number }
 local placed: { [Player]: { [number]: Entry } } = {}
 local walkwayFolder: Folder
 
@@ -163,7 +176,7 @@ local function tryBuy(player: Player, def, model: Model)
 	local boughtAt = model:GetPivot()
 	model:Destroy()
 	-- It's yours (and saved) right away, then flies from where you bought it to its grave.
-	GhostService.placeGhost(player, slot, def.id, boughtAt)
+	GhostService.placeGhost(player, slot, def.id, { from = boughtAt, paid = def.price, buyCount = 0 })
 	Notify.send(player, "You bought " .. def.name .. "! It's flying to your base.", "success")
 end
 
@@ -236,11 +249,18 @@ local function arrivalPoint(plot): Vector3
 	return (plot.cframe * CFrame.new(0, 4, -inFront)).Position
 end
 
--- `arriveFrom`: where the ghost was bought. If given, it flies from there to the front of the
--- base (see arrivalPoint), then appears on its grave; it can't earn, be stolen or be sold until
--- then. Otherwise it appears on its grave straight away (loading a saved base, or a thief
+-- What it costs to buy a ghost that has already been bought `buyCount` times in flight: the
+-- original price plus RepurchaseMarkup of it for each one ($100 -> $150 -> $200 ...).
+local function rebuyPrice(def, buyCount: number): number
+	return math.floor(def.price * (1 + GameConfig.RepurchaseMarkup * buyCount))
+end
+
+-- `arrival`: the ghost was just bought (see Arrival). It flies from where it was bought to the
+-- front of the base (see arrivalPoint), then appears on its grave; until then it can't earn, be
+-- stolen or be sold, but anyone else can buy it out from under the owner (see tryRebuy).
+-- Without `arrival` it appears on its grave straight away (loading a saved base, or a thief
 -- delivering a stolen ghost).
-function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, arriveFrom: CFrame?)
+function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, arrival: Arrival?)
 	local plot = PlotService.getPlot(owner)
 	local def = GhostConfig.byId[ghostId]
 	if not plot or not def or not plot.slots[slot] then
@@ -251,8 +271,8 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, a
 	model:SetAttribute("OwnerUserId", owner.UserId)
 	model:SetAttribute("GhostId", ghostId)
 	model:SetAttribute("Carried", false)
-	model:SetAttribute("Arriving", arriveFrom ~= nil)
-	model:PivotTo(arriveFrom or plot.slots[slot])
+	model:SetAttribute("Arriving", arrival ~= nil)
+	model:PivotTo(if arrival then arrival.from else plot.slots[slot])
 
 	-- Both prompts exist on every ghost; the client hides the one that doesn't apply to you.
 	-- The server re-checks everything, so a hacked client can't sell someone else's ghost.
@@ -266,21 +286,80 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, a
 		GhostService.trySell(player, owner, slot)
 	end)
 
+	local entry: Entry = {
+		id = ghostId,
+		model = model,
+		carried = false,
+		arriving = arrival ~= nil,
+		paid = if arrival then arrival.paid else 0,
+		buyCount = if arrival then arrival.buyCount else 0,
+	}
+
+	-- While it flies, everyone else sees "Buy for $X" (the next re-buy price).
+	local rebuyPrompt
+	if arrival then
+		local price = rebuyPrice(def, entry.buyCount + 1)
+		rebuyPrompt = makePrompt(model.PrimaryPart, "RebuyPrompt", "Buy for $" .. Format.cash(price), def.name, 0.25)
+		rebuyPrompt.Triggered:Connect(function(buyer)
+			GhostService.tryRebuy(buyer, owner, slot, entry)
+		end)
+	end
+
 	CollectionService:AddTag(model, "PlacedGhost")
 	model.Parent = plot.ghostFolder
 
-	local entry: Entry = { id = ghostId, model = model, carried = false, arriving = arriveFrom ~= nil }
 	placed[owner] = placed[owner] or {}
 	placed[owner][slot] = entry
 	DataService.setGhost(owner, slot, ghostId)
 
-	if arriveFrom then
+	if arrival then
 		flyTo(model, arrivalPoint(plot), GameConfig.GhostTravelSpeed, function()
 			model:PivotTo(plot.slots[slot])
 			entry.arriving = false
 			model:SetAttribute("Arriving", false)
+			rebuyPrompt:Destroy() -- it's home; from now on it can only be stolen
 		end)
 	end
+end
+
+-- `buyer` takes a ghost that's still flying to `owner`'s base, paying the next re-buy price.
+-- The owner gets back what they paid, and the ghost turns and flies to the buyer's base instead.
+-- `entry` is the flight the buyer saw, so a stale button (it already landed, or someone else
+-- re-bought it first) does nothing.
+function GhostService.tryRebuy(buyer: Player, owner: Player, slot: number, entry: Entry)
+	if buyer == owner or GhostService.getEntry(owner, slot) ~= entry or not entry.arriving then
+		return
+	end
+	if not PlotService.getPlot(buyer) or not DataService.isLoaded(buyer) then
+		return
+	end
+	local def = GhostConfig.byId[entry.id]
+	local newSlot = GhostService.firstFreeSlot(buyer)
+	if not newSlot then
+		Notify.send(buyer, "Your base is full! Sell a ghost to make room.", "error")
+		return
+	end
+	local buyCount = entry.buyCount + 1
+	local price = rebuyPrice(def, buyCount)
+	if not DataService.spendCash(buyer, price) then
+		Notify.send(buyer, "Not enough cash for " .. def.name .. " ($" .. Format.cash(price) .. ").", "error")
+		return
+	end
+
+	local from = entry.model:GetPivot()
+	GhostService.removeGhost(owner, slot)
+	DataService.addCash(owner, entry.paid)
+	GhostService.placeGhost(buyer, newSlot, entry.id, { from = from, paid = price, buyCount = buyCount })
+
+	local outbid = rebuyPrice(def, buyCount + 1)
+	Notify.send(buyer, `You bought {def.name} for ${Format.cash(price)}! It's flying to your base.`, "success")
+	Notify.send(
+		owner,
+		`{buyer.DisplayName} outbid you for {def.name}! You got ${Format.cash(entry.paid)} back. Buy it back for ${Format.cash(
+			outbid
+		)}.`,
+		"error"
+	)
 end
 
 function GhostService.removeGhost(owner: Player, slot: number)

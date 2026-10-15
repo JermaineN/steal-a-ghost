@@ -25,8 +25,12 @@ return {
 	-- A bought ghost flies from the walkway toward its owner's base, facing where it's going.
 	-- Once it reaches the front of the base it appears on its grave. It can't earn, be stolen
 	-- or be sold until then.
-	GhostTravelSpeed = 12, -- studs per second (a third of the old 35)
+	GhostTravelSpeed = 8, -- studs per second; slow enough that other players can catch it and bid
 	GhostArrivalSnapDistance = 6, -- studs in front of the base's gate where it appears on its grave
+	-- While a ghost is flying to its base, anyone else can buy it out from under the buyer (like
+	-- bidding). Each re-buy costs this much more of the ghost's original price than the last
+	-- ($100 -> $150 -> $200 ...), and whoever loses the ghost gets back what they paid.
+	RepurchaseMarkup = 0.5,
 	-- Testing only, ONLY when playing in Studio (live servers ignore it): true makes every ghost
 	-- equally likely to spawn and halves the spawn interval. Set to false for normal rates.
 	StudioBoostSpawns = false,

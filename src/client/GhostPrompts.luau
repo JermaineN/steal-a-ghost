@@ -15,12 +15,20 @@ local function setup(model: Model)
 		return
 	end
 
-	-- No buttons while the ghost is being carried off or is still flying in after being bought.
+	-- Only on a ghost still flying to its base after being bought (see server GhostService).
+	local rebuy = body:FindFirstChild("RebuyPrompt") :: ProximityPrompt?
+
+	-- No Steal/Sell while the ghost is being carried off or is still flying in after being
+	-- bought; while it flies, everyone but its owner can buy it out from under them instead.
 	local function update()
 		local mine = model:GetAttribute("OwnerUserId") == player.UserId
-		local busy = model:GetAttribute("Carried") == true or model:GetAttribute("Arriving") == true
+		local arriving = model:GetAttribute("Arriving") == true
+		local busy = model:GetAttribute("Carried") == true or arriving
 		steal.Enabled = not mine and not busy
 		sell.Enabled = mine and not busy
+		if rebuy and rebuy.Parent then
+			rebuy.Enabled = not mine and arriving
+		end
 	end
 	model:GetAttributeChangedSignal("Carried"):Connect(update)
 	model:GetAttributeChangedSignal("Arriving"):Connect(update)
