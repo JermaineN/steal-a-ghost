@@ -1,5 +1,5 @@
 -- On-screen HUD: a big outlined cash number in the bottom-left (it counts up, pops, and big
--- gains/spends float a "+$X" / "-$X" off it) with the income under it, and sliding toasts.
+-- gains/spends float a "+$X" / "-$X" off it) with the income under it, and pop-up messages.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -12,18 +12,21 @@ local player = Players.LocalPlayer
 
 local Hud = {}
 
-local PANEL_DARK = Color3.fromRGB(28, 16, 44)
-local PANEL_LIGHT = Color3.fromRGB(62, 34, 92)
 local CASH_GREEN = Theme.MoneyGreen
 local SPEND_RED = Theme.SpendRed
 
+-- Pop-up messages ("You bought Boo!", "Outbid!"): big rounded text with a dark outline,
+-- no box, in the lower middle of the screen. Colour shows the kind of message, and dollar
+-- amounts stand out in their own colour.
 local TOAST_STYLES = {
-	info = { color = Color3.fromRGB(190, 140, 255), icon = "i" },
-	success = { color = Color3.fromRGB(110, 240, 140), icon = "+" },
-	error = { color = Color3.fromRGB(255, 95, 95), icon = "!" },
+	success = { color = Color3.fromRGB(130, 255, 100), money = Color3.fromRGB(255, 225, 60) },
+	error = { color = Color3.fromRGB(255, 95, 95), money = Color3.fromRGB(130, 255, 100) },
+	info = { color = Color3.fromRGB(255, 225, 90), money = Color3.fromRGB(130, 255, 100) },
 }
+local TOAST_FONT = Enum.Font.FredokaOne -- rounded and bold
+local TOAST_TEXT_SIZE = 40
 local MAX_TOASTS = 4
-local TOAST_SECONDS = 3.5
+local TOAST_SECONDS = 3
 
 -- Builds an instance from a table of properties, e.g. new("Frame", { Size = ..., Parent = ... }).
 local function new(className: string, props: { [string]: any }): any
@@ -36,24 +39,6 @@ local function new(className: string, props: { [string]: any }): any
 	end
 	instance.Parent = parent
 	return instance
-end
-
-local function corner(parent: Instance, radius: number)
-	new("UICorner", { CornerRadius = UDim.new(0, radius), Parent = parent })
-end
-
-local function stroke(parent: Instance, color: Color3, thickness: number, transparency: number?)
-	return new("UIStroke", {
-		Color = color,
-		Thickness = thickness,
-		Transparency = transparency or 0,
-		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-		Parent = parent,
-	})
-end
-
-local function gradient(parent: Instance, top: Color3, bottom: Color3)
-	new("UIGradient", { Color = ColorSequence.new(top, bottom), Rotation = 90, Parent = parent })
 end
 
 -- Text with a dark outline so it stays readable over any background.
@@ -142,20 +127,49 @@ local function floatAmount(display: Frame, amount: number)
 	rise:Play()
 end
 
+-- Makes a message safe for rich text (so a "<" in a name can't break it), then colours every
+-- dollar amount ("$37", "$1.50K"). A full stop right after an amount stays uncoloured.
+local function toastRichText(message: string, moneyColor: Color3): string
+	local escaped = message:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
+	local hex = moneyColor:ToHex()
+	return (
+		escaped:gsub("%$%d[%d%.]*%a*", function(amount)
+			local body, fullStop = amount:match("^(.-)(%.?)$")
+			return `<font color="#{hex}">{body}</font>{fullStop}`
+		end)
+	)
+end
+
+-- Shrinks the messages on small (phone) screens.
+local function scaleToScreen(scale: UIScale)
+	local function update()
+		local camera = workspace.CurrentCamera
+		local height = if camera then camera.ViewportSize.Y else 900
+		scale.Scale = math.clamp(height / 800, 0.6, 1)
+	end
+	update()
+	if workspace.CurrentCamera then
+		workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(update)
+	end
+end
+
 local function buildToasts(gui: ScreenGui)
 	local toasts = new("Frame", {
 		Name = "Toasts",
 		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -110),
-		Size = UDim2.fromOffset(420, 200),
+		Position = UDim2.new(0.5, 0, 0.76, 0),
+		Size = UDim2.new(0.9, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
 		Parent = gui,
 	})
+	new("UISizeConstraint", { MaxSize = Vector2.new(760, math.huge), Parent = toasts })
+	scaleToScreen(new("UIScale", { Parent = toasts }))
+	-- Newest message at the bottom; older ones move up.
 	new("UIListLayout", {
 		SortOrder = Enum.SortOrder.LayoutOrder,
-		VerticalAlignment = Enum.VerticalAlignment.Bottom,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		Padding = UDim.new(0, 6),
+		Padding = UDim.new(0, 2),
 		Parent = toasts,
 	})
 
@@ -164,47 +178,29 @@ local function buildToasts(gui: ScreenGui)
 		local style = TOAST_STYLES[kind] or TOAST_STYLES.info
 		toastCount += 1
 
-		-- The list layout positions this holder; the card inside it slides in from below.
+		-- The list layout positions this holder; the text inside it pops in and floats away.
 		local holder = new("Frame", {
-			Size = UDim2.new(1, 0, 0, 40),
+			Size = UDim2.fromScale(1, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
 			LayoutOrder = toastCount,
 			BackgroundTransparency = 1,
 			Parent = toasts,
 		})
-		local card = new("CanvasGroup", {
-			Position = UDim2.fromOffset(0, 24),
-			Size = UDim2.fromScale(1, 1),
-			BackgroundColor3 = Color3.new(1, 1, 1),
-			GroupTransparency = 1,
+		local label = new("TextLabel", {
+			Size = UDim2.fromScale(1, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			BackgroundTransparency = 1,
+			Font = TOAST_FONT,
+			TextSize = TOAST_TEXT_SIZE,
+			TextWrapped = true,
+			RichText = true,
+			TextColor3 = style.color,
+			Text = toastRichText(message, style.money),
+			Rotation = if math.random() < 0.5 then -6 else 6,
 			Parent = holder,
 		})
-		corner(card, 12)
-		gradient(card, PANEL_LIGHT, PANEL_DARK)
-		stroke(card, style.color, 2)
-
-		local badge = new("Frame", {
-			AnchorPoint = Vector2.new(0, 0.5),
-			Position = UDim2.new(0, 6, 0.5, 0),
-			Size = UDim2.fromOffset(28, 28),
-			BackgroundColor3 = style.color,
-			Parent = card,
-		})
-		corner(badge, 14)
-		text({
-			Text = style.icon,
-			Size = UDim2.fromScale(1, 1),
-			TextColor3 = PANEL_DARK,
-			TextStrokeTransparency = 1,
-			Parent = badge,
-		})
-		text({
-			Position = UDim2.fromOffset(42, 7),
-			Size = UDim2.new(1, -52, 1, -14),
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextColor3 = Color3.new(1, 1, 1),
-			Text = message,
-			Parent = card,
-		})
+		local labelOutline = outline(label, 3.5)
+		local pop = new("UIScale", { Scale = 0.2, Parent = label })
 
 		-- Keep only the newest few.
 		local holders = {}
@@ -220,15 +216,22 @@ local function buildToasts(gui: ScreenGui)
 			holders[index]:Destroy()
 		end
 
-		TweenService:Create(card, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-			Position = UDim2.fromOffset(0, 0),
-			GroupTransparency = 0,
-		}):Play()
+		-- Pop in: grow past full size with a bounce, straightening out the tilt.
+		local bounce = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		TweenService:Create(pop, bounce, { Scale = 1 }):Play()
+		TweenService:Create(label, bounce, { Rotation = 0 }):Play()
+
+		-- Then float up and fade away.
 		task.delay(TOAST_SECONDS, function()
-			if not card.Parent then
+			if not label.Parent then
 				return
 			end
-			local fade = TweenService:Create(card, TweenInfo.new(0.4), { GroupTransparency = 1 })
+			local away = TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			TweenService:Create(labelOutline, away, { Transparency = 1 }):Play()
+			local fade = TweenService:Create(label, away, {
+				Position = UDim2.fromOffset(0, -24),
+				TextTransparency = 1,
+			})
 			fade.Completed:Connect(function()
 				holder:Destroy()
 			end)
