@@ -140,7 +140,8 @@ local function deliver(thief: Player)
 end
 
 function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
-	if thief == owner or carries[thief] or os.clock() < (cooldownUntil[thief] or 0) then
+	-- Caged players (CageService) can't steal.
+	if thief == owner or carries[thief] or thief:GetAttribute("Caged") or os.clock() < (cooldownUntil[thief] or 0) then
 		return
 	end
 	local entry = GhostService.getEntry(owner, slot)
