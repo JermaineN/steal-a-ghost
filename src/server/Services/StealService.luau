@@ -1,5 +1,5 @@
 -- Stealing: grab a ghost from someone else's base and carry it back to yours.
--- The steal fails if the thief dies, the owner catches them, or the base locks with them inside.
+-- The steal fails if the thief dies, gets hit with a bat (ItemService), or the base locks with them inside.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -171,7 +171,7 @@ function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
 
 	local def = GhostConfig.byId[entry.id]
 	Notify.send(thief, "Run back to your base!", "info")
-	Notify.send(owner, thief.DisplayName .. " is stealing your " .. def.name .. "! Catch them!", "error")
+	Notify.send(owner, thief.DisplayName .. " is stealing your " .. def.name .. "! Hit them with your bat!", "error")
 end
 
 function StealService.playerRemoving(player: Player)
@@ -188,7 +188,7 @@ function StealService.playerRemoving(player: Player)
 end
 
 local function checkCarries()
-	for thief, carry in carries do
+	for thief in carries do
 		local root = getAliveRoot(thief)
 		if not root then
 			StealService.returnGhost(thief, "You dropped the ghost!")
@@ -198,13 +198,6 @@ local function checkCarries()
 		local thiefPlot = PlotService.getPlot(thief)
 		if thiefPlot and PlotService.isInside(thiefPlot, root.Position) then
 			deliver(thief)
-			continue
-		end
-
-		local ownerRoot = getAliveRoot(carry.owner)
-		if ownerRoot and (ownerRoot.Position - root.Position).Magnitude <= GameConfig.TagDistance then
-			StealService.returnGhost(thief, carry.owner.DisplayName .. " caught you!")
-			Notify.send(carry.owner, "You got your ghost back!", "success")
 		end
 	end
 end

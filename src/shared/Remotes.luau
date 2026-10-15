@@ -7,6 +7,8 @@ local EVENT_NAMES = {
 	"Notify", -- server -> client: show a message toast (message, kind)
 	"CashCollected", -- server -> the pad's owner only: they collected a collect pad (pad)
 	"RareSpawn", -- server -> all clients: a Legendary/Mythic ghost spawned (ghostId)
+	"BatSwing", -- server -> every client except the swinger: play this character's swing (character)
+	"Ragdoll", -- server -> the hit player only: go floppy (true, knockback velocity) or get up (false)
 }
 
 local folder
