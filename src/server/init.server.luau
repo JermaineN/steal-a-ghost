@@ -12,6 +12,8 @@ local GhostService = require(Services.GhostService)
 local StealService = require(Services.StealService)
 local LockService = require(Services.LockService)
 local EconomyService = require(Services.EconomyService)
+local RagdollService = require(Services.RagdollService)
+local ItemService = require(Services.ItemService)
 
 local map = MapBuilder.build()
 PlotService.start(map.plots)
@@ -20,6 +22,8 @@ GhostService.start(map)
 StealService.start()
 LockService.start(map.plots)
 EconomyService.start(map.plots)
+RagdollService.start()
+ItemService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).
 local function applyWalkSpeed(character: Model)

@@ -48,8 +48,20 @@ return {
 	-- Walk speeds in studs per second (Roblox's default is 16).
 	WalkSpeed = 24.5, -- increased from the default
 	CarryWalkSpeed = 13, -- decreased from the default, while carrying a stolen ghost
-	TagDistance = 6, -- owner this close to the thief = ghost goes home
 	StealCooldownSeconds = 3, -- after a failed steal
+
+	-- Bat (every player's slot-1 item): hitting a player knocks them over; hitting a thief also
+	-- sends the stolen ghost home
+	BatIcon = "rbxassetid://81006760675555", -- hotbar picture (source: assets/bat-icon.png)
+	BatRange = 8, -- studs in front of the swinger that count as a hit
+	BatSwingCooldown = 0.7, -- seconds between swings (the swing animation lasts about this long)
+	BatHitDelay = 0.22, -- seconds from click to the bat reaching the front (matches the animation)
+	BatKnockbackSpeed = 5, -- sideways push away from the swinger, in studs per second (5 lands about 4 studs back)
+	BatKnockbackLift = 60, -- upward launch in studs per second (60 flies them about 9 studs up)
+	BatKnockbackSpin = 6, -- tumble while flying, in radians per second
+	BatRagdollSeconds = 3.5, -- how long a hit player stays floppy (in the air and on the ground)
+	BatHitSound = { soundId = 137041944943141, volume = 0.8, pitch = 1 }, -- "bonk" (DEGG_20)
+	BatHitImmunitySeconds = 1, -- after getting up, can't be knocked over again for this long
 
 	-- Base lock
 	LockDurationSeconds = 60,
