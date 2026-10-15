@@ -1,27 +1,14 @@
 -- The floating text above each ghost (no card or border): its name, its rarity in the rarity's
 -- colour (gold for Legendary, rainbow for Mythic), and lines of info (price and income on the
 -- walkway, income in a base). Text has a thick black outline so it reads over anything.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextService = game:GetService("TextService")
+
+local Theme = require(ReplicatedStorage.Shared.Theme)
 
 local GhostLabel = {}
 
 local RARITY_TEXT_SIZE = 21
-
--- Special text colours for the top rarities; the rest use their rarity colour.
-local RARITY_GRADIENTS = {
-	Legendary = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 240, 150)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 190, 40)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 240, 150)),
-	}),
-	Mythic = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 90, 110)),
-		ColorSequenceKeypoint.new(0.25, Color3.fromRGB(255, 200, 80)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 255, 150)),
-		ColorSequenceKeypoint.new(0.75, Color3.fromRGB(110, 170, 255)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 120, 255)),
-	}),
-}
 
 local function textLabel(parent: Instance, props: { [string]: any }): TextLabel
 	local label = Instance.new("TextLabel")
@@ -77,7 +64,7 @@ function GhostLabel.create(adornee: BasePart, def, rarity, infoLines: { InfoLine
 	-- Rarity: the word itself in the rarity's colour, with a black outline.
 	-- A UIGradient on a TextLabel tints the text, so gradient rarities start from white text.
 	-- The label is sized to the word so a gradient spans exactly the letters.
-	local gradientColors = RARITY_GRADIENTS[def.rarity]
+	local gradientColors = Theme.RarityGradients[def.rarity]
 	local rarityText = string.upper(def.rarity)
 	local textWidth =
 		TextService:GetTextSize(rarityText, RARITY_TEXT_SIZE, Enum.Font.FredokaOne, Vector2.new(1000, 100)).X

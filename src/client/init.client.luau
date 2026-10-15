@@ -1,11 +1,13 @@
 -- Client entry point.
 local Hud = require(script.UI.Hud)
+local RareSpawnBanner = require(script.UI.RareSpawnBanner)
 local GhostPrompts = require(script.GhostPrompts)
 local GhostAnimation = require(script.GhostAnimation)
 local MusicPlayer = require(script.MusicPlayer)
 local CollectEffect = require(script.CollectEffect)
 
 Hud.start()
+RareSpawnBanner.start()
 GhostPrompts.start()
 GhostAnimation.start()
 MusicPlayer.start()
