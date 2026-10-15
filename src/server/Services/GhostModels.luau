@@ -8,7 +8,13 @@
 -- so one piece could be removed). They can't live in git, so they're saved with the place
 -- file. If one is missing, the ghost falls back to the simple look instead of breaking.
 local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
+
+local Theme = require(ReplicatedStorage.Shared.Theme)
+
+-- Roblox's built-in four-pointed sparkle, for star-shaped particles.
+local SPARKLE_TEXTURE = "rbxasset://textures/particles/sparkles_main.dds"
 
 local GhostModels = {}
 
@@ -287,7 +293,8 @@ end
 -- Spectre King: the rarest ghost. A chunky blue spectral king with a ghostly beard, a jewelled
 -- gold crown, a crimson tunic, a fur-trimmed royal cape, a sceptre and golden boots.
 -- Much bigger than the other ghosts, fully solid, glowing gold, and it waddles as if
--- walking (the client's walk animation) instead of the usual float.
+-- walking (the client's walk animation) instead of the usual float. Gold dust, twinkling stars
+-- and a few rainbow stars give it a mythic sparkle without hiding the model.
 function GhostModels.spectre_king(model: Model, body: BasePart, def): number?
 	local heightScale = 1.5
 	-- Ghosts float with their centre 4 studs up; lift the King so his boots stay above the ground.
@@ -306,18 +313,58 @@ function GhostModels.spectre_king(model: Model, body: BasePart, def): number?
 		light.Range = def.size * 3
 	end
 
-	-- Royal gold sparkles drifting off him.
+	-- He's much bigger than the other ghosts, so his particles are sized up to match.
+	-- Royal gold dust drifting off him.
 	local sparkles = Instance.new("ParticleEmitter")
 	sparkles.Color = ColorSequence.new(Color3.fromRGB(255, 245, 200), gold)
 	sparkles.LightEmission = 1
-	sparkles.Size = NumberSequence.new(0.3, 0)
+	sparkles.Size = NumberSequence.new(0.5, 0)
 	sparkles.Transparency = NumberSequence.new(0.1, 1)
 	sparkles.Lifetime = NumberRange.new(1, 1.8)
-	sparkles.Rate = 8
-	sparkles.Speed = NumberRange.new(0.3, 0.8)
+	sparkles.Rate = 12
+	sparkles.Speed = NumberRange.new(0.15, 0.4)
 	sparkles.SpreadAngle = Vector2.new(180, 180)
-	sparkles.Acceleration = Vector3.new(0, 0.5, 0)
+	sparkles.Acceleration = Vector3.new(0, 0.25, 0)
 	sparkles.Parent = mesh
+
+	-- Gold-and-white stars that twinkle in and out on his surface (they grow, then shrink away).
+	local twinkles = Instance.new("ParticleEmitter")
+	twinkles.Texture = SPARKLE_TEXTURE
+	twinkles.Color = ColorSequence.new(Color3.new(1, 1, 1), gold)
+	twinkles.LightEmission = 1
+	twinkles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.5, 1.4),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	twinkles.Lifetime = NumberRange.new(1, 1.6)
+	twinkles.Rate = 5
+	twinkles.Speed = NumberRange.new(0)
+	twinkles.Rotation = NumberRange.new(0, 360)
+	twinkles.RotSpeed = NumberRange.new(-30, 30)
+	twinkles.Shape = Enum.ParticleEmitterShape.Box
+	twinkles.ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface -- inside his solid body they'd be hidden
+	twinkles.Parent = mesh
+
+	-- A few slow, larger stars that drift upward, shifting through the Mythic rainbow.
+	local rainbowStars = Instance.new("ParticleEmitter")
+	rainbowStars.Texture = SPARKLE_TEXTURE
+	rainbowStars.Color = Theme.RarityGradients.Mythic
+	rainbowStars.LightEmission = 1
+	rainbowStars.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.3, 1.8),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	rainbowStars.Transparency = NumberSequence.new(0.1, 0.6)
+	rainbowStars.Lifetime = NumberRange.new(1.4, 2.2)
+	rainbowStars.Rate = 2.5
+	rainbowStars.Speed = NumberRange.new(0.3, 0.6)
+	rainbowStars.SpreadAngle = Vector2.new(60, 60)
+	rainbowStars.EmissionDirection = Enum.NormalId.Top
+	rainbowStars.Rotation = NumberRange.new(0, 360)
+	rainbowStars.RotSpeed = NumberRange.new(-20, 20)
+	rainbowStars.Parent = mesh
 
 	return labelHeight
 end
