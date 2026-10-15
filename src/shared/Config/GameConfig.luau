@@ -53,7 +53,7 @@ return {
 
 	-- Base lock
 	LockDurationSeconds = 60,
-	LockCooldownSeconds = 30, -- wait time after a lock ends before locking again
+	LockCooldownSeconds = 10, -- wait time after a lock ends before locking again
 	LockButtonMargin = 1, -- extra studs around the button that still count as standing on it
 
 	-- Background music: Roblox-licensed tracks (free to use in any experience), played in a
