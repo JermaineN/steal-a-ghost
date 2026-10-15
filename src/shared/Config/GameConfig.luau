@@ -68,7 +68,7 @@ return {
 	-- UserIds of who gets the Cage. A UserId is the number in a player's profile link
 	-- (roblox.com/users/<UserId>/profile). Studio test players: Player1 = -1, Player2 = -2.
 	CageAllowedUserIds = {
-		5783726738, -- the game's owner
+		701124691, -- Winter_Unicorn79
 	},
 	CageIcon = "rbxassetid://83040114543592", -- hotbar picture (source: assets/cage-icon.png)
 	CageRange = 8, -- studs in front of the swinger that count as a hit
