@@ -1,6 +1,14 @@
--- Base lock: the owner steps on the lock button, and for a while nobody else can enter.
+-- Base lock: the owner steps on the lock button, and for a while red jail bars appear across
+-- the entrance and an invisible wall behind them blocks everyone except the owner. Anyone
+-- already inside when the lock starts is pushed out (dropping any ghost they were stealing
+-- from this base). The bars are only a see-through warning; the wall does the blocking.
 -- Only a fresh step counts: standing on the button doesn't re-lock when the cooldown ends,
 -- so an AFK owner can't keep their base locked forever.
+--
+-- The owner walks through their own wall thanks to collision groups (named groups of parts
+-- where you choose which groups bump into each other): each base's wall is in "LockWall<n>",
+-- its owner's character is in "PlotOwner<n>", and those two groups don't collide.
+local PhysicsService = game:GetService("PhysicsService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -15,6 +23,40 @@ local COLOR_READY = Color3.fromRGB(80, 255, 120)
 local COLOR_LOCKED = Color3.fromRGB(255, 70, 80)
 local COLOR_COOLDOWN = Color3.fromRGB(150, 150, 150)
 
+local function wallGroup(plot): string
+	return "LockWall" .. plot.index
+end
+
+local function ownerGroup(plot): string
+	return "PlotOwner" .. plot.index
+end
+
+-- Puts every part of a character (including ones added later, like accessories) in `group`.
+local function setCharacterGroup(character: Model, group: string)
+	for _, part in character:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.CollisionGroup = group
+		end
+	end
+	character.DescendantAdded:Connect(function(part)
+		if part:IsA("BasePart") then
+			part.CollisionGroup = group
+		end
+	end)
+end
+
+-- Shows the bars and makes the invisible wall solid while locked; hides and opens them otherwise.
+local function setBarsLocked(plot, locked: boolean)
+	if plot.barsLocked == locked then
+		return
+	end
+	plot.barsLocked = locked
+	for _, surface in plot.lockBarSurfaces do
+		surface.Enabled = locked
+	end
+	plot.lockWall.CanCollide = locked
+end
+
 local function tryLock(plot, player: Player)
 	if plot.owner ~= player then
 		return
@@ -28,7 +70,9 @@ local function tryLock(plot, player: Player)
 	Notify.send(player, `Base locked for {GameConfig.LockDurationSeconds} seconds!`, "success")
 end
 
--- Pushes everyone except the owner out of a locked base.
+-- Pushes everyone except the owner out of a locked base. The wall stops anyone walking in, so
+-- this catches players who were already inside when the lock started (and anyone who gets in
+-- some other way, like an exploiter).
 local function ejectIntruders(plot)
 	for _, player in Players:GetPlayers() do
 		if player == plot.owner then
@@ -73,7 +117,7 @@ local function updatePlot(plot, now: number)
 	plot.ownerWasOnButton = onButton
 
 	local locked = now < plot.lockedUntil
-	plot.barrier.Transparency = if locked then 0.5 else 1
+	setBarsLocked(plot, locked)
 
 	local text, color
 	if not plot.owner then
@@ -94,7 +138,29 @@ local function updatePlot(plot, now: number)
 	end
 end
 
+-- Lets a base's owner walk through their own lock wall. Called once they've been given a base.
+function LockService.playerAdded(player: Player)
+	local plot = PlotService.getPlot(player)
+	if not plot then
+		return
+	end
+	local group = ownerGroup(plot)
+	player.CharacterAdded:Connect(function(character)
+		setCharacterGroup(character, group)
+	end)
+	if player.Character then
+		setCharacterGroup(player.Character, group)
+	end
+end
+
 function LockService.start(plots)
+	for _, plot in plots do
+		PhysicsService:RegisterCollisionGroup(wallGroup(plot))
+		PhysicsService:RegisterCollisionGroup(ownerGroup(plot))
+		PhysicsService:CollisionGroupSetCollidable(wallGroup(plot), ownerGroup(plot), false)
+		plot.lockWall.CollisionGroup = wallGroup(plot)
+	end
+
 	task.spawn(function()
 		while true do
 			local now = os.clock()

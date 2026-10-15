@@ -14,7 +14,11 @@ local MapBuilder = {}
 local PLOT_SIZE = 40
 local PLOT_SPACING = 104 -- center to center; bases are about 44 wide, so this leaves a ~60 stud gap
 local PLOT_DISTANCE = 58 -- walkway center to plot center: a 32-stud gap between the walkway edge and the base
-local WALL_HEIGHT = 16.5 -- height of the lock barrier
+local WALL_HEIGHT = 16.5 -- height of the lock bars
+local LOCK_BAR_SPACING = 3 -- studs between lock bars (purely visual; an invisible wall blocks)
+local LOCK_BAR_THICKNESS = 0.8
+local LOCK_BAR_COLOR = Color3.fromRGB(255, 40, 60)
+local LOCK_BAR_TRANSPARENCY = 0.4 -- 60% opaque; the bars are just a warning, the wall blocks
 local PILLAR_HEIGHT = 18
 local GATE_PILLAR_HEIGHT = 21 -- the two pillars at the entrance
 local INVISIBLE_WALL_HEIGHT = 300 -- reaches high into the sky, so nobody can jump or climb over
@@ -37,10 +41,9 @@ local PLOT_COLORS = {
 
 local makePart = Parts.make
 
--- The green pad in front of a grave where that ghost's income piles up. It's drawn fullbright:
--- every visible face is painted with a SurfaceGui that ignores scene lighting, so the pad looks
--- like neon in the dark but doesn't light up anything around it.
--- EconomyService flashes the "Glow" fills when the pad is collected.
+-- The green pad in front of a grave where that ghost's income piles up, drawn fullbright (see
+-- Parts.paintFullbright) so it looks like neon in the dark without lighting up its surroundings.
+-- EconomyService flashes its "Glow" fills when the pad is collected.
 local PAD_BRIGHTNESS = 1.6 -- above 1 pushes the colour past normal, like neon
 
 local function makeCollectPad(model: Model, slot: number, cframe: CFrame): Part
@@ -52,26 +55,7 @@ local function makeCollectPad(model: Model, slot: number, cframe: CFrame): Part
 		Material = Enum.Material.SmoothPlastic,
 		CastShadow = false,
 	})
-
-	for _, face in
-		{ Enum.NormalId.Top, Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right }
-	do
-		local surface = Instance.new("SurfaceGui")
-		surface.Name = "PadSurface" .. face.Name
-		surface.Face = face
-		surface.LightInfluence = 0
-		surface.Brightness = PAD_BRIGHTNESS
-		surface.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-		surface.PixelsPerStud = 20
-		local glow = Instance.new("Frame")
-		glow.Name = "Glow"
-		glow.Size = UDim2.fromScale(1, 1)
-		glow.BorderSizePixel = 0
-		glow.BackgroundColor3 = Theme.MoneyGreen
-		glow.Parent = surface
-		surface.Parent = pad
-	end
-
+	Parts.paintFullbright(pad, Theme.MoneyGreen, PAD_BRIGHTNESS)
 	return pad
 end
 
@@ -180,18 +164,51 @@ local function buildPlot(mapFolder: Folder, index: number, plotCFrame: CFrame)
 		)
 	end
 
-	-- Red laser across the entrance; visible only while the base is locked.
-	local barrier = makePart(model, {
-		Name = "LockBarrier",
+	-- Chunky red jail bars across the entrance, with a rail along the top and along the ground
+	-- (covering the bars' feet). They're drawn fullbright like the collect pads, slightly
+	-- see-through, and never collide: they only show while the base is locked. What actually
+	-- blocks the entrance is the invisible wall right behind them, which LockService makes solid
+	-- for everyone but the owner while locked.
+	local lockWall = makePart(model, {
+		Name = "LockWall",
 		Size = Vector3.new(PLOT_SIZE, WALL_HEIGHT, 0.4),
-		CFrame = at(0, wallY, -half),
-		Color = Color3.fromRGB(255, 40, 60),
-		Material = Enum.Material.Neon,
+		CFrame = at(0, wallY, -half + 0.4),
 		Transparency = 1,
 		CanCollide = false,
 		CanQuery = false,
 		CastShadow = false,
 	})
+	local lockBarSurfaces = {}
+	local function lockBar(name: string, size: Vector3, cframe: CFrame)
+		local bar = makePart(model, {
+			Name = name,
+			Size = size,
+			CFrame = cframe,
+			Color = LOCK_BAR_COLOR,
+			Material = Enum.Material.SmoothPlastic,
+			Transparency = 1,
+			CanCollide = false,
+			CanQuery = false,
+			CastShadow = false,
+		})
+		-- The bar part stays invisible; its fullbright paint is what you see.
+		for _, surface in Parts.paintFullbright(bar, LOCK_BAR_COLOR, PAD_BRIGHTNESS) do
+			surface.Enabled = false
+			surface:FindFirstChild("Glow").BackgroundTransparency = LOCK_BAR_TRANSPARENCY
+			table.insert(lockBarSurfaces, surface)
+		end
+	end
+	local barCount = math.floor(PLOT_SIZE / LOCK_BAR_SPACING)
+	local barGap = PLOT_SIZE / barCount
+	for bar = 0, barCount do
+		local x = -half + bar * barGap
+		lockBar("LockBar", Vector3.new(LOCK_BAR_THICKNESS, WALL_HEIGHT, LOCK_BAR_THICKNESS), at(x, wallY, -half))
+	end
+	-- The bottom rail sits on the ground (y = 1) and is deeper than the bars, hiding their feet.
+	local railHeight = LOCK_BAR_THICKNESS
+	for _, y in { 1 + railHeight / 2, 1 + WALL_HEIGHT - railHeight / 2 } do
+		lockBar("LockRail", Vector3.new(PLOT_SIZE, railHeight, LOCK_BAR_THICKNESS + 0.3), at(0, y, -half))
+	end
 
 	local lockButton = makePart(model, {
 		Name = "LockButton",
@@ -244,7 +261,8 @@ local function buildPlot(mapFolder: Folder, index: number, plotCFrame: CFrame)
 		size = PLOT_SIZE,
 		model = model,
 		ghostFolder = ghostFolder,
-		barrier = barrier,
+		lockBarSurfaces = lockBarSurfaces, -- the jail bars' fullbright paint, shown only while locked
+		lockWall = lockWall, -- invisible wall behind the bars that fills the gaps
 		lockButton = lockButton,
 		lockLabel = lockLabel,
 		signLabel = signLabel,
