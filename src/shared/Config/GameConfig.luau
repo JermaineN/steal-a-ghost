@@ -47,7 +47,7 @@ return {
 	StealHoldSeconds = 1.5, -- how long the thief holds E to grab a ghost
 	-- Walk speeds in studs per second (Roblox's default is 16).
 	WalkSpeed = 24.5, -- increased from the default
-	CarryWalkSpeed = 13, -- decreased from the default, while carrying a stolen ghost
+	CarryWalkSpeed = 14.3, -- decreased from the default, while carrying a stolen ghost (no jumping or items)
 	StealCooldownSeconds = 3, -- after a failed steal
 
 	-- Bat (every player's slot-1 item): hitting a player knocks them over; hitting a thief also
