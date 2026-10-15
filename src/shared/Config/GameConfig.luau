@@ -1,7 +1,7 @@
 -- Tuning values for the whole game. Change numbers here instead of inside scripts.
 return {
 	-- Plots / server size (set Max Players in Game Settings to match PlotCount)
-	PlotCount = 10,
+	PlotCount = 8,
 	HalloweenMap = true, -- night sky, pumpkins, graveyard and ghost portals (visual only)
 
 	-- Economy
