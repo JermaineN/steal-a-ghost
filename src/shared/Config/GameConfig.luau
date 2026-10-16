@@ -66,6 +66,7 @@ return {
 	BatRagdollSeconds = 3.5, -- how long a hit player stays floppy (in the air and on the ground)
 	BatHitSound = { soundId = 137041944943141, volume = 0.8, pitch = 1 }, -- "bonk" (DEGG_20)
 	BatHitImmunitySeconds = 1, -- after getting up, can't be knocked over again for this long
+	RagdollMaxAirSeconds = 6, -- a launched player counts as landed after this long, even if they never seem to
 
 	-- Cage (slot 2, only for the players listed below): swing it like the bat; the closest player
 	-- hit drops any stolen ghost and is frozen inside a cage
@@ -94,7 +95,7 @@ return {
 	LandmineArmSeconds = 1, -- a new mine can't go off for this long (so it can't blow up as it lands)
 	LandmineKnockbackSpeed = 50, -- sideways push away from the mine, in studs per second
 	LandmineKnockbackLift = 125, -- upward launch (125 flies them about 40 studs up; the bat's 60 is about 9)
-	LandmineRagdollSeconds = 9, -- how long they stay floppy (the bat's is 3.5)
+	LandmineRagdollSeconds = 1.75, -- how long they stay floppy after landing back on the ground
 	-- "Dynamite Explosion" (BuilderBillbert)
 	LandmineSound = { soundId = 117211977307268, volume = 1 },
 
