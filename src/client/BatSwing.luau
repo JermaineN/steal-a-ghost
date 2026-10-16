@@ -84,13 +84,13 @@ end
 
 function BatSwing.start()
 	local player = Players.LocalPlayer
-	local lastSwing = 0 -- any item
-	local lastUse: { [string]: number } = {} -- per item, for its own cooldown
+	local lastSwing = 0
 
 	-- Your own swing plays as soon as you click. The server checks the same cooldowns and does
-	-- the actual hitting. Swingable items carry a "Cooldown" attribute (set in ItemService).
+	-- the actual hitting. Swingable items carry a "Swingable" attribute, and an item on a longer
+	-- cooldown (the cage, after it catches someone) carries "ReadyAt" (set in ItemService).
 	local function onToolAdded(item: Instance)
-		if item:IsA("Tool") and item:GetAttribute("Cooldown") and not item:GetAttribute("SwingWired") then
+		if item:IsA("Tool") and item:GetAttribute("Swingable") and not item:GetAttribute("SwingWired") then
 			item:SetAttribute("SwingWired", true) -- only on this device
 			item.Activated:Connect(function()
 				local character = player.Character
@@ -101,12 +101,11 @@ function BatSwing.start()
 					or not humanoid
 					or humanoid:GetState() == Enum.HumanoidStateType.Physics -- knocked over
 					or now - lastSwing < GameConfig.BatSwingCooldown
-					or now - (lastUse[item.Name] or -math.huge) < item:GetAttribute("Cooldown")
+					or (item:GetAttribute("ReadyAt") or 0) > workspace:GetServerTimeNow()
 				then
 					return
 				end
 				lastSwing = now
-				lastUse[item.Name] = now
 				BatSwing.play(character)
 			end)
 		end

@@ -2,7 +2,7 @@
 -- bottom of the screen). Number keys equip/unequip them: slot 1 is the first tool, and so on.
 -- - Bat (slot 1, everyone): a hit knocks the player over (RagdollService).
 -- - Cage (slot 2, only players in GameConfig.CageAllowedUserIds): the closest player hit is
---   frozen inside a cage (CageService). Long cooldown.
+--   frozen inside a cage (CageService). Long cooldown, but only after a successful cage.
 -- Either way, a thief who gets hit drops the stolen ghost, which flies home.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
@@ -19,6 +19,8 @@ local StealService = require(script.Parent.StealService)
 local ItemService = {}
 
 local lastSwing: { [Player]: number } = {}
+-- When each player's cage can next be used, in server time (workspace:GetServerTimeNow(), the
+-- same clock on the server and every device). Only set by a successful cage.
 local cageReadyAt: { [Player]: number } = {}
 local cageTemplate: Tool
 
@@ -97,7 +99,7 @@ local function findTargets(swinger: Player, root: BasePart, range: number): { Ta
 end
 
 -- What each item does when its swing lands.
-local function batHits(swinger: Player, targets: { Target })
+local function batHits(swinger: Player, targets: { Target }, _tool: Tool)
 	for _, target in targets do
 		playBonk(target.player)
 		dropStolenGhost(swinger, target.player, "bonked")
@@ -106,15 +108,20 @@ local function batHits(swinger: Player, targets: { Target })
 	end
 end
 
-local function cageHits(swinger: Player, targets: { Target })
+local function cageHits(swinger: Player, targets: { Target }, tool: Tool)
 	local target = targets[1] -- only the closest one
 	if not target then
-		return
+		return -- a miss costs nothing
 	end
 	dropStolenGhost(swinger, target.player, "caged")
 	if CageService.trap(target.player) then
 		Notify.send(target.player, swinger.DisplayName .. " caged you!", "error")
 		Notify.send(swinger, "You caged " .. target.player.DisplayName .. "!", "success")
+		-- The cooldown starts now. The tool carries it too, so the swinger's device skips the
+		-- swing animation until it's ready (BatSwing).
+		local readyAt = workspace:GetServerTimeNow() + GameConfig.CageCooldownSeconds
+		cageReadyAt[swinger] = readyAt
+		tool:SetAttribute("ReadyAt", readyAt)
 	end
 end
 
@@ -137,7 +144,7 @@ local function checkHits(swinger: Player, tool: Tool)
 		return
 	end
 	local item = ITEMS[tool.Name]
-	item.onHit(swinger, findTargets(swinger, root, item.range))
+	item.onHit(swinger, findTargets(swinger, root, item.range), tool)
 end
 
 -- Called on the server when a player clicks while holding an item.
@@ -158,12 +165,11 @@ local function swing(tool: Tool)
 		return
 	end
 	if tool.Name == "Cage" then
-		local readyAt = cageReadyAt[swinger] or 0
-		if now < readyAt then
-			Notify.send(swinger, "Cage ready in " .. math.ceil(readyAt - now) .. "s", "error")
+		local waitLeft = (cageReadyAt[swinger] or 0) - workspace:GetServerTimeNow()
+		if waitLeft > 0 then
+			Notify.send(swinger, "Cage ready in " .. math.ceil(waitLeft) .. "s", "error")
 			return
 		end
-		cageReadyAt[swinger] = now + GameConfig.CageCooldownSeconds
 	end
 	lastSwing[swinger] = now
 
@@ -197,7 +203,7 @@ local function buildBat(): Tool
 	tool.CanBeDropped = false -- otherwise Backspace drops it on the ground
 	-- Where the hand holds the grip; the tilt points the bat up instead of straight ahead.
 	tool.Grip = CFrame.new(0, 0, 0.6) * CFrame.Angles(math.rad(-60), 0, 0)
-	tool:SetAttribute("Cooldown", GameConfig.BatSwingCooldown) -- read by BatSwing on the client
+	tool:SetAttribute("Swingable", true) -- BatSwing on the client plays the swing for it
 
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"
@@ -227,7 +233,7 @@ local function buildCage(): Tool
 	tool.ToolTip = "Click to swing. Traps the closest player in a cage"
 	tool.TextureId = GameConfig.CageIcon
 	tool.CanBeDropped = false
-	tool:SetAttribute("Cooldown", GameConfig.CageCooldownSeconds) -- read by BatSwing on the client
+	tool:SetAttribute("Swingable", true)
 
 	local iron = Color3.fromRGB(45, 46, 52)
 	local handle = Instance.new("Part")
@@ -274,7 +280,9 @@ local function giveCage(player: Player, character: Model)
 		local hasBat = backpack and (backpack:FindFirstChild("Bat") or character:FindFirstChild("Bat"))
 		if backpack and hasBat then
 			if not backpack:FindFirstChild("Cage") and not character:FindFirstChild("Cage") then
-				cageTemplate:Clone().Parent = backpack
+				local cage = cageTemplate:Clone()
+				cage:SetAttribute("ReadyAt", cageReadyAt[player]) -- a cooldown still running
+				cage.Parent = backpack
 			end
 			return
 		end
