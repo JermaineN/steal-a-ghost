@@ -221,3 +221,34 @@ future windows match.
 twice and Item 6 once ($510K taken, correct); gem items showed "Can't afford" with 0 gems;
 forcing a gem purchase, an unknown item id and a number from the client were all refused by
 the server; the Inventory showed x2 and x1; the purchase message shows above the Shop.
+
+---
+
+## 7. Daily reward streak
+
+**For players:** join on consecutive days for growing **gem** rewards:
+Day 1 **10**, Day 2 **15**, Day 3 **20**, Day 4 **30**, Day 5 **40**, Day 6 **60**, Day 7 **100**,
+then 100 every day after that (`GameConfig.DailyRewardGems`). Missing a day starts over at
+Day 1. A new day starts at midnight UTC.
+
+- A **Daily Reward** window (gem blue, same style as the other windows) pops up 3 seconds after
+  joining when a reward is waiting: seven day cards (claimed days ticked, today's in gold and
+  pulsing), and a pulsing green **"Claim +N gems"** button. On Day 2+ it says "Day 3 streak!
+  Don't break it!".
+- After claiming, today's card gets a tick, the button says "Come back tomorrow!", a message
+  confirms the gems, and the window closes itself after 1.5 s.
+- If you close it without claiming, a pulsing **"Daily reward!"** button above the Invite
+  button brings it back.
+- Players still in the game at midnight get the next reward without rejoining.
+
+Why: a reason to come back every day, and gems now have something to buy (the Shop).
+
+**How it works:** `Shared/DailyReward.luau` (the streak rules, shared), `DailyRewardService`
+(checks and gives the reward; `DailyClaim` remote; `DailyAvailable` / `DailyStreakDay`
+attributes), `UI/DailyRewardPanel.luau`. Saved as `daily = { day, streak }`.
+
+**Tested:** the streak rules with every case (new player, already claimed, claimed yesterday,
+missed a day, past day 7). Solo playtest: the window popped up on join with Day 1, claiming
+gave 10 gems and ticked Day 1, two more forced claims from the client were refused (still 10
+gems), and the window closed itself. **Not tested:** the actual next-day streak (Studio
+doesn't save, so it needs the live game over two days).
