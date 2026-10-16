@@ -6,6 +6,7 @@ local TweenService = game:GetService("TweenService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
+local MutationConfig = require(ReplicatedStorage.Shared.Config.MutationConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local HauntedHour = require(ReplicatedStorage.Shared.HauntedHour)
 local Rebirth = require(ReplicatedStorage.Shared.Rebirth)
@@ -25,8 +26,10 @@ GhostService.onStealPromptTriggered = function(_thief: Player, _owner: Player, _
 -- `carried`: a thief is running off with it. `arriving`: just bought, still flying to its grave.
 -- `paid` and `buyCount` only matter while arriving: what the owner paid (refunded if someone
 -- re-buys it), and how many times it has been re-bought so far (sets the next re-buy price).
+-- `mutation`: its MutationConfig id, if it has one (it keeps it when bought, re-bought or stolen).
 type Entry = {
 	id: string,
+	mutation: string?,
 	model: Model,
 	carried: boolean,
 	arriving: boolean,
@@ -73,11 +76,25 @@ local function flyTo(model: Model, destination: Vector3, speed: number, onArrive
 	tween:Play()
 end
 
+-- "Shiny Boo", or just "Boo" without a mutation.
+function GhostService.displayName(def, mutationId: string?): string
+	local mutation = mutationId and MutationConfig.byId[mutationId]
+	return if mutation then mutation.name .. " " .. def.name else def.name
+end
+
+-- What a ghost earns per second for this owner: its income, times its mutation, boosted by the
+-- owner's rebirths (rounded to whole dollars).
+function GhostService.ghostIncome(def, mutationId: string?, rebirths: number): number
+	return Rebirth.income(def.income * MutationConfig.multiplier(mutationId), rebirths)
+end
+
 -- `infoLines` are shown under the name: price and income on the walkway, income in a base.
-local function buildModel(def, infoLines: { GhostLabel.InfoLine }): Model
+local function buildModel(def, infoLines: { GhostLabel.InfoLine }, mutationId: string?): Model
 	local rarity = GhostConfig.Rarities[def.rarity]
+	local mutation = mutationId and MutationConfig.byId[mutationId]
 	local model = Instance.new("Model")
-	model.Name = def.name
+	model.Name = GhostService.displayName(def, mutationId)
+	model:SetAttribute("Mutation", mutationId)
 	-- Stream the whole ghost in/out at once so client-side prompt setup always sees every part.
 	model.ModelStreamingMode = Enum.ModelStreamingMode.Atomic
 
@@ -122,7 +139,10 @@ local function buildModel(def, infoLines: { GhostLabel.InfoLine }): Model
 	end
 
 	GhostModels.addRarityAura(body, def.rarity, def.size)
-	GhostLabel.create(body, def, rarity, infoLines, labelHeight + 0.4)
+	if mutation then
+		GhostModels.addMutationAura(body, mutation, def.size)
+	end
+	GhostLabel.create(body, def, rarity, infoLines, labelHeight + 0.4, mutation)
 
 	return model
 end
@@ -175,7 +195,25 @@ local function pickRandomGhost()
 	return GhostConfig.Ghosts[1]
 end
 
-local function tryBuy(player: Player, def, model: Model)
+-- Studio-only testing boost (GameConfig.StudioBoostMutations): every walkway ghost gets a
+-- random mutation. Live servers always use the normal chances.
+local boostMutations = RunService:IsStudio() and GameConfig.StudioBoostMutations == true
+
+-- Rolls a new walkway ghost's mutation: rarest first, and the first one that hits wins (so a
+-- rarer mutation always takes precedence). Usually nil (no mutation).
+local function rollMutation(): string?
+	if boostMutations then
+		return MutationConfig.Mutations[math.random(#MutationConfig.Mutations)].id
+	end
+	for _, mutation in MutationConfig.Mutations do
+		if math.random() < 1 / mutation.chance then
+			return mutation.id
+		end
+	end
+	return nil
+end
+
+local function tryBuy(player: Player, def, model: Model, mutationId: string?)
 	if model:GetAttribute("Sold") or not PlotService.getPlot(player) or not DataService.isLoaded(player) then
 		return
 	end
@@ -184,36 +222,41 @@ local function tryBuy(player: Player, def, model: Model)
 		Notify.send(player, "Your base is full! Sell a ghost to make room.", "error")
 		return
 	end
+	local name = GhostService.displayName(def, mutationId)
 	if not DataService.spendCash(player, def.price) then
-		Notify.send(player, "Not enough cash for " .. def.name .. ".", "error")
+		Notify.send(player, "Not enough cash for " .. name .. ".", "error")
 		return
 	end
 	model:SetAttribute("Sold", true)
 	local boughtAt = model:GetPivot()
 	model:Destroy()
 	-- It's yours (and saved) right away, then flies from where you bought it to its grave.
-	GhostService.placeGhost(player, slot, def.id, { from = boughtAt, paid = def.price, buyCount = 0 })
-	Notify.send(player, "You bought " .. def.name .. "! It's flying to your base.", "success")
+	GhostService.placeGhost(player, slot, def.id, { from = boughtAt, paid = def.price, buyCount = 0 }, mutationId)
+	Notify.send(player, "You bought " .. name .. "! It's flying to your base.", "success")
 end
 
 local function spawnWalkwayGhost(startCFrame: CFrame, endCFrame: CFrame)
 	local def = pickRandomGhost()
+	local mutationId = rollMutation()
+	local mutation = mutationId and MutationConfig.byId[mutationId]
+	local income = def.income * MutationConfig.multiplier(mutationId)
 	local model = buildModel(def, {
 		{ text = "$" .. Format.cash(def.price), color = Theme.MoneyGreen },
-		{ text = "+$" .. Format.cash(def.income) .. "/s", color = Theme.PreviewIncomeYellow },
-	})
+		{ text = "+$" .. Format.cash(income) .. "/s", color = Theme.PreviewIncomeYellow },
+	}, mutationId)
 	model:PivotTo(startCFrame)
 	model.Parent = walkwayFolder
 
-	-- Everyone gets a banner when a top-rarity ghost appears (client RareSpawnBanner).
-	if GameConfig.RareSpawnAnnouncements[def.rarity] then
-		Remotes.RareSpawn:FireAllClients(def.id)
+	-- Everyone gets a banner when a top-rarity ghost, or a ghost with a big mutation, appears
+	-- (client RareSpawnBanner).
+	if GameConfig.RareSpawnAnnouncements[def.rarity] or (mutation and mutation.announce) then
+		Remotes.RareSpawn:FireAllClients(def.id, mutationId)
 	end
 
-	local buyText = def.name .. " ($" .. Format.cash(def.price) .. ")"
+	local buyText = GhostService.displayName(def, mutationId) .. " ($" .. Format.cash(def.price) .. ")"
 	local prompt = makePrompt(model.PrimaryPart, "BuyPrompt", "Buy", buyText, 0.25)
 	prompt.Triggered:Connect(function(player)
-		tryBuy(player, def, model)
+		tryBuy(player, def, model, mutationId)
 	end)
 
 	-- Float down the walkway, and vanish at the far end if nobody buys it.
@@ -256,7 +299,7 @@ function GhostService.getIncome(player: Player): number
 	local total = 0
 	for _, entry in placed[player] or {} do
 		if GhostService.isInBase(entry) then
-			total += GhostConfig.byId[entry.id].income
+			total += GhostConfig.byId[entry.id].income * MutationConfig.multiplier(entry.mutation)
 		end
 	end
 	return total
@@ -280,18 +323,23 @@ end
 -- front of the base (see arrivalPoint), then appears on its grave; until then it can't earn, be
 -- stolen or be sold, but anyone else can buy it out from under the owner (see tryRebuy).
 -- Without `arrival` it appears on its grave straight away (loading a saved base, or a thief
--- delivering a stolen ghost).
-function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, arrival: Arrival?)
+-- delivering a stolen ghost). `mutationId` is the ghost's mutation, if it has one.
+function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, arrival: Arrival?, mutationId: string?)
 	local plot = PlotService.getPlot(owner)
 	local def = GhostConfig.byId[ghostId]
 	if not plot or not def or not plot.slots[slot] then
 		return
 	end
+	if mutationId and not MutationConfig.byId[mutationId] then
+		mutationId = nil
+	end
+	local name = GhostService.displayName(def, mutationId)
 
-	-- Its label shows what it earns for this owner (rebirths boost income; rebirthing clears the
+	-- Its label shows what it earns for this owner (mutation and rebirths; rebirthing clears the
 	-- base, so the boost can't change while it sits here).
-	local income = Rebirth.income(def.income, DataService.getRebirths(owner))
-	local model = buildModel(def, { { text = "+$" .. Format.cash(income) .. "/s", color = Theme.MoneyGreen } })
+	local income = GhostService.ghostIncome(def, mutationId, DataService.getRebirths(owner))
+	local model =
+		buildModel(def, { { text = "+$" .. Format.cash(income) .. "/s", color = Theme.MoneyGreen } }, mutationId)
 	model:SetAttribute("OwnerUserId", owner.UserId)
 	model:SetAttribute("GhostId", ghostId)
 	model:SetAttribute("Carried", false)
@@ -300,18 +348,19 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, a
 
 	-- Both prompts exist on every ghost; the client hides the one that doesn't apply to you.
 	-- The server re-checks everything, so a hacked client can't sell someone else's ghost.
-	local stealPrompt = makePrompt(model.PrimaryPart, "StealPrompt", "Steal", def.name, GameConfig.StealHoldSeconds)
+	local stealPrompt = makePrompt(model.PrimaryPart, "StealPrompt", "Steal", name, GameConfig.StealHoldSeconds)
 	stealPrompt.Triggered:Connect(function(thief)
 		GhostService.onStealPromptTriggered(thief, owner, slot)
 	end)
 	local sellPrice = math.floor(def.price * GameConfig.SellRefund)
-	local sellPrompt = makePrompt(model.PrimaryPart, "SellPrompt", "Sell for $" .. Format.cash(sellPrice), def.name, 1)
+	local sellPrompt = makePrompt(model.PrimaryPart, "SellPrompt", "Sell for $" .. Format.cash(sellPrice), name, 1)
 	sellPrompt.Triggered:Connect(function(player)
 		GhostService.trySell(player, owner, slot)
 	end)
 
 	local entry: Entry = {
 		id = ghostId,
+		mutation = mutationId,
 		model = model,
 		carried = false,
 		arriving = arrival ~= nil,
@@ -323,7 +372,7 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, a
 	local rebuyPrompt
 	if arrival then
 		local price = rebuyPrice(def, entry.buyCount + 1)
-		rebuyPrompt = makePrompt(model.PrimaryPart, "RebuyPrompt", "Buy for $" .. Format.cash(price), def.name, 0.25)
+		rebuyPrompt = makePrompt(model.PrimaryPart, "RebuyPrompt", "Buy for $" .. Format.cash(price), name, 0.25)
 		rebuyPrompt.Triggered:Connect(function(buyer)
 			GhostService.tryRebuy(buyer, owner, slot, entry)
 		end)
@@ -334,7 +383,7 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, a
 
 	placed[owner] = placed[owner] or {}
 	placed[owner][slot] = entry
-	DataService.setGhost(owner, slot, ghostId)
+	DataService.setGhost(owner, slot, ghostId, mutationId)
 
 	if arrival then
 		flyTo(model, arrivalPoint(plot), GameConfig.GhostTravelSpeed, function()
@@ -358,6 +407,7 @@ function GhostService.tryRebuy(buyer: Player, owner: Player, slot: number, entry
 		return
 	end
 	local def = GhostConfig.byId[entry.id]
+	local name = GhostService.displayName(def, entry.mutation)
 	local newSlot = GhostService.firstFreeSlot(buyer)
 	if not newSlot then
 		Notify.send(buyer, "Your base is full! Sell a ghost to make room.", "error")
@@ -366,20 +416,26 @@ function GhostService.tryRebuy(buyer: Player, owner: Player, slot: number, entry
 	local buyCount = entry.buyCount + 1
 	local price = rebuyPrice(def, buyCount)
 	if not DataService.spendCash(buyer, price) then
-		Notify.send(buyer, "Not enough cash for " .. def.name .. " ($" .. Format.cash(price) .. ").", "error")
+		Notify.send(buyer, "Not enough cash for " .. name .. " ($" .. Format.cash(price) .. ").", "error")
 		return
 	end
 
 	local from = entry.model:GetPivot()
 	GhostService.removeGhost(owner, slot)
 	DataService.addCash(owner, entry.paid)
-	GhostService.placeGhost(buyer, newSlot, entry.id, { from = from, paid = price, buyCount = buyCount })
+	GhostService.placeGhost(
+		buyer,
+		newSlot,
+		entry.id,
+		{ from = from, paid = price, buyCount = buyCount },
+		entry.mutation
+	)
 
 	local outbid = rebuyPrice(def, buyCount + 1)
-	Notify.send(buyer, `You bought {def.name} for ${Format.cash(price)}! It's flying to your base.`, "success")
+	Notify.send(buyer, `You bought {name} for ${Format.cash(price)}! It's flying to your base.`, "success")
 	Notify.send(
 		owner,
-		`{buyer.DisplayName} outbid you for {def.name}! You got ${Format.cash(entry.paid)} back. Buy it back for ${Format.cash(
+		`{buyer.DisplayName} outbid you for {name}! You got ${Format.cash(entry.paid)} back. Buy it back for ${Format.cash(
 			outbid
 		)}.`,
 		"error"
@@ -418,9 +474,10 @@ function GhostService.trySell(player: Player, owner: Player, slot: number, confi
 		return
 	end
 	pendingSells[owner] = nil
+	local name = GhostService.displayName(def, entry.mutation)
 	GhostService.removeGhost(owner, slot)
 	DataService.addCash(owner, refund)
-	Notify.send(owner, "Sold " .. def.name .. " for $" .. Format.cash(refund) .. ".", "success")
+	Notify.send(owner, "Sold " .. name .. " for $" .. Format.cash(refund) .. ".", "success")
 end
 
 function GhostService.getSlotCFrame(owner: Player, slot: number): CFrame?
@@ -433,7 +490,7 @@ function GhostService.loadGhosts(player: Player)
 	for slotKey, ghostId in DataService.getGhosts(player) do
 		local slot = tonumber(slotKey)
 		if slot and GhostConfig.byId[ghostId] then
-			GhostService.placeGhost(player, slot, ghostId)
+			GhostService.placeGhost(player, slot, ghostId, nil, DataService.getMutation(player, slot))
 		end
 	end
 end

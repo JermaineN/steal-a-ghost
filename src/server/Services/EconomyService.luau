@@ -6,7 +6,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
-local Rebirth = require(ReplicatedStorage.Shared.Rebirth)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local DataService = require(script.Parent.DataService)
@@ -99,7 +98,7 @@ local function incomeTick()
 		for slot = 1, if plot then #plot.slots else 0 do
 			local entry = GhostService.getEntry(player, slot)
 			if entry and GhostService.isInBase(entry) then
-				local baseIncome = Rebirth.income(GhostConfig.byId[entry.id].income, rebirths)
+				local baseIncome = GhostService.ghostIncome(GhostConfig.byId[entry.id], entry.mutation, rebirths)
 				local slotIncome = math.floor(baseIncome * friendBoost + 0.5)
 				income += slotIncome
 				DataService.addStored(player, slot, slotIncome * GameConfig.IncomeTickSeconds)

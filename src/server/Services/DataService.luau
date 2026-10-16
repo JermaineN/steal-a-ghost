@@ -29,6 +29,7 @@ local function newData()
 	return {
 		cash = GameConfig.StartingCash,
 		ghosts = {}, -- ["slotNumber"] = ghostId (string keys so DataStores accept it)
+		mutations = {}, -- ["slotNumber"] = mutationId, for ghosts that have one (see MutationConfig)
 		stored = {}, -- ["slotNumber"] = uncollected cash waiting on that slot's collect pad
 		discovered = {}, -- [ghostId] = true for every ghost the player has owned (the Index)
 		claimed = {}, -- [ghostId] = true once its Index gem reward has been claimed
@@ -252,10 +253,11 @@ function DataService.markIndexClaimed(player: Player, ghostId: string)
 	end
 end
 
-function DataService.setGhost(player: Player, slot: number, ghostId: string?)
+function DataService.setGhost(player: Player, slot: number, ghostId: string?, mutationId: string?)
 	local profile = profiles[player]
 	if profile then
 		profile.data.ghosts[tostring(slot)] = ghostId
+		profile.data.mutations[tostring(slot)] = if ghostId then mutationId else nil
 		-- Every way of getting a ghost (buying, out-bidding, stealing) ends up here, so this is
 		-- where the Index learns about it.
 		if ghostId and not profile.data.discovered[ghostId] then
@@ -312,9 +314,16 @@ function DataService.applyRebirth(player: Player, gems: number)
 	profile.cashValue.Value = profile.data.cash
 	profile.data.stored = {}
 	profile.data.ghosts = {}
+	profile.data.mutations = {}
 	profile.data.rebirths += 1
 	profile.rebirthsValue.Value = profile.data.rebirths
 	DataService.addGems(player, gems)
+end
+
+-- The mutation of the ghost saved in a slot, or nil.
+function DataService.getMutation(player: Player, slot: number): string?
+	local profile = profiles[player]
+	return if profile then profile.data.mutations[tostring(slot)] else nil
 end
 
 function DataService.getGhosts(player: Player): { [string]: string }

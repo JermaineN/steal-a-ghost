@@ -1,6 +1,7 @@
 -- "Are you sure?" pop-up before selling a rare ghost (GameConfig.SellConfirmMinRarity or higher).
 -- The server asks (SellConfirm remote) instead of selling; pressing Sell answers yes
 -- (SellConfirmed remote) and the server sells it. Keep it, or waiting too long, sells nothing.
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -111,7 +112,8 @@ local function show(gui: ScreenGui, slot: number, ghostId: string, refund: numbe
 		Parent = panel,
 	})
 	if gradient then
-		new("UIGradient", { Color = gradient, Parent = rarityLabel })
+		local shimmer = new("UIGradient", { Color = gradient, Parent = rarityLabel })
+		CollectionService:AddTag(shimmer, "AnimatedGradient") -- shimmers (client GradientAnimator)
 	end
 	text({
 		Text = "You'll get $" .. Format.cash(refund) .. " back.",

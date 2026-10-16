@@ -75,7 +75,7 @@ window). It could only be checked by reading the code.
 | Rarity | Order | Index reward | Placeholder ghost | Price | Income | How rare |
 |---|---|---|---|---|---|---|
 | Divine | 7 | 300 gems | "Divine Ghost" (`divine_1`) | $2.5M | $20K/s | ~1 in 700 spawns (~30 min) |
-| Secret | 8 | 600 gems | "Secret Ghost" (`secret_1`) | $10M | $75K/s | ~1 in 2,100 spawns (~90 min) |
+| Secret | 8 | 600 gems | "Secret Ghost" (`secret_1`) | $15M | $100K/s | ~1 in 2,100 spawns (~90 min) |
 
 - **Colours:** Divine is heavenly white/gold/sky-blue gradient text; Secret is silver with a
   blood-red streak (`Theme.RarityGradients`). Used on ghost labels, the Index and the sell
@@ -283,3 +283,52 @@ missed a day, past day 7). Solo playtest: the window popped up on join with Day 
 gave 10 gems and ticked Day 1, two more forced claims from the client were refused (still 10
 gems), and the window closed itself. **Not tested:** the actual next-day streak (Studio
 doesn't save, so it needs the live game over two days).
+
+---
+
+## 8. Mutations, Divine recolour, Secret price
+
+**Mutations:** a walkway ghost can spawn with one mutation that multiplies its income:
+
+| Mutation | Chance | Income | Colours | Big announcement |
+|---|---|---|---|---|
+| Eerie | 1 in 20 | ×1.2 | grey and silver | no |
+| Spooky | 1 in 50 | ×1.5 | orange and black | no |
+| Undead | 1 in 115 | ×2 | green and dark grey | **yes** (small, big on Mythic+) |
+| Shiny | 1 in 500 | ×3 | mostly white, a touch of gold | **yes** (big) |
+
+- Max one per ghost. Each spawn rolls Shiny first, then Undead, Spooky, Eerie, and the first
+  hit wins, so a rarer mutation always takes precedence.
+- The mutation's name sits **above the rarity** on the ghost's label, in its own
+  **animated gradient**. The ghost also gets sparkles in its mutation's colours (more for
+  rarer ones). The name everywhere becomes e.g. "Shiny Boo" (prompts and messages).
+- **Shiny** always gets the big spawn banner in its colours ("SHINY GHOST SPAWNED!") with a
+  white screen flash. **Undead** gets the smaller Legendary-style banner in its colours
+  ("UNDEAD GHOST SPAWNED!"), and the big one with a green flash only on a Mythic or rarer
+  ghost ("UNDEAD MYTHIC GHOST SPAWNED!"); `bigBanner` in `MutationConfig` sets which. On a
+  rare ghost the title combines both: "SHINY LEGENDARY GHOST SPAWNED!". They reuse the Mythic
+  sound for now (`GameConfig.MutationAnnouncements`).
+- A mutated ghost keeps its mutation when bought, outbid, stolen, or handed over when its owner
+  leaves, and it's **saved** (`mutations` in the save data, next to `ghosts`; old saves are
+  fine). The multiplier stacks with rebirths and friends.
+- The **price stays the same** as the normal ghost (finding a mutation is pure luck), and so
+  does the sell price. Easy to change if you'd rather mutated ghosts cost more.
+- `MutationConfig.luau` holds the chances, multipliers and colours. Studio-only
+  `GameConfig.StudioBoostMutations` gives every walkway ghost a random mutation for testing.
+
+**Animated gradients:** rarity text on ghost labels used to be static (only the banners
+moved). Now every Legendary-and-rarer rarity word and every mutation word shimmers back and
+forth (client `GradientAnimator`, which animates any UIGradient tagged `AnimatedGradient`),
+including in the Index and the sell pop-up.
+
+**Divine** is now white and blue (gradient, card/light colour, placeholder ball and banner
+flash), so it no longer looks like Mythic.
+
+**Secret Ghost** now costs $15M and earns $100K/s.
+
+**Tested (solo, with test cash, spawn boost and mutation boost, all turned back off):** all
+four mutations spawned with the right label line, colours and multiplied income (e.g. Spooky
+Divine $30K/s, Eerie Secret $120K/s, Shiny Secret $300K/s); the Shiny and Undead banners,
+including a real "SHINY LEGENDARY GHOST SPAWNED!"; Divine's new colours; bought an Undead
+Sheet Ghost: it kept "UNDEAD" in the base and earned $20/s. **Not tested:** a stolen mutated
+ghost keeping its mutation (2 players), and saving (Studio doesn't save).

@@ -3,6 +3,10 @@
 --   Mythic:    the screen flashes, a dark strip drops in, and a huge rainbow title lands with a
 --              bigger sound; its colours drift slowly and it stays longer.
 --   Divine / Secret: the same big banner in their own colours (Secret flashes the screen dark).
+--   Shiny mutation: the big banner in Shiny's colours, on any rarity ("SHINY GHOST SPAWNED!",
+--              or "SHINY MYTHIC GHOST SPAWNED!" on a rare one).
+--   Undead mutation: the smaller (Legendary-style) banner in Undead's colours, or the big one
+--              when the ghost is Mythic or rarer ("UNDEAD MYTHIC GHOST SPAWNED!").
 -- The server only says which ghost spawned (Remotes.RareSpawn); everything here is visual.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -12,6 +16,7 @@ local TweenService = game:GetService("TweenService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
+local MutationConfig = require(ReplicatedStorage.Shared.Config.MutationConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
@@ -53,10 +58,11 @@ local function outlinedText(props: { [string]: any }, thickness: number): (TextL
 	return label, stroke
 end
 
--- "Phantom Knight · $25K", with the price in money green.
-local function nameAndPrice(def): string
+-- "Spooky Phantom Knight · $25K", with the price in money green.
+local function nameAndPrice(def, mutation): string
 	local hex = Theme.MoneyGreen:ToHex()
-	return `{def.name}  ·  <font color="#{hex}">${Format.cash(def.price)}</font>`
+	local name = if mutation then mutation.name .. " " .. def.name else def.name
+	return `{name}  ·  <font color="#{hex}">${Format.cash(def.price)}</font>`
 end
 
 local function playSound(announcement)
@@ -78,7 +84,8 @@ local function screenScale(): number
 	return math.clamp(height / 800, 0.6, 1)
 end
 
-local function showLegendary(def, announcement)
+-- The smaller banner (Legendary, and Undead on anything below Mythic), in `gradient`'s colours.
+local function showSmall(announcement, nameText: string, titleText: string, gradient: ColorSequence)
 	local banner = new("Frame", {
 		Name = "LegendaryBanner",
 		AnchorPoint = Vector2.new(0.5, 0),
@@ -93,12 +100,12 @@ local function showLegendary(def, announcement)
 		Size = UDim2.new(1, 0, 0, 40),
 		TextSize = 36,
 		TextColor3 = Color3.new(1, 1, 1),
-		Text = "LEGENDARY GHOST SPAWNED!",
+		Text = titleText,
 		Parent = banner,
 	}, 3)
-	-- A gold gradient that slides along, so the title shimmers.
+	-- A gradient that slides along, so the title shimmers.
 	local shimmer = new("UIGradient", {
-		Color = Theme.RarityGradients.Legendary,
+		Color = gradient,
 		Rotation = 15,
 		Parent = title,
 	})
@@ -108,7 +115,7 @@ local function showLegendary(def, announcement)
 		TextSize = 25,
 		RichText = true,
 		TextColor3 = Color3.new(1, 1, 1),
-		Text = nameAndPrice(def),
+		Text = nameText,
 		Parent = banner,
 	}, 2.5)
 
@@ -140,22 +147,29 @@ local function showLegendary(def, announcement)
 	return { destroy = destroy }
 end
 
--- The big banner, used for Mythic and every rarity above it, each in its own colours.
--- `flashColor`: Secret flashes the screen dark instead of white.
+-- The big banner, used for Mythic and every rarity above it, and for the mutations that
+-- announce (Undead, Shiny), each in its own colours. `flashColor` is the quick screen flash:
+-- Secret flashes dark, Undead a sickly green.
 local BIG_BANNERS = {
 	Mythic = { flashColor = Color3.new(1, 1, 1) },
-	Divine = { flashColor = Color3.fromRGB(255, 245, 210) },
+	Divine = { flashColor = Color3.fromRGB(215, 235, 255) },
 	Secret = { flashColor = Color3.new(0, 0, 0) },
 }
+local MUTATION_FLASH = {
+	undead = Color3.fromRGB(60, 120, 50),
+	shiny = Color3.new(1, 1, 1),
+}
 
-local function showBig(def, announcement)
+type BigStyle = { title: string, gradient: ColorSequence, flashColor: Color3, nameText: string }
+
+local function showBig(style: BigStyle, announcement)
 	local scale = screenScale()
 
 	-- A quick flash over the whole screen.
 	local flash = new("Frame", {
 		Name = "MythicFlash",
 		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = BIG_BANNERS[def.rarity].flashColor,
+		BackgroundColor3 = style.flashColor,
 		BackgroundTransparency = 0.25,
 		BorderSizePixel = 0,
 		ZIndex = 10,
@@ -192,12 +206,13 @@ local function showBig(def, announcement)
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.fromScale(0.5, 0),
 		Size = UDim2.new(1, 0, 0, 72),
-		TextSize = 66,
+		-- Long titles ("SHINY LEGENDARY GHOST SPAWNED!") get a bit smaller so they fit.
+		TextSize = if #style.title > 24 then 52 else 66,
 		TextColor3 = Color3.new(1, 1, 1),
-		Text = string.upper(def.rarity) .. " GHOST SPAWNED!",
+		Text = style.title,
 		Parent = content,
 	}, 5)
-	local rainbow = new("UIGradient", { Color = Theme.RarityGradients[def.rarity], Parent = title })
+	local rainbow = new("UIGradient", { Color = style.gradient, Parent = title })
 	local titleScale = new("UIScale", { Scale = 2.5, Parent = title })
 	outlinedText({
 		Position = UDim2.fromOffset(0, 74),
@@ -205,7 +220,7 @@ local function showBig(def, announcement)
 		TextSize = 38,
 		RichText = true,
 		TextColor3 = Color3.new(1, 1, 1),
-		Text = nameAndPrice(def),
+		Text = style.nameText,
 		Parent = content,
 	}, 3.5)
 
@@ -253,17 +268,58 @@ function RareSpawnBanner.start()
 		Parent = player:WaitForChild("PlayerGui"),
 	})
 
-	Remotes.RareSpawn.OnClientEvent:Connect(function(ghostId: string)
+	Remotes.RareSpawn.OnClientEvent:Connect(function(ghostId: string, mutationId: string?)
 		local def = GhostConfig.byId[ghostId]
-		local announcement = def and GameConfig.RareSpawnAnnouncements[def.rarity]
-		if not announcement then
+		if not def then
+			return
+		end
+		local mutation = mutationId and MutationConfig.byId[mutationId]
+		-- A mutation that announces (Undead, Shiny) gets the big banner in its own colours.
+		local bigMutation = if mutation and mutation.announce then mutation else nil
+		local rarityAnnouncement = GameConfig.RareSpawnAnnouncements[def.rarity]
+		local mutationAnnouncement = bigMutation and GameConfig.MutationAnnouncements[bigMutation.id]
+		if not rarityAnnouncement and not mutationAnnouncement then
 			return
 		end
 		-- A new banner replaces whatever is showing.
 		if current then
 			current.destroy()
 		end
-		current = if BIG_BANNERS[def.rarity] then showBig(def, announcement) else showLegendary(def, announcement)
+		local nameText = nameAndPrice(def, mutation)
+		-- "SHINY GHOST SPAWNED!", "MYTHIC GHOST SPAWNED!", "UNDEAD LEGENDARY GHOST SPAWNED!" ...
+		local words = {}
+		if bigMutation then
+			table.insert(words, string.upper(bigMutation.name))
+		end
+		if rarityAnnouncement then
+			table.insert(words, string.upper(def.rarity))
+		end
+		table.insert(words, "GHOST SPAWNED!")
+		local title = table.concat(words, " ")
+		-- An announced mutation colours the banner; otherwise the rarity does.
+		local gradient = if bigMutation then bigMutation.gradient else Theme.RarityGradients[def.rarity]
+		-- Whichever announcement lasts longer (and its sound) wins.
+		local announcement = mutationAnnouncement or rarityAnnouncement
+		if
+			rarityAnnouncement
+			and mutationAnnouncement
+			and rarityAnnouncement.seconds > mutationAnnouncement.seconds
+		then
+			announcement = rarityAnnouncement
+		end
+
+		-- The big banner for Mythic and rarer, and for mutations marked bigBanner (Shiny); the
+		-- smaller one otherwise (Legendary, and Undead on anything below Mythic).
+		if BIG_BANNERS[def.rarity] or (bigMutation and bigMutation.bigBanner) then
+			current = showBig({
+				title = title,
+				gradient = gradient,
+				flashColor = if bigMutation then MUTATION_FLASH[bigMutation.id] else BIG_BANNERS[def.rarity].flashColor,
+				nameText = nameText,
+			}, announcement)
+		else
+			current = showSmall(announcement, nameText, title, gradient)
+		end
 	end)
 end
 

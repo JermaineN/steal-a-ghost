@@ -55,6 +55,15 @@ return {
 	-- Testing only, ONLY when playing in Studio (live servers ignore it): true makes every ghost
 	-- equally likely to spawn and halves the spawn interval. Set to false for normal rates.
 	StudioBoostSpawns = false,
+	-- Testing only, ONLY in Studio: true gives every walkway ghost a random mutation (see
+	-- MutationConfig for the real chances). Set to false for normal rates.
+	StudioBoostMutations = false,
+	-- Big spawn banner sounds for the mutations that announce (MutationConfig `announce`).
+	-- They reuse the Mythic sound until you pick their own.
+	MutationAnnouncements = {
+		undead = { soundId = 9047100306, volume = 0.6, seconds = 6 },
+		shiny = { soundId = 9047100306, volume = 0.7, seconds = 7 },
+	},
 
 	-- Daily rewards: gems for joining on consecutive days (a new day starts at midnight UTC).
 	-- Day 1, 2, 3 ... of a streak; after the last day it keeps giving the last reward. Missing a
