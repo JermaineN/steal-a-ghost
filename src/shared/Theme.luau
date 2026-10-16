@@ -7,6 +7,8 @@ return {
 	PreviewIncomeYellow = Color3.fromRGB(255, 225, 40),
 	-- Spending (the floating "-$X" on the HUD).
 	SpendRed = Color3.fromRGB(255, 90, 90),
+	-- Gems, the second currency.
+	GemBlue = Color3.fromRGB(80, 190, 255),
 
 	-- Special text colours for the top rarities (gold and rainbow); the rest use their rarity's
 	-- colour from GhostConfig. Applied with a UIGradient on white text.

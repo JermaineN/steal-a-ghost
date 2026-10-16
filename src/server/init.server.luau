@@ -15,6 +15,7 @@ local EconomyService = require(Services.EconomyService)
 local RagdollService = require(Services.RagdollService)
 local CageService = require(Services.CageService)
 local LandmineService = require(Services.LandmineService)
+local IndexService = require(Services.IndexService)
 local ItemService = require(Services.ItemService)
 
 local map = MapBuilder.build()
@@ -27,6 +28,7 @@ EconomyService.start(map.plots)
 RagdollService.start()
 CageService.start()
 LandmineService.start()
+IndexService.start()
 ItemService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).

@@ -1,10 +1,12 @@
 -- On-screen HUD: a big outlined cash number in the bottom-left (it counts up, pops, and big
--- gains/spends float a "+$X" / "-$X" off it) with the income under it, and pop-up messages.
+-- gains/spends float a "+$X" / "-$X" off to its right) with the income under it, gems above it
+-- (they count up too, with a floating "+N"), and pop-up messages.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Format = require(ReplicatedStorage.Shared.Format)
+local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 
@@ -14,6 +16,8 @@ local Hud = {}
 
 local CASH_GREEN = Theme.MoneyGreen
 local SPEND_RED = Theme.SpendRed
+local GEM_BLUE = Theme.GemBlue
+local GEMS_ROW_HEIGHT = 42 -- pixels: the gem icon and number above the cash
 
 -- Pop-up messages ("You bought Boo!", "Outbid!"): big rounded text with a dark outline,
 -- no box, in the lower middle of the screen. Colour shows the kind of message, and dollar
@@ -63,7 +67,8 @@ local function outline(label: TextLabel, thickness: number): UIStroke
 	})
 end
 
--- Big outlined cash number in the bottom-left corner, with the income line under it.
+-- Big outlined cash number in the bottom-left corner, with the income line under it and the
+-- gems line above it.
 local function buildCashDisplay(gui: ScreenGui)
 	local display = new("Frame", {
 		Name = "CashDisplay",
@@ -97,16 +102,45 @@ local function buildCashDisplay(gui: ScreenGui)
 	})
 	outline(incomeLabel, 2.5)
 
-	return display, pop, cashLabel, incomeLabel
+	-- Gems: the gem icon and the amount, in their own row above the cash.
+	local gemsRow = new("Frame", {
+		Name = "Gems",
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.fromOffset(2, 0),
+		Size = UDim2.new(1, -2, 0, GEMS_ROW_HEIGHT),
+		BackgroundTransparency = 1,
+		Parent = display,
+	})
+	new("ImageLabel", {
+		Name = "Icon",
+		Size = UDim2.fromOffset(GEMS_ROW_HEIGHT, GEMS_ROW_HEIGHT),
+		BackgroundTransparency = 1,
+		Image = GameConfig.GemIcon,
+		Parent = gemsRow,
+	})
+	local gemsLabel = text({
+		Name = "Amount",
+		Position = UDim2.fromOffset(GEMS_ROW_HEIGHT + 6, 0),
+		Size = UDim2.new(1, -(GEMS_ROW_HEIGHT + 6), 1, 0),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextColor3 = GEM_BLUE,
+		Text = "0",
+		Parent = gemsRow,
+	})
+	outline(gemsLabel, 3)
+	-- Used to "pop" the row when gems come in.
+	local gemsPop = new("UIScale", { Parent = gemsRow })
+
+	return display, pop, cashLabel, incomeLabel, gemsRow, gemsLabel, gemsPop
 end
 
 -- A "+$X" / "-$X" that floats up off the cash number and fades away.
-local function floatAmount(display: Frame, amount: number)
+local function floatAmount(display: Frame, cashLabel: TextLabel, amount: number)
 	local gain = amount > 0
-	-- Starts just above the cash number and drifts upward.
+	-- Starts just to the right of the cash number (clear of the gems above it) and drifts upward.
 	local label = text({
-		AnchorPoint = Vector2.new(0, 1),
-		Position = UDim2.fromOffset(6, -2),
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.fromOffset(cashLabel.TextBounds.X + 14, cashLabel.AbsoluteSize.Y / 2),
 		Size = UDim2.fromOffset(200, 34),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextColor3 = if gain then CASH_GREEN else SPEND_RED,
@@ -123,6 +157,45 @@ local function floatAmount(display: Frame, amount: number)
 	)
 	rise.Completed:Connect(function()
 		label:Destroy()
+	end)
+	rise:Play()
+end
+
+-- A "+N" with a little gem that floats up off the gems number and fades away.
+local function floatGems(gemsRow: Frame, gemsLabel: TextLabel, amount: number)
+	local holder = new("Frame", {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.fromOffset(gemsLabel.Position.X.Offset + gemsLabel.TextBounds.X + 12, GEMS_ROW_HEIGHT / 2),
+		Size = UDim2.fromOffset(160, 30),
+		BackgroundTransparency = 1,
+		ZIndex = 5,
+		Parent = gemsRow,
+	})
+	local label = text({
+		Size = UDim2.fromOffset(90, 30),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextColor3 = GEM_BLUE,
+		Text = "+" .. Format.cash(amount),
+		ZIndex = 5,
+		Parent = holder,
+	})
+	local labelOutline = outline(label, 3)
+	label.Size = UDim2.fromOffset(label.TextBounds.X + 4, 30)
+	local icon = new("ImageLabel", {
+		Position = UDim2.fromOffset(label.TextBounds.X + 6, 1),
+		Size = UDim2.fromOffset(28, 28),
+		BackgroundTransparency = 1,
+		Image = GameConfig.GemIcon,
+		ZIndex = 5,
+		Parent = holder,
+	})
+	local fade = TweenInfo.new(1.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	TweenService:Create(labelOutline, fade, { Transparency = 1 }):Play()
+	TweenService:Create(label, fade, { TextTransparency = 1 }):Play()
+	TweenService:Create(icon, fade, { ImageTransparency = 1 }):Play()
+	local rise = TweenService:Create(holder, fade, { Position = holder.Position + UDim2.fromOffset(8, -40) })
+	rise.Completed:Connect(function()
+		holder:Destroy()
 	end)
 	rise:Play()
 end
@@ -252,7 +325,7 @@ function Hud.start()
 		Parent = player:WaitForChild("PlayerGui"),
 	})
 
-	local display, pop, cashLabel, incomeLabel = buildCashDisplay(gui)
+	local display, pop, cashLabel, incomeLabel, gemsRow, gemsLabel, gemsPop = buildCashDisplay(gui)
 	buildToasts(gui)
 
 	local function updateIncome()
@@ -262,6 +335,28 @@ function Hud.start()
 	updateIncome()
 
 	-- leaderstats appears once the server has loaded our data.
+	task.spawn(function()
+		local gems = player:WaitForChild("leaderstats"):WaitForChild("Gems") :: IntValue
+		-- Like the cash, the shown number counts toward the real one.
+		local shown = Instance.new("NumberValue")
+		shown.Value = gems.Value
+		shown.Changed:Connect(function(value)
+			gemsLabel.Text = Format.cash(value)
+		end)
+		gemsLabel.Text = Format.cash(gems.Value)
+
+		local lastValue = gems.Value
+		gems.Changed:Connect(function(value)
+			local change = value - lastValue
+			lastValue = value
+			TweenService:Create(shown, TweenInfo.new(0.6, Enum.EasingStyle.Quad), { Value = value }):Play()
+			if change > 0 then
+				floatGems(gemsRow, gemsLabel, change)
+				gemsPop.Scale = 1.25
+				TweenService:Create(gemsPop, TweenInfo.new(0.45, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+			end
+		end)
+	end)
 	task.spawn(function()
 		local cash = player:WaitForChild("leaderstats"):WaitForChild("Cash") :: NumberValue
 
@@ -282,7 +377,7 @@ function Hud.start()
 			-- Ignore the steady income ticks; only call out purchases, sales and other big changes.
 			local income = player:GetAttribute("IncomePerSecond") or 0
 			if math.abs(change) > income * 1.5 then
-				floatAmount(display, change)
+				floatAmount(display, cashLabel, change)
 				-- A quick pop of the number.
 				pop.Scale = 1.12
 				TweenService:Create(pop, TweenInfo.new(0.35, Enum.EasingStyle.Back), { Scale = 1 }):Play()

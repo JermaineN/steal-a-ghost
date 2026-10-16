@@ -430,7 +430,28 @@ function GhostService.playerRemoving(player: Player)
 	placed[player] = nil
 end
 
+-- One clean copy of every ghost in ReplicatedStorage.GhostPreviews, for the Index window to
+-- show (the meshes live in ServerStorage, which players' devices can't see). No label, light or
+-- animation tag; each sits at the origin.
+local function buildPreviews()
+	local folder = Instance.new("Folder")
+	folder.Name = "GhostPreviews"
+	for _, def in GhostConfig.Ghosts do
+		local model = buildModel(def, {})
+		model.Name = def.id
+		for _, item in model:GetDescendants() do
+			if item:IsA("BillboardGui") or item:IsA("Light") then
+				item:Destroy()
+			end
+		end
+		CollectionService:RemoveTag(model, GhostModels.ANIMATED_TAG)
+		model.Parent = folder
+	end
+	folder.Parent = ReplicatedStorage
+end
+
 function GhostService.start(map)
+	buildPreviews()
 	-- The owner confirmed a rare-ghost sale. Never trust the client: it only counts if it matches
 	-- the sale we asked about, in time, and the same ghost is still in that slot.
 	Remotes.SellConfirmed.OnServerEvent:Connect(function(player: Player, slot: unknown)
