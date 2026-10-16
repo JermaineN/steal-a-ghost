@@ -56,15 +56,15 @@ local function playBonk(target: Player)
 	Debris:AddItem(sound, 4)
 end
 
--- Players within `range` and inside the swing's arc (GameConfig.ItemHitArcDegrees, centred on
--- where the swinger faces), using server positions, closest first.
+-- Players within `range` and inside the swing's cone (`arcDegrees` wide, centred on where the
+-- swinger faces), using server positions, closest first.
 -- Each comes with the flat direction from the swinger to them.
 type Target = { player: Player, direction: Vector3, distance: number }
-local function findTargets(swinger: Player, root: BasePart, range: number): { Target }
+local function findTargets(swinger: Player, root: BasePart, range: number, arcDegrees: number): { Target }
 	local targets = {}
 	-- A target is in the arc when the angle between where the swinger faces and the direction to
 	-- them is at most half the arc.
-	local minFacing = math.cos(math.rad(GameConfig.ItemHitArcDegrees / 2))
+	local minFacing = math.cos(math.rad(arcDegrees / 2))
 	for _, target in Players:GetPlayers() do
 		local targetRoot = getAliveRoot(target)
 		-- Can't hit players who are already knocked over or caged.
@@ -114,8 +114,8 @@ local function cageHits(swinger: Player, targets: { Target }, tool: Tool)
 end
 
 local ITEMS = {
-	Bat = { range = GameConfig.BatRange, onHit = batHits },
-	Cage = { range = GameConfig.CageRange, onHit = cageHits },
+	Bat = { range = GameConfig.BatRange, arc = GameConfig.BatHitArcDegrees, onHit = batHits },
+	Cage = { range = GameConfig.CageRange, arc = GameConfig.CageHitArcDegrees, onHit = cageHits },
 }
 
 -- The moment the swing reaches the front.
@@ -132,7 +132,7 @@ local function checkHits(swinger: Player, tool: Tool)
 		return
 	end
 	local item = ITEMS[tool.Name]
-	item.onHit(swinger, findTargets(swinger, root, item.range), tool)
+	item.onHit(swinger, findTargets(swinger, root, item.range, item.arc), tool)
 end
 
 -- Called on the server when a player clicks while holding an item.
