@@ -20,6 +20,8 @@ local EVENT_NAMES = {
 	"ShopBuy", -- client -> server: buy one of a Shop item (itemId); the server checks the price
 	"DailyClaim", -- client -> server: claim today's daily reward (no arguments)
 	"TutorialComplete", -- client -> server: finished the first-time tutorial (no arguments)
+	"OpenUpgrades", -- server -> a base's owner: they used their Upgrades signpost, open the window
+	"BuyUpgrade", -- client -> server: buy the next level of a base upgrade (kindId: "graves" or "lock")
 }
 
 local folder

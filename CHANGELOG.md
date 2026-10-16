@@ -385,3 +385,39 @@ because its owner left mid-steal.
 once their data loads (Studio's server-only mode). **Not tested:** the worldwide lists (Studio
 has no DataStore access; check the boards in the live game after publishing), and a real steal
 adding to the count (2 players).
+
+---
+
+## 11. Base upgrades
+
+**For players:** a wooden **UPGRADES** signpost at every base entrance (across from the lock
+button). Its prompt opens a **Base Upgrades** window (gold, same style as the other windows)
+for that base's owner; anyone else is told it's not their base. Two upgrades, each a card with
+level pips, "Now / Next", the price and an Upgrade button:
+
+| Upgrade | Start | Levels and cost |
+|---|---|---|
+| **More Graves** | 6 of the base's 10 graves open | 7: $5K · 8: $25K · 9: $100K · 10: $500K |
+| **Longer Lock** | 60 s | 75 s: $10K · 90 s: $50K · 105 s: $250K |
+
+- Graves that aren't open yet have a **grey pad with "LOCKED"** over it, and new ghosts only
+  go into open graves (the base counts as full when they're taken).
+- **Nobody loses a ghost:** a player whose save already uses more graves gets enough More
+  Graves levels for free when they join.
+- Upgrades are saved (`upgrades`) and **kept through rebirths**.
+- I made the second upgrade *Longer Lock* rather than *faster lock cooldown*, because the
+  cooldown is only 10 s, so shortening it wouldn't mean much.
+
+**This changes the early game:** new players start with 6 graves instead of 10. Tune
+`StartingGraves`, `GraveUpgradeCosts`, `LockUpgradeCosts` and `LockUpgradeSeconds` in
+`GameConfig` (set `StartingGraves = 10` to turn the grave limit off).
+
+**How it works:** `Shared/Upgrades.luau` (maths), `UpgradeService` (`BuyUpgrade`,
+`OpenUpgrades`; `Upgrade_<id>` attributes), `UI/UpgradePanel.luau`. GhostService only fills
+open graves, LockService uses the upgraded duration, EconomyService greys out locked pads,
+MapBuilder builds the signpost.
+
+**Tested (solo, with test cash):** graves 7–10 showed LOCKED; the signpost opened the
+window; buying More Graves opened grave 7 and Longer Lock made the lock last 75 s; the
+window updated (pips, next level, prices). **Not tested:** the free levels for old saves
+(needs a live save with ghosts in graves 7–10), and a non-owner using the sign (2 players).
