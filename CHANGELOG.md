@@ -360,3 +360,28 @@ sat on the new ghost's pad, stepping on it moved to step 3, stepping on the lock
 finished it with +25 gems; a repeated completion request was refused; everything was cleaned
 up. You confirmed the line and arrow show in-game, and spotted the card under the hotbar (now
 fixed).
+
+---
+
+## 10. Leaderboards in the map
+
+**For players:** three glowing graveyard-stone boards in the gaps between the two middle bases,
+facing the walkway:
+- **RICHEST** (green, current cash) and **MOST REBIRTHS** (purple) on one side.
+- **TOP THIEVES** (red, ghosts successfully stolen) on the other side.
+
+Each shows the **top 10 players worldwide**, with #1–#3 in gold, silver and bronze, and refreshes
+every minute (`GameConfig.LeaderboardRefreshSeconds`, `LeaderboardSize`). A player who joins
+shows up a few seconds after their data loads.
+
+**How it works:** `LeaderboardService` builds the boards in code (`GeneratedMap.Leaderboards`)
+and keeps one OrderedDataStore per stat (`Leaderboard_Cash`, `Leaderboard_Rebirths`,
+`Leaderboard_Steals`). Each refresh saves everyone's current number in this server, then reads
+the top 10. If DataStores can't be reached (always in Studio), a board shows "Players in this
+server" instead. **Steals are now counted and saved** (`steals`), including a ghost taken
+because its owner left mid-steal.
+
+**Tested (solo):** the boards build in both gaps, face the walkway and fill in with the player
+once their data loads (Studio's server-only mode). **Not tested:** the worldwide lists (Studio
+has no DataStore access; check the boards in the live game after publishing), and a real steal
+adding to the count (2 players).

@@ -23,6 +23,7 @@ local FriendBoostService = require(Services.FriendBoostService)
 local ShopService = require(Services.ShopService)
 local DailyRewardService = require(Services.DailyRewardService)
 local TutorialService = require(Services.TutorialService)
+local LeaderboardService = require(Services.LeaderboardService)
 
 local map = MapBuilder.build()
 PlotService.start(map.plots)
@@ -42,6 +43,7 @@ FriendBoostService.start()
 ShopService.start()
 DailyRewardService.start()
 TutorialService.start()
+LeaderboardService.start(map.plots)
 
 -- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).
 local function applyWalkSpeed(character: Model)
@@ -62,6 +64,7 @@ local function onPlayerAdded(player: Player)
 		TutorialService.playerLoaded(player)
 		GhostService.loadGhosts(player)
 		DailyRewardService.playerLoaded(player)
+		LeaderboardService.playerLoaded(player)
 	end
 end
 

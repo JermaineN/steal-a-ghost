@@ -65,6 +65,11 @@ return {
 		shiny = { soundId = 9047100306, volume = 0.7, seconds = 7 },
 	},
 
+	-- Leaderboards (glowing boards between the middle bases): the top players worldwide, saved in
+	-- OrderedDataStores. In Studio (no DataStore access) they show the players in the server.
+	LeaderboardRefreshSeconds = 60,
+	LeaderboardSize = 10, -- rows per board
+
 	-- First-time tutorial: gems for finishing it (buy a ghost, collect, lock your base).
 	TutorialGems = 25,
 
