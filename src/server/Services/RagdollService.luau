@@ -38,9 +38,37 @@ function RagdollService.canKnock(player: Player): boolean
 	return not ragdolled[player] and os.clock() >= (immuneUntil[player] or 0) and player:GetAttribute("Caged") ~= true
 end
 
--- Knocks the player over, pushing them with `velocity` (studs per second), for `seconds`
--- (the bat's GameConfig.BatRagdollSeconds if not given).
-function RagdollService.knock(player: Player, velocity: Vector3, seconds: number?)
+-- Has a launched (floppy) character come back down? Something solid just under the root part,
+-- and no longer falling. Uses the positions and speeds their device sends the server.
+local function hasLanded(character: Model, root: BasePart): boolean
+	if root.AssemblyLinearVelocity.Y < -4 then
+		return false
+	end
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { character }
+	-- Start above the root part: lying down, it can sit partly inside the floor.
+	return workspace:Raycast(root.Position + Vector3.new(0, 2, 0), Vector3.new(0, -6, 0), params) ~= nil
+end
+
+-- Waits until the character lands (or GameConfig.RagdollMaxAirSeconds pass, in case they never
+-- seem to), giving it a moment to leave the ground first.
+local function waitForLanding(character: Model)
+	local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	local started = os.clock()
+	task.wait(0.3)
+	while root and root.Parent and os.clock() - started < GameConfig.RagdollMaxAirSeconds do
+		if hasLanded(character, root) then
+			return
+		end
+		task.wait(0.1)
+	end
+end
+
+-- Knocks the player over, pushing them with `velocity` (studs per second). They stay floppy for
+-- `seconds` (the bat's GameConfig.BatRagdollSeconds if not given), counted from the hit, or from
+-- when they land if `afterLanding` is true.
+function RagdollService.knock(player: Player, velocity: Vector3, seconds: number?, afterLanding: boolean?)
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	if not character or not humanoid or humanoid.Health <= 0 or not RagdollService.canKnock(player) then
@@ -56,7 +84,11 @@ function RagdollService.knock(player: Player, velocity: Vector3, seconds: number
 	end
 	Remotes.Ragdoll:FireClient(player, true, velocity)
 
-	task.delay(seconds or GameConfig.BatRagdollSeconds, function()
+	task.spawn(function()
+		if afterLanding then
+			waitForLanding(character)
+		end
+		task.wait(seconds or GameConfig.BatRagdollSeconds)
 		ragdolled[player] = nil
 		immuneUntil[player] = os.clock() + GameConfig.BatHitImmunitySeconds
 		-- They may have respawned or left meanwhile; a new character starts with its joints on.

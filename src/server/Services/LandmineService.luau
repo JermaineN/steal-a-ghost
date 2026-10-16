@@ -78,7 +78,7 @@ local function explode(mine: Mine, triggeredBy: Player)
 		local away = Vector3.new(root.Position.X - mine.position.X, 0, root.Position.Z - mine.position.Z)
 		local direction = if away.Magnitude > 0.1 then away.Unit else Vector3.xAxis
 		local push = direction * GameConfig.LandmineKnockbackSpeed + Vector3.new(0, GameConfig.LandmineKnockbackLift, 0)
-		RagdollService.knock(target, push, GameConfig.LandmineRagdollSeconds)
+		RagdollService.knock(target, push, GameConfig.LandmineRagdollSeconds, true) -- counted from landing
 		table.insert(launched, target)
 		if target == triggeredBy then
 			Notify.send(target, "You stepped on a hidden landmine!", "error")
