@@ -9,6 +9,8 @@ local EVENT_NAMES = {
 	"RareSpawn", -- server -> all clients: a Legendary/Mythic ghost spawned (ghostId)
 	"BatSwing", -- server -> every client except the swinger: play this character's swing (character)
 	"Ragdoll", -- server -> the hit player only: go floppy (true, knockback velocity) or get up (false)
+	"Landmine", -- server -> the mine's owner only: draw ("placed", id, position) or remove ("removed", id)
+	"LandmineExploded", -- server -> all clients: play the explosion (position, radius)
 }
 
 local folder

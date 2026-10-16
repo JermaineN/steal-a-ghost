@@ -1,4 +1,8 @@
 -- Tuning values for the whole game. Change numbers here instead of inside scripts.
+
+-- The landmine's other sizes are based on this: 2/3 of the walkway's 12-stud width.
+local LANDMINE_TRIGGER_RADIUS = 8
+
 return {
 	-- Plots / server size (set Max Players in Game Settings to match PlotCount)
 	PlotCount = 8,
@@ -74,6 +78,25 @@ return {
 	CageRange = 8, -- studs in front of the swinger that count as a hit
 	CageSeconds = 8, -- how long a caged player stays stuck
 	CageCooldownSeconds = 12, -- after caging someone, before the cage can be used again (misses are free)
+
+	-- Landmine (only for the players listed below): click to place one at your feet. Only its
+	-- owner can see it. Anyone else who walks near it sets it off and everyone in the blast (except
+	-- the owner) is launched much harder than the bat, and stays down longer
+	LandmineAllowedUserIds = {
+		5783726738, -- jerizaxe
+	},
+	LandmineIcon = "rbxassetid://108281657379293", -- hotbar picture (source: assets/landmine-icon.png)
+	LandmineTriggerRadius = LANDMINE_TRIGGER_RADIUS, -- studs from the mine that set it off
+	LandmineExplosionRadius = LANDMINE_TRIGGER_RADIUS * 1.3, -- everyone this close gets launched
+	LandmineMinSpacing = LANDMINE_TRIGGER_RADIUS * 2.5, -- closest a new mine can be to another (20 studs)
+	LandmineMaxPlaced = 4, -- placing another removes the oldest
+	LandmineCooldownSeconds = 15, -- after placing a mine, before placing the next
+	LandmineArmSeconds = 1, -- a new mine can't go off for this long (so it can't blow up as it lands)
+	LandmineKnockbackSpeed = 50, -- sideways push away from the mine, in studs per second
+	LandmineKnockbackLift = 125, -- upward launch (125 flies them about 40 studs up; the bat's 60 is about 9)
+	LandmineRagdollSeconds = 9, -- how long they stay floppy (the bat's is 3.5)
+	-- "Dynamite Explosion" (BuilderBillbert)
+	LandmineSound = { soundId = 117211977307268, volume = 1 },
 
 	-- Base lock
 	LockDurationSeconds = 60,
