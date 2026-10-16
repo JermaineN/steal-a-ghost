@@ -1,7 +1,7 @@
 -- The side menu: press M (or tap the tab on the middle of the left edge) to slide out four
 -- buttons (Shop, Rebirth, Index, Inventory), one after another; press again to tuck them away.
--- Index opens the Ghost Index (IndexPanel); the other menus aren't built yet, so for now
--- they say they're coming soon.
+-- Index opens the Ghost Index (IndexPanel) and Rebirth the Rebirth window (RebirthPanel); the
+-- other menus aren't built yet, so for now they say they're coming soon.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -10,6 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Hud = require(script.Parent.Hud)
 local IndexPanel = require(script.Parent.IndexPanel)
+local RebirthPanel = require(script.Parent.RebirthPanel)
 
 local Sidebar = {}
 
@@ -55,13 +56,27 @@ local function darken(color: Color3, amount: number): Color3
 	return color:Lerp(Color3.new(0, 0, 0), amount)
 end
 
--- What each button does. Index opens (or closes) the Ghost Index; the others come later.
+-- The windows the buttons open. Opening one closes the others.
+local PANELS = {
+	Index = IndexPanel,
+	Rebirth = RebirthPanel,
+}
+
+-- What each button does: open (or close) its window; menus without one aren't built yet.
 local function select(name: string)
-	if name == "Index" then
-		IndexPanel.toggle()
-	else
+	local panel = PANELS[name]
+	if not panel then
 		Hud.showToast(name .. " coming soon!", "info")
+		return
 	end
+	if not panel.isOpen() then
+		for otherName, other in PANELS do
+			if otherName ~= name then
+				other.close()
+			end
+		end
+	end
+	panel.toggle()
 end
 
 -- One button: a card with a dark accent-tinted gradient, a glowing two-tone outline, the icon on a
@@ -251,10 +266,12 @@ local function buildTab(parent: GuiObject): (TextButton, (boolean) -> ())
 	return tab, showOpen
 end
 
--- A red count in the Index button's corner while gem rewards are waiting to be claimed there.
-local function addRewardBadge(button: GuiObject)
+-- A red badge in a button's corner: the number of Index rewards waiting, or "!" on Rebirth
+-- while you can afford one. `changed` fires with the new value; `show` turns it into the badge
+-- text, or nil to hide it.
+local function addBadge(button: GuiObject, changed: BindableEvent, initial: any, show: (any) -> string?)
 	local badge = new("TextLabel", {
-		Name = "RewardBadge",
+		Name = "Badge",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(1, -6, 0, 6),
 		Size = UDim2.fromOffset(26, 26),
@@ -273,12 +290,13 @@ local function addRewardBadge(button: GuiObject)
 		Parent = badge,
 	})
 	new("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), Parent = badge })
-	local function show(count: number)
-		badge.Visible = count > 0
-		badge.Text = tostring(count)
+	local function update(value: any)
+		local badgeText = show(value)
+		badge.Visible = badgeText ~= nil
+		badge.Text = badgeText or ""
 	end
-	IndexPanel.claimableChanged.Event:Connect(show)
-	show(IndexPanel.claimableCount())
+	changed.Event:Connect(update)
+	update(initial)
 end
 
 -- Shrinks everything on small (phone) screens, like the HUD does.
@@ -337,7 +355,13 @@ function Sidebar.start()
 		holders[index] = holder
 		icons[index] = icon
 		if option.name == "Index" then
-			addRewardBadge(button)
+			addBadge(button, IndexPanel.claimableChanged, IndexPanel.claimableCount(), function(count: number)
+				return if count > 0 then tostring(count) else nil
+			end)
+		elseif option.name == "Rebirth" then
+			addBadge(button, RebirthPanel.availableChanged, RebirthPanel.canAfford(), function(available: boolean)
+				return if available then "!" else nil
+			end)
 		end
 	end
 

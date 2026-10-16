@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
+local Rebirth = require(ReplicatedStorage.Shared.Rebirth)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local GhostLabel = require(script.Parent.Parent.Util.GhostLabel)
@@ -276,7 +277,10 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, a
 		return
 	end
 
-	local model = buildModel(def, { { text = "+$" .. Format.cash(def.income) .. "/s", color = Theme.MoneyGreen } })
+	-- Its label shows what it earns for this owner (rebirths boost income; rebirthing clears the
+	-- base, so the boost can't change while it sits here).
+	local income = Rebirth.income(def.income, DataService.getRebirths(owner))
+	local model = buildModel(def, { { text = "+$" .. Format.cash(income) .. "/s", color = Theme.MoneyGreen } })
 	model:SetAttribute("OwnerUserId", owner.UserId)
 	model:SetAttribute("GhostId", ghostId)
 	model:SetAttribute("Carried", false)

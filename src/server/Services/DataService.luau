@@ -9,7 +9,13 @@ local Notify = require(script.Parent.Parent.Util.Notify)
 
 local DataService = {}
 
-type Profile = { data: any, canSave: boolean, cashValue: NumberValue, gemsValue: IntValue }
+type Profile = {
+	data: any,
+	canSave: boolean,
+	cashValue: NumberValue,
+	gemsValue: IntValue,
+	rebirthsValue: IntValue,
+}
 local profiles: { [Player]: Profile } = {}
 local activeSaves = 0
 
@@ -27,6 +33,7 @@ local function newData()
 		discovered = {}, -- [ghostId] = true for every ghost the player has owned (the Index)
 		claimed = {}, -- [ghostId] = true once its Index gem reward has been claimed
 		gems = 0,
+		rebirths = 0, -- how many times they've rebirthed (each one boosts income, see Shared.Rebirth)
 	}
 end
 
@@ -112,9 +119,19 @@ function DataService.playerAdded(player: Player): boolean
 	gemsValue.Name = "Gems"
 	gemsValue.Value = data.gems
 	gemsValue.Parent = leaderstats
+	local rebirthsValue = Instance.new("IntValue")
+	rebirthsValue.Name = "Rebirths"
+	rebirthsValue.Value = data.rebirths
+	rebirthsValue.Parent = leaderstats
 	leaderstats.Parent = player
 
-	profiles[player] = { data = data, canSave = canSave, cashValue = cashValue, gemsValue = gemsValue }
+	profiles[player] = {
+		data = data,
+		canSave = canSave,
+		cashValue = cashValue,
+		gemsValue = gemsValue,
+		rebirthsValue = rebirthsValue,
+	}
 
 	-- The Index: ghosts already in their base count as found (saves from before the Index), and
 	-- each found ghost is shown to the player's device as an "Index_<ghostId>" attribute.
@@ -233,6 +250,32 @@ function DataService.collectStored(player: Player, slot: number): number
 	profile.data.stored[tostring(slot)] = nil
 	DataService.addCash(player, amount)
 	return amount
+end
+
+function DataService.getCash(player: Player): number
+	local profile = profiles[player]
+	return if profile then profile.data.cash else 0
+end
+
+function DataService.getRebirths(player: Player): number
+	local profile = profiles[player]
+	return if profile then profile.data.rebirths else 0
+end
+
+-- The data side of a rebirth (RebirthService has already cleared the base): cash back to the
+-- starting amount, uncollected pad cash gone, one more rebirth, and the gem reward.
+function DataService.applyRebirth(player: Player, gems: number)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	profile.data.cash = GameConfig.StartingCash
+	profile.cashValue.Value = profile.data.cash
+	profile.data.stored = {}
+	profile.data.ghosts = {}
+	profile.data.rebirths += 1
+	profile.rebirthsValue.Value = profile.data.rebirths
+	DataService.addGems(player, gems)
 end
 
 function DataService.getGhosts(player: Player): { [string]: string }

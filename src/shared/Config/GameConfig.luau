@@ -121,6 +121,18 @@ return {
 		Inventory = "rbxassetid://129386900876231",
 	},
 
+	-- Rebirth (side menu → Rebirth): trade in all your cash and ghosts once you have enough cash,
+	-- for a permanent income boost and a gem reward. Gems, the Index and your items stay.
+	-- Cash needed for rebirth 1, 2, 3 ...; after the last one, each costs RebirthCostGrowth
+	-- times the one before.
+	RebirthCosts = { 50000, 250000, 1000000, 5000000, 25000000, 100000000, 500000000, 2000000000 },
+	RebirthCostGrowth = 4,
+	RebirthIncomeBonus = 0.5, -- each rebirth adds +50% income (1 rebirth = x1.5, 2 = x2, ...)
+	RebirthGems = 50, -- gem reward = this × the rebirth number reached (rebirth 3 gives 150)
+	-- Played on the rebirthing player's device with the celebration. "Rewards Level Up - Next
+	-- Tier" (Los Calientes Studio, unknown uploader; swap it if you prefer another).
+	RebirthSound = { soundId = 134821092416328, volume = 0.7 },
+
 	-- Base lock
 	LockDurationSeconds = 60,
 	LockCooldownSeconds = 10, -- wait time after a lock ends before locking again

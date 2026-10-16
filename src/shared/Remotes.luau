@@ -15,6 +15,8 @@ local EVENT_NAMES = {
 	"SellConfirmed", -- client -> server: the owner said yes (slot)
 	"IndexClaim", -- client -> server: claim the gem reward for a found ghost (ghostId, or "all")
 	"StealAlarm", -- server -> a ghost's owner only: someone is carrying one of your ghosts away (true) or not any more (false)
+	"Rebirth", -- client -> server: rebirth now (no arguments; the server checks the cost)
+	"Rebirthed", -- server -> all clients: a player rebirthed (player, rebirth number reached)
 }
 
 local folder
