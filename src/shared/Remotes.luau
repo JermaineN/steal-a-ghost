@@ -13,6 +13,7 @@ local EVENT_NAMES = {
 	"LandmineExploded", -- server -> all clients: play the explosion (position, radius)
 	"SellConfirm", -- server -> the owner only: ask "sell this rare ghost?" (slot, ghostId, refund)
 	"SellConfirmed", -- client -> server: the owner said yes (slot)
+	"StealAlarm", -- server -> a ghost's owner only: someone is carrying one of your ghosts away (true) or not any more (false)
 }
 
 local folder
