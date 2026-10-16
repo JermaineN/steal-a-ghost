@@ -10,9 +10,11 @@ return {
 
 	-- Economy
 	StartingCash = 100,
+	GemIcon = "rbxassetid://87137328805739", -- the gem currency's picture (source: assets/gem-icon.png)
 	-- Extra cash for testing, ONLY when playing in Studio (live servers ignore it).
-	-- A test profile is never saved. Set to 0 to test with normal starting cash.
-	StudioTestCash = 0,
+	-- A test profile is never saved. Turn StudioTestCashOn on to start with StudioTestCash.
+	StudioTestCashOn = false,
+	StudioTestCash = 1000000000, -- $1B
 	SellRefund = 0.5, -- selling a ghost returns 50% of its price
 	-- Selling a ghost of this rarity or higher asks "Are you sure?" first (see GhostConfig.Rarities).
 	SellConfirmMinRarity = "Mythic",

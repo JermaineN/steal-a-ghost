@@ -10,7 +10,9 @@ function Format.cash(amount: number): string
 	end
 
 	local index = 1
-	while amount >= 1000 and index < #SUFFIXES do
+	-- 999.5 or more would round up to "1000" with this suffix (999,999,575 -> "1000M"), so it
+	-- moves up to the next one ("1.00B") instead.
+	while amount >= 999.5 and index < #SUFFIXES do
 		amount /= 1000
 		index += 1
 	end

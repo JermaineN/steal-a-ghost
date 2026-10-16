@@ -32,7 +32,7 @@ The user is new to Roblox development: explain Roblox concepts briefly when they
 - Sounds come from the Creator Store; prefer Roblox-licensed APM Music tracks or audio made for games over clips ripped from other games. Their IDs live in `GameConfig`.
 
 ## Testing
-- `GameConfig.StudioTestCash` (extra starting cash, never saved) and `GameConfig.StudioBoostSpawns` (equal ghost odds, 2× spawn rate) only apply in Studio. Both are off by default; turn on for testing expensive/rare ghosts, and turn back off before committing.
+- `GameConfig.StudioTestCashOn` (start with `StudioTestCash`, $1B, never saved) and `GameConfig.StudioBoostSpawns` (equal ghost odds, 2× spawn rate) only apply in Studio. Both are off by default; turn on for testing expensive/rare ghosts, and turn back off before committing.
 - Stealing, catching, lock-with-thief, bidding and anything about what other players see need a 2-player test (Test → Clients and Servers, 2 players); the user starts it. `list_roblox_studios` then shows the server and each player window, and `execute_luau` / `user_keyboard_input` can drive each one.
 - DataStore warnings in Studio output are expected (Studio API access is off), and so is the "Infinite yield ... leaderstats" warning they cause. Cash only appears a few seconds after joining.
 - `execute_luau` gets its own copy of every ModuleScript, so requiring a service there gives a fresh, empty copy (no plots, no players). Test like a player instead: move the character (`PivotTo`), press E with `user_keyboard_input` to use a prompt, and read results from the Server or Client. Stateless modules (`GhostModels`, `GhostLabel`) are fine to require for building previews.

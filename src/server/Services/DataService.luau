@@ -9,7 +9,7 @@ local Notify = require(script.Parent.Parent.Util.Notify)
 
 local DataService = {}
 
-type Profile = { data: any, canSave: boolean, cashValue: NumberValue }
+type Profile = { data: any, canSave: boolean, cashValue: NumberValue, gemsValue: IntValue }
 local profiles: { [Player]: Profile } = {}
 local activeSaves = 0
 
@@ -24,6 +24,9 @@ local function newData()
 		cash = GameConfig.StartingCash,
 		ghosts = {}, -- ["slotNumber"] = ghostId (string keys so DataStores accept it)
 		stored = {}, -- ["slotNumber"] = uncollected cash waiting on that slot's collect pad
+		discovered = {}, -- [ghostId] = true for every ghost the player has owned (the Index)
+		claimed = {}, -- [ghostId] = true once its Index gem reward has been claimed
+		gems = 0,
 	}
 end
 
@@ -88,9 +91,9 @@ function DataService.playerAdded(player: Player): boolean
 		return false
 	end
 
-	-- Studio-only test money (GameConfig.StudioTestCash). A boosted profile is never saved,
+	-- Studio-only test money (GameConfig.StudioTestCashOn / StudioTestCash). A boosted profile is never saved,
 	-- so test money can't leak into anyone's real save data. Live servers never run this.
-	local testCash = GameConfig.StudioTestCash
+	local testCash = if GameConfig.StudioTestCashOn then GameConfig.StudioTestCash else 0
 	if RunService:IsStudio() and testCash and testCash > 0 then
 		data.cash = math.max(data.cash, testCash)
 		canSave = false
@@ -105,9 +108,25 @@ function DataService.playerAdded(player: Player): boolean
 	cashValue.Name = "Cash"
 	cashValue.Value = data.cash
 	cashValue.Parent = leaderstats
+	local gemsValue = Instance.new("IntValue")
+	gemsValue.Name = "Gems"
+	gemsValue.Value = data.gems
+	gemsValue.Parent = leaderstats
 	leaderstats.Parent = player
 
-	profiles[player] = { data = data, canSave = canSave, cashValue = cashValue }
+	profiles[player] = { data = data, canSave = canSave, cashValue = cashValue, gemsValue = gemsValue }
+
+	-- The Index: ghosts already in their base count as found (saves from before the Index), and
+	-- each found ghost is shown to the player's device as an "Index_<ghostId>" attribute.
+	for _, ghostId in data.ghosts do
+		data.discovered[ghostId] = true
+	end
+	for ghostId in data.discovered do
+		player:SetAttribute("Index_" .. ghostId, true)
+	end
+	for ghostId in data.claimed do
+		player:SetAttribute("IndexClaimed_" .. ghostId, true)
+	end
 	return true
 end
 
@@ -154,10 +173,39 @@ function DataService.spendCash(player: Player, amount: number): boolean
 	return true
 end
 
+function DataService.addGems(player: Player, amount: number)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	profile.data.gems += amount
+	profile.gemsValue.Value = profile.data.gems
+end
+
+-- Can the player claim the Index reward for this ghost? (Found it, and hasn't claimed it yet.)
+function DataService.canClaimIndex(player: Player, ghostId: string): boolean
+	local profile = profiles[player]
+	return profile ~= nil and profile.data.discovered[ghostId] == true and not profile.data.claimed[ghostId]
+end
+
+function DataService.markIndexClaimed(player: Player, ghostId: string)
+	local profile = profiles[player]
+	if profile then
+		profile.data.claimed[ghostId] = true
+		player:SetAttribute("IndexClaimed_" .. ghostId, true)
+	end
+end
+
 function DataService.setGhost(player: Player, slot: number, ghostId: string?)
 	local profile = profiles[player]
 	if profile then
 		profile.data.ghosts[tostring(slot)] = ghostId
+		-- Every way of getting a ghost (buying, out-bidding, stealing) ends up here, so this is
+		-- where the Index learns about it.
+		if ghostId and not profile.data.discovered[ghostId] then
+			profile.data.discovered[ghostId] = true
+			player:SetAttribute("Index_" .. ghostId, true)
+		end
 	end
 end
 

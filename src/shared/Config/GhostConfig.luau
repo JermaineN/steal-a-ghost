@@ -4,13 +4,14 @@
 --   spawnWeight how often it appears on the walkway (higher = more common)
 local GhostConfig = {}
 
+-- indexGems: the one-time gem reward for finding a ghost of that rarity (claimed in the Index).
 GhostConfig.Rarities = {
-	Common = { order = 1, color = Color3.fromRGB(210, 210, 210) },
-	Uncommon = { order = 2, color = Color3.fromRGB(90, 220, 110) },
-	Rare = { order = 3, color = Color3.fromRGB(80, 150, 255) },
-	Epic = { order = 4, color = Color3.fromRGB(180, 90, 255) },
-	Legendary = { order = 5, color = Color3.fromRGB(255, 190, 40) },
-	Mythic = { order = 6, color = Color3.fromRGB(255, 60, 90) },
+	Common = { order = 1, color = Color3.fromRGB(210, 210, 210), indexGems = 5 },
+	Uncommon = { order = 2, color = Color3.fromRGB(90, 220, 110), indexGems = 10 },
+	Rare = { order = 3, color = Color3.fromRGB(80, 150, 255), indexGems = 20 },
+	Epic = { order = 4, color = Color3.fromRGB(180, 90, 255), indexGems = 40 },
+	Legendary = { order = 5, color = Color3.fromRGB(255, 190, 40), indexGems = 75 },
+	Mythic = { order = 6, color = Color3.fromRGB(255, 60, 90), indexGems = 150 },
 }
 
 -- stylua: ignore
