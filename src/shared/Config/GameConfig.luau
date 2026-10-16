@@ -106,6 +106,15 @@ return {
 	-- "Dynamite Explosion" (BuilderBillbert)
 	LandmineSound = { soundId = 117211977307268, volume = 1 },
 
+	-- Side menu (press M) button pictures (source: assets/menu-*.png, drawn by
+	-- scripts/draw-menu-icons.ps1)
+	MenuIcons = {
+		Shop = "rbxassetid://107829839670669",
+		Rebirth = "rbxassetid://117203030563415",
+		Index = "rbxassetid://95666104073571",
+		Inventory = "rbxassetid://129386900876231",
+	},
+
 	-- Base lock
 	LockDurationSeconds = 60,
 	LockCooldownSeconds = 10, -- wait time after a lock ends before locking again

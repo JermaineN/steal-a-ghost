@@ -174,7 +174,9 @@ local function buildToasts(gui: ScreenGui)
 	})
 
 	local toastCount = 0
-	Remotes.Notify.OnClientEvent:Connect(function(message: string, kind: string)
+	-- Shows a pop-up message. Messages from the server arrive through Notify; scripts on this
+	-- device (like the sidebar) can call Hud.showToast directly.
+	local function showToast(message: string, kind: string)
 		local style = TOAST_STYLES[kind] or TOAST_STYLES.info
 		toastCount += 1
 
@@ -237,7 +239,9 @@ local function buildToasts(gui: ScreenGui)
 			end)
 			fade:Play()
 		end)
-	end)
+	end
+	Hud.showToast = showToast
+	Remotes.Notify.OnClientEvent:Connect(showToast)
 end
 
 function Hud.start()
