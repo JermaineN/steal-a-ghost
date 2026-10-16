@@ -56,11 +56,15 @@ local function playBonk(target: Player)
 	Debris:AddItem(sound, 4)
 end
 
--- Players within `range` and roughly in front of the swinger (server positions), closest first.
+-- Players within `range` and inside the swing's arc (GameConfig.ItemHitArcDegrees, centred on
+-- where the swinger faces), using server positions, closest first.
 -- Each comes with the flat direction from the swinger to them.
 type Target = { player: Player, direction: Vector3, distance: number }
 local function findTargets(swinger: Player, root: BasePart, range: number): { Target }
 	local targets = {}
+	-- A target is in the arc when the angle between where the swinger faces and the direction to
+	-- them is at most half the arc.
+	local minFacing = math.cos(math.rad(GameConfig.ItemHitArcDegrees / 2))
 	for _, target in Players:GetPlayers() do
 		local targetRoot = getAliveRoot(target)
 		-- Can't hit players who are already knocked over or caged.
@@ -69,8 +73,8 @@ local function findTargets(swinger: Player, root: BasePart, range: number): { Ta
 		end
 		local offset = targetRoot.Position - root.Position
 		local flat = Vector3.new(offset.X, 0, offset.Z)
-		local inFront = flat.Magnitude < 2 or root.CFrame.LookVector:Dot(flat.Unit) > 0
-		if offset.Magnitude <= range and inFront then
+		local inArc = flat.Magnitude < 2 or root.CFrame.LookVector:Dot(flat.Unit) >= minFacing
+		if offset.Magnitude <= range and inArc then
 			-- Straight ahead of the swinger if standing on top of each other.
 			local direction = if flat.Magnitude > 0.1 then flat.Unit else root.CFrame.LookVector
 			table.insert(targets, { player = target, direction = direction, distance = offset.Magnitude })
