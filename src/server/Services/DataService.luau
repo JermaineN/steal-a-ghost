@@ -34,6 +34,7 @@ local function newData()
 		claimed = {}, -- [ghostId] = true once its Index gem reward has been claimed
 		gems = 0,
 		rebirths = 0, -- how many times they've rebirthed (each one boosts income, see Shared.Rebirth)
+		items = {}, -- [itemId] = how many they own (bought in the Shop, see ItemConfig)
 	}
 end
 
@@ -144,6 +145,10 @@ function DataService.playerAdded(player: Player): boolean
 	for ghostId in data.claimed do
 		player:SetAttribute("IndexClaimed_" .. ghostId, true)
 	end
+	-- Owned items are shown to the player's device as "Item_<itemId>" = count (the Inventory).
+	for itemId, count in data.items do
+		player:SetAttribute("Item_" .. itemId, count)
+	end
 	return true
 end
 
@@ -197,6 +202,26 @@ function DataService.addGems(player: Player, amount: number)
 	end
 	profile.data.gems += amount
 	profile.gemsValue.Value = profile.data.gems
+end
+
+-- Returns true if the player could afford it (and the gems were taken).
+function DataService.spendGems(player: Player, amount: number): boolean
+	local profile = profiles[player]
+	if not profile or profile.data.gems < amount then
+		return false
+	end
+	DataService.addGems(player, -amount)
+	return true
+end
+
+function DataService.addItem(player: Player, itemId: string, count: number)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	local owned = (profile.data.items[itemId] or 0) + count
+	profile.data.items[itemId] = if owned > 0 then owned else nil
+	player:SetAttribute("Item_" .. itemId, if owned > 0 then owned else nil)
 end
 
 -- Can the player claim the Index reward for this ghost? (Found it, and hasn't claimed it yet.)

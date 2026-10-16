@@ -357,6 +357,8 @@ function Hud.start()
 		Name = "Hud",
 		ResetOnSpawn = false,
 		IgnoreGuiInset = false,
+		-- Above the menu windows (5), so messages like "You bought ..." show over the Shop.
+		DisplayOrder = 6,
 		Parent = player:WaitForChild("PlayerGui"),
 	})
 

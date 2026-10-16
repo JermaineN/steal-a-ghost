@@ -1,16 +1,17 @@
 -- The side menu: press M (or tap the tab on the middle of the left edge) to slide out four
 -- buttons (Shop, Rebirth, Index, Inventory), one after another; press again to tuck them away.
--- Index opens the Ghost Index (IndexPanel) and Rebirth the Rebirth window (RebirthPanel); the
--- other menus aren't built yet, so for now they say they're coming soon.
+-- Each opens its window: ShopPanel, RebirthPanel, IndexPanel (the Ghost Index) and
+-- InventoryPanel.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
-local Hud = require(script.Parent.Hud)
 local IndexPanel = require(script.Parent.IndexPanel)
 local RebirthPanel = require(script.Parent.RebirthPanel)
+local ShopPanel = require(script.Parent.ShopPanel)
+local InventoryPanel = require(script.Parent.InventoryPanel)
 
 local Sidebar = {}
 
@@ -58,15 +59,16 @@ end
 
 -- The windows the buttons open. Opening one closes the others.
 local PANELS = {
-	Index = IndexPanel,
+	Shop = ShopPanel,
 	Rebirth = RebirthPanel,
+	Index = IndexPanel,
+	Inventory = InventoryPanel,
 }
 
--- What each button does: open (or close) its window; menus without one aren't built yet.
+-- What each button does: open (or close) its window.
 local function select(name: string)
 	local panel = PANELS[name]
 	if not panel then
-		Hud.showToast(name .. " coming soon!", "info")
 		return
 	end
 	if not panel.isOpen() then

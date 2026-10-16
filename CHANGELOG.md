@@ -183,3 +183,41 @@ rounded), the HUD showed "+20% friends", and the button showed "2 here: +20% inc
 button calls Roblox's invite window; Studio doesn't show it, so the window itself only appears
 in the live game. **Not tested:** real friends joining (needs two friend accounts in a live
 server).
+
+---
+
+## 6. Shop and Inventory windows (with placeholder items)
+
+**For players:** the side menu's **Shop** and **Inventory** buttons now open real windows
+instead of "coming soon". Both look like the Index and Rebirth windows (same frame, header and
+close button) in their own button's colour: Shop green, Inventory orange.
+
+- **Shop:** a card per item: picture, name, description, price (blue gem number with the gem
+  picture, or a green "$X"), and a **Buy** button. It turns grey ("Can't afford") when you
+  can't afford it and comes back as your balance changes. Each press buys one.
+- **Inventory:** a card per item you own, with a pill showing how many ("x2"). With nothing
+  owned it says "Nothing here yet. Visit the Shop!". Each card's button says "Coming soon",
+  because the items don't do anything yet.
+- Items are **saved** (`items` in the save data) and **kept through rebirths**.
+
+**PLACEHOLDERS, for you to design:** `src/shared/Config/ItemConfig.luau` has 6 stand-in items
+("Placeholder Item 1–6", "Design me!", a "?" picture): 3 for gems (25 / 75 / 200) and 3 for
+cash ($5K / $50K / $500K). Give each a name, description, picture (`image`, an
+rbxassetid) and price, or replace them with your own. Keep an item's `id` once it's live (saves
+store items by id). What an item *does* when used still needs building; the Inventory's
+"Coming soon" button is where that will go.
+
+**Also changed:** pop-up messages now draw above open windows (HUD `DisplayOrder` 6), so
+"You bought ..." isn't hidden behind the Shop. Before, every message was hidden behind an
+open Index window too.
+
+**How it works:** `ShopService` handles the `ShopBuy` remote. The price and currency always
+come from `ItemConfig` on the server, never from the client. `DataService.spendGems` /
+`addItem`; owned items are mirrored to the client as `Item_<id>` = count attributes. New
+`UI/Window.luau` builds the shared window frame, buttons, card grid and item pictures, so
+future windows match.
+
+**Tested (solo, with Studio test cash):** opened both windows from the side menu; bought Item 4
+twice and Item 6 once ($510K taken, correct); gem items showed "Can't afford" with 0 gems;
+forcing a gem purchase, an unknown item id and a number from the client were all refused by
+the server; the Inventory showed x2 and x1; the purchase message shows above the Shop.

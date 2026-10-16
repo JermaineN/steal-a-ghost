@@ -17,6 +17,7 @@ local EVENT_NAMES = {
 	"StealAlarm", -- server -> a ghost's owner only: someone is carrying one of your ghosts away (true) or not any more (false)
 	"Rebirth", -- client -> server: rebirth now (no arguments; the server checks the cost)
 	"Rebirthed", -- server -> all clients: a player rebirthed (player, rebirth number reached)
+	"ShopBuy", -- client -> server: buy one of a Shop item (itemId); the server checks the price
 }
 
 local folder
