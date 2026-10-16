@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
+local HauntedHour = require(ReplicatedStorage.Shared.HauntedHour)
 local Rebirth = require(ReplicatedStorage.Shared.Rebirth)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
@@ -146,17 +147,27 @@ end
 -- they spawn twice as often. Live servers always use the normal rates.
 local boostSpawns = RunService:IsStudio() and GameConfig.StudioBoostSpawns == true
 
+-- How likely a ghost is to spawn. During Haunted Hour the rarest ghosts are boosted.
+local function spawnWeight(def, haunted: boolean): number
+	local luckyOrder = GhostConfig.Rarities[GameConfig.HauntedHourLuckMinRarity].order
+	if haunted and GhostConfig.Rarities[def.rarity].order >= luckyOrder then
+		return def.spawnWeight * GameConfig.HauntedHourLuck
+	end
+	return def.spawnWeight
+end
+
 local function pickRandomGhost()
 	if boostSpawns then
 		return GhostConfig.Ghosts[math.random(#GhostConfig.Ghosts)]
 	end
+	local haunted = HauntedHour.isActive()
 	local total = 0
 	for _, def in GhostConfig.Ghosts do
-		total += def.spawnWeight
+		total += spawnWeight(def, haunted)
 	end
 	local roll = math.random() * total
 	for _, def in GhostConfig.Ghosts do
-		roll -= def.spawnWeight
+		roll -= spawnWeight(def, haunted)
 		if roll <= 0 then
 			return def
 		end
@@ -483,7 +494,10 @@ function GhostService.start(map)
 	task.spawn(function()
 		while true do
 			spawnWalkwayGhost(map.walkwayStart, map.walkwayEnd)
-			task.wait(spawnInterval)
+			-- Haunted Hour: ghosts spawn faster.
+			task.wait(
+				if HauntedHour.isActive() then spawnInterval / GameConfig.HauntedHourSpawnSpeed else spawnInterval
+			)
 		end
 	end)
 end

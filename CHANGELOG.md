@@ -120,3 +120,38 @@ bought afterwards earned 1.5× (Boo: $4.50/s, now rounded to $5/s). After rebirt
 window shows "Need $250K" and the "!" badge goes away; a fake rebirth request with too little
 cash is refused by the server. **Not tested:** what other players see (pillar and pop-up)
 needs a 2-player test, and the blocked-while-being-robbed check.
+
+---
+
+## 4. Haunted Hour (server-wide event)
+
+**For players:** every 15 minutes there's a 2-minute **Haunted Hour**:
+- A small pill at the top of the screen always counts down: "Haunted Hour in 12:34".
+- 30 seconds before, everyone gets "Haunted Hour starts in 30 seconds!".
+- When it starts: a lightning flicker, a thunder clap, and a big blood-red **"HAUNTED HOUR!"**
+  title with "Rare ghosts x3 · Ghosts spawn 2x faster". The whole world turns red.
+- While it's on, the pill turns red, pulses, and counts down the time left, with what's
+  boosted written under it.
+- **Legendary and rarer ghosts are 3× as likely**, and ghosts spawn **twice as often**.
+- When it ends, the red fades and a message says "Haunted Hour is over!".
+
+Why: a reason to stay in the server ("only 3 minutes until Haunted Hour"), a predictable
+moment when everyone rushes the walkway (bidding wars and steals), and an obvious clip moment.
+
+**Tuning** (all in `GameConfig`): `HauntedHourEverySeconds` (15 min), `HauntedHourSeconds`
+(2 min), `HauntedHourLuck` (3), `HauntedHourLuckMinRarity` ("Legendary"),
+`HauntedHourSpawnSpeed` (2), `HauntedHourWarnSeconds` (30), `HauntedHourSound`
+("WX_Thunder_Close_03" by MSDLF; looks like a professional sound library, not a game rip).
+
+**How it works:** `HauntedHourService` writes the next event's start and end times as
+attributes on ReplicatedStorage, in server time (the same clock on every device), so every
+device counts down without any extra messages. `Shared/HauntedHour.luau` reads them
+(`isActive()`), GhostService uses it for the luck and spawn speed, and `UI/HauntedHourHud.luau`
+draws everything. The red world is a ColorCorrectionEffect made on each device. Someone who
+joins mid-event gets the red world and timer but not the big title.
+
+**Tested (solo):** countdown pill on join; moved the event to start 33 s later from the
+server: the 30-second warning appeared, then the title, red pill with boosts and red tint;
+the walkway spawned 7 ghosts in 10 s (normally 4); at the end the "over" message showed and
+the tint went back to normal. The rare-ghost luck wasn't measured (too rare to count in a short
+test), only read in the code.

@@ -56,6 +56,17 @@ return {
 	-- equally likely to spawn and halves the spawn interval. Set to false for normal rates.
 	StudioBoostSpawns = false,
 
+	-- Haunted Hour: a server-wide event. A countdown at the top of the screen shows when the next
+	-- one starts; while it's on, the sky turns blood red, ghosts spawn faster and the rarest ones
+	-- are much more likely.
+	HauntedHourEverySeconds = 15 * 60, -- wait between one ending and the next starting
+	HauntedHourSeconds = 120, -- how long it lasts
+	HauntedHourLuck = 3, -- ghosts of HauntedHourLuckMinRarity or rarer are this many times as likely
+	HauntedHourLuckMinRarity = "Legendary",
+	HauntedHourSpawnSpeed = 2, -- ghosts spawn this many times as often
+	HauntedHourWarnSeconds = 30, -- everyone gets a "starting soon" message this long before
+	HauntedHourSound = { soundId = 91289467382888, volume = 0.8 }, -- "WX_Thunder_Close_03" (MSDLF)
+
 	-- Stealing
 	StealHoldSeconds = 1.5, -- how long the thief holds E to grab a ghost
 	-- Walk speeds in studs per second (Roblox's default is 16).
