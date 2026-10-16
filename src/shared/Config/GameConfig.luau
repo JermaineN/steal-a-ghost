@@ -171,6 +171,14 @@ return {
 	-- Tier" (Los Calientes Studio, unknown uploader; swap it if you prefer another).
 	RebirthSound = { soundId = 134821092416328, volume = 0.7 },
 
+	-- Base upgrades (the Upgrades signpost at each base's entrance). Kept through rebirths.
+	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.
+	StartingGraves = 6,
+	GraveUpgradeCosts = { 5000, 25000, 100000, 500000 }, -- graves 7, 8, 9, 10
+	-- Longer Lock: each upgrade adds LockUpgradeSeconds to LockDurationSeconds.
+	LockUpgradeCosts = { 10000, 50000, 250000 },
+	LockUpgradeSeconds = 15,
+
 	-- Base lock
 	LockDurationSeconds = 60,
 	LockCooldownSeconds = 10, -- wait time after a lock ends before locking again

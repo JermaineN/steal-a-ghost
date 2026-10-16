@@ -13,7 +13,9 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local Notify = require(script.Parent.Parent.Util.Notify)
+local DataService = require(script.Parent.DataService)
 local PlotService = require(script.Parent.PlotService)
 local StealService = require(script.Parent.StealService)
 
@@ -65,9 +67,11 @@ local function tryLock(plot, player: Player)
 	if now < plot.lockCooldownUntil then
 		return
 	end
-	plot.lockedUntil = now + GameConfig.LockDurationSeconds
+	-- The Longer Lock upgrade makes it last longer.
+	local duration = Upgrades.lockSeconds(DataService.getUpgrade(player, "lock"))
+	plot.lockedUntil = now + duration
 	plot.lockCooldownUntil = plot.lockedUntil + GameConfig.LockCooldownSeconds
-	Notify.send(player, `Base locked for {GameConfig.LockDurationSeconds} seconds!`, "success")
+	Notify.send(player, `Base locked for {duration} seconds!`, "success")
 end
 
 -- Pushes everyone except the owner out of a locked base. The wall stops anyone walking in, so

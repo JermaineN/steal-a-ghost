@@ -223,6 +223,57 @@ local function buildPlot(mapFolder: Folder, index: number, plotCFrame: CFrame)
 		lines = { { text = "" } },
 	})[1]
 
+	-- The Upgrades signpost, across the entrance from the lock button: a wooden post with a board
+	-- that reads "UPGRADES" on both sides. Its prompt opens the owner's Upgrades window
+	-- (UpgradeService).
+	local signX = -(half - 5)
+	makePart(model, {
+		Name = "UpgradePost",
+		Size = Vector3.new(0.6, 6, 0.6),
+		CFrame = at(signX, 4, -half + 5),
+		Color = Color3.fromRGB(70, 48, 34),
+		Material = Enum.Material.Wood,
+	})
+	local upgradeBoard = makePart(model, {
+		Name = "UpgradeSign",
+		Size = Vector3.new(5, 2.2, 0.4),
+		CFrame = at(signX, 6.4, -half + 5),
+		Color = Color3.fromRGB(90, 62, 42),
+		Material = Enum.Material.Wood,
+	})
+	for _, face in { Enum.NormalId.Front, Enum.NormalId.Back } do
+		local surface = Instance.new("SurfaceGui")
+		surface.Face = face
+		surface.LightInfluence = 0
+		surface.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+		surface.PixelsPerStud = 50
+		local text = Instance.new("TextLabel")
+		text.Size = UDim2.fromScale(1, 1)
+		text.BackgroundTransparency = 1
+		text.Font = Enum.Font.FredokaOne
+		text.TextScaled = true
+		text.TextColor3 = Color3.fromRGB(255, 190, 40)
+		text.Text = "UPGRADES"
+		local padding = Instance.new("UIPadding")
+		padding.PaddingTop = UDim.new(0.15, 0)
+		padding.PaddingBottom = UDim.new(0.15, 0)
+		padding.Parent = text
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Color3.fromRGB(20, 8, 30)
+		stroke.Thickness = 3
+		stroke.Parent = text
+		text.Parent = surface
+		surface.Parent = upgradeBoard
+	end
+	local upgradePrompt = Instance.new("ProximityPrompt")
+	upgradePrompt.Name = "UpgradePrompt"
+	upgradePrompt.ActionText = "Upgrade"
+	upgradePrompt.ObjectText = "Your base"
+	upgradePrompt.HoldDuration = 0
+	upgradePrompt.MaxActivationDistance = 9
+	upgradePrompt.RequiresLineOfSight = false
+	upgradePrompt.Parent = upgradeBoard
+
 	-- 10 graves in two well-spaced rows. Each has a tombstone behind it; the ghost floats above the grave.
 	-- A bright green collect pad sits in front of each grave, where that ghost's income piles up.
 	local slots = {}
@@ -265,6 +316,7 @@ local function buildPlot(mapFolder: Folder, index: number, plotCFrame: CFrame)
 		lockWall = lockWall, -- invisible wall behind the bars that fills the gaps
 		lockButton = lockButton,
 		lockLabel = lockLabel,
+		upgradePrompt = upgradePrompt, -- on the Upgrades signpost (UpgradeService)
 		signLabel = signLabel,
 		slots = slots,
 		collectPads = collectPads, -- collectPads[slot] is the pad in front of that grave

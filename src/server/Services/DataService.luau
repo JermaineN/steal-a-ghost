@@ -39,6 +39,7 @@ local function newData()
 		daily = {}, -- daily reward: { day = the day they last claimed, streak = which streak day that was }
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
+		upgrades = {}, -- base upgrade levels: { graves = n, lock = n } (see Shared.Upgrades)
 	}
 end
 
@@ -316,6 +317,20 @@ end
 function DataService.getCash(player: Player): number
 	local profile = profiles[player]
 	return if profile then profile.data.cash else 0
+end
+
+-- A base upgrade's level (0 = not upgraded).
+function DataService.getUpgrade(player: Player, kindId: string): number
+	local profile = profiles[player]
+	return if profile then profile.data.upgrades[kindId] or 0 else 0
+end
+
+function DataService.setUpgrade(player: Player, kindId: string, level: number)
+	local profile = profiles[player]
+	if profile then
+		profile.data.upgrades[kindId] = level
+		player:SetAttribute("Upgrade_" .. kindId, level)
+	end
 end
 
 function DataService.getSteals(player: Player): number

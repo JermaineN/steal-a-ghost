@@ -12,6 +12,7 @@ local HauntedHour = require(ReplicatedStorage.Shared.HauntedHour)
 local Rebirth = require(ReplicatedStorage.Shared.Rebirth)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local GhostLabel = require(script.Parent.Parent.Util.GhostLabel)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local DataService = require(script.Parent.DataService)
@@ -281,7 +282,9 @@ function GhostService.firstFreeSlot(player: Player): number?
 		return nil
 	end
 	local ghosts = placed[player] or {}
-	for slot = 1, #plot.slots do
+	-- Only open graves count (More Graves upgrade, see UpgradeService).
+	local open = math.min(#plot.slots, Upgrades.graves(DataService.getUpgrade(player, "graves")))
+	for slot = 1, open do
 		if not ghosts[slot] then
 			return slot
 		end

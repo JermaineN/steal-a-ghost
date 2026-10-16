@@ -8,6 +8,7 @@ local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local DataService = require(script.Parent.DataService)
 local GhostService = require(script.Parent.GhostService)
 local PlotService = require(script.Parent.PlotService)
@@ -20,6 +21,9 @@ type PadLabel = { amount: TextLabel, collect: TextLabel }
 local padLabels: { [any]: { PadLabel } } = {}
 -- Whether the owner was standing on each pad last update (to spot the step onto it).
 local ownerWasOn: { [BasePart]: boolean } = {}
+-- Whether each pad is currently drawn as a locked (not yet opened) grave.
+local padLocked: { [BasePart]: boolean } = {}
+local LOCKED_GREY = Color3.fromRGB(110, 105, 120)
 
 -- Text with a thick black outline.
 local function outlinedText(gui: BillboardGui, props: { [string]: any }): TextLabel
@@ -108,6 +112,25 @@ local function incomeTick()
 	end
 end
 
+-- How many of the owner's graves are open (More Graves upgrade).
+local function openGraves(owner: Player): number
+	return Upgrades.graves(DataService.getUpgrade(owner, "graves"))
+end
+
+-- Greys out a locked grave's pad (or brings back its green). Only changes it when it flips.
+local function setPadLocked(pad: BasePart, locked: boolean)
+	if padLocked[pad] == locked then
+		return
+	end
+	padLocked[pad] = locked
+	for _, surface in pad:GetChildren() do
+		local glow = surface:IsA("SurfaceGui") and surface:FindFirstChild("Glow")
+		if glow then
+			(glow :: Frame).BackgroundColor3 = if locked then LOCKED_GREY else Theme.MoneyGreen
+		end
+	end
+end
+
 -- Collects pads the owner is standing on and refreshes every pad's "$X" text.
 local function updatePads(plots)
 	for _, plot in plots do
@@ -118,6 +141,7 @@ local function updatePads(plots)
 			if not loaded then
 				label.amount.Text = ""
 				label.collect.Text = ""
+				setPadLocked(pad, false)
 				continue
 			end
 			-- Only the owner is checked, so nobody else can collect this pad. The owner's device
@@ -131,8 +155,19 @@ local function updatePads(plots)
 				Remotes.CashCollected:FireClient(owner, pad, justStepped)
 			end
 			local stored = DataService.getStored(owner, slot)
+			local hasGhost = GhostService.getEntry(owner, slot) ~= nil
+			-- Graves the owner hasn't opened yet (More Graves upgrade) are greyed out.
+			local locked = slot > openGraves(owner) and not hasGhost and stored <= 0
+			setPadLocked(pad, locked)
+			if locked then
+				label.amount.Text = ""
+				label.collect.Text = "LOCKED"
+				label.collect.TextColor3 = LOCKED_GREY
+				continue
+			end
+			label.collect.TextColor3 = Color3.new(1, 1, 1)
 			-- Empty graves show nothing unless money is still waiting there (e.g. a ghost was sold).
-			local showAmount = stored > 0 or GhostService.getEntry(owner, slot) ~= nil
+			local showAmount = stored > 0 or hasGhost
 			label.amount.Text = if showAmount then "$" .. Format.cash(stored) else ""
 			label.collect.Text = if stored > 0 then "COLLECT" else ""
 		end
