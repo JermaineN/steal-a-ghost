@@ -9,6 +9,8 @@ return {
 	SpendRed = Color3.fromRGB(255, 90, 90),
 	-- Gems, the second currency.
 	GemBlue = Color3.fromRGB(80, 190, 255),
+	-- The friend boost (HUD income line, Invite button).
+	FriendPink = Color3.fromRGB(255, 120, 200),
 	-- Rebirths (the side menu's Rebirth button, the Rebirth panel and the celebration).
 	RebirthPurple = Color3.fromRGB(175, 95, 255),
 	RebirthGradient = ColorSequence.new({

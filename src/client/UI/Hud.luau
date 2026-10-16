@@ -17,6 +17,7 @@ local Hud = {}
 local CASH_GREEN = Theme.MoneyGreen
 local SPEND_RED = Theme.SpendRed
 local GEM_BLUE = Theme.GemBlue
+local FRIEND_PINK = Theme.FriendPink
 local GEMS_ROW_HEIGHT = 42 -- pixels: the gem icon and number above the cash
 
 -- Pop-up messages ("You bought Boo!", "Outbid!"): big rounded text with a dark outline,
@@ -362,10 +363,18 @@ function Hud.start()
 	local display, pop, cashLabel, incomeLabel, gemsRow, gemsLabel, gemsPop = buildCashDisplay(gui)
 	buildToasts(gui)
 
+	-- "Income: +$150/s", plus the friend boost in its own colour while friends are here.
+	incomeLabel.RichText = true
 	local function updateIncome()
-		incomeLabel.Text = "Income: +$" .. Format.cash(player:GetAttribute("IncomePerSecond") or 0) .. "/s"
+		local line = "Income: +$" .. Format.cash(player:GetAttribute("IncomePerSecond") or 0) .. "/s"
+		local friendBoost = player:GetAttribute("FriendBoost") or 0
+		if friendBoost > 0 then
+			line ..= `  <font color="#{FRIEND_PINK:ToHex()}">+{math.floor(friendBoost * 100 + 0.5)}% friends</font>`
+		end
+		incomeLabel.Text = line
 	end
 	player:GetAttributeChangedSignal("IncomePerSecond"):Connect(updateIncome)
+	player:GetAttributeChangedSignal("FriendBoost"):Connect(updateIncome)
 	updateIncome()
 
 	-- leaderstats appears once the server has loaded our data.

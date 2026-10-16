@@ -155,3 +155,31 @@ server: the 30-second warning appeared, then the title, red pill with boosts and
 the walkway spawned 7 ghosts in 10 s (normally 4); at the end the "over" message showed and
 the tint went back to normal. The rare-ghost luck wasn't measured (too rare to count in a short
 test), only read in the code.
+
+---
+
+## 5. Friend boost and Invite button
+
+**For players:**
+- Each of your **Roblox friends in the same server gives +10% income**, up to +50%
+  (`GameConfig.FriendBoostPerFriend` / `FriendBoostMax`). It stacks on top of rebirths.
+- When a friend joins (or you join a friend), both get "Your friend X is here: +10% income!".
+- The HUD income line shows it in pink: "Income: +$150/s  +20% friends".
+- New **Invite friends** button in the bottom-right corner, next to the music button, same
+  round dark style with a pink outline. It opens Roblox's own invite window. Its second line
+  says "+10% income each", or "2 here: +20% income" while friends are in the server.
+
+Why: friends playing together is how Roblox games spread. This rewards inviting and gives
+people a reason to play with friends (who can then also steal from each other).
+
+**How it works:** `FriendBoostService` checks `IsFriendsWith` for every pair of players when
+someone joins (each check on its own, failures ignored), and sets the player attributes
+`FriendsHere` and `FriendBoost`. EconomyService multiplies each ghost's income by
+`1 + FriendBoost` (rounded to whole dollars; so +10% on a $1/s Wisp still rounds to $1).
+Ghost labels show the income without the friend boost, since friends come and go.
+
+**Tested (solo):** set 2 friends by hand on the server: income went from $3/s to $4/s ($3.60
+rounded), the HUD showed "+20% friends", and the button showed "2 here: +20% income". The
+button calls Roblox's invite window; Studio doesn't show it, so the window itself only appears
+in the live game. **Not tested:** real friends joining (needs two friend accounts in a live
+server).
