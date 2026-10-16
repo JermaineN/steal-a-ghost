@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local EVENT_NAMES = {
-	"Notify", -- server -> client: show a message toast (message, kind)
+	"Notify", -- server -> client: show a message toast (message, kind, options: { note?, seconds? })
 	"CashCollected", -- server -> the pad's owner only: they collected a collect pad (pad)
 	"RareSpawn", -- server -> all clients: a Legendary/Mythic ghost spawned (ghostId)
 	"BatSwing", -- server -> every client except the swinger: play this character's swing (character)
