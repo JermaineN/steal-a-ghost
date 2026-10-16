@@ -23,10 +23,12 @@ local function isCaged(player: Player): boolean
 end
 CageService.isCaged = isCaged
 
--- Builds the cage with its floor centred at `floor`.
-local function buildCage(floor: Vector3): Model
+-- Builds the cage with its floor centred at `floor`. The caster's UserId is stored on it so
+-- their device can let them walk through it (CageClient).
+local function buildCage(floor: Vector3, caster: Player): Model
 	local cage = Instance.new("Model")
 	cage.Name = "Cage"
+	cage:SetAttribute("CasterUserId", caster.UserId)
 	local half = CAGE_SIZE / 2
 	local function part(size: Vector3, offset: Vector3, color: Color3, material: Enum.Material)
 		Parts.make(cage, {
@@ -76,8 +78,8 @@ local function buildCage(floor: Vector3): Model
 	return cage
 end
 
--- Cages the player. Returns false if they can't be caged right now.
-function CageService.trap(player: Player): boolean
+-- Cages the player (`caster` is who swung the cage). Returns false if they can't be caged right now.
+function CageService.trap(player: Player, caster: Player): boolean
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	local root = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
@@ -114,7 +116,7 @@ function CageService.trap(player: Player): boolean
 		end
 	end)
 
-	local cage = buildCage(Vector3.new(standAt.X, floor.Y, standAt.Z))
+	local cage = buildCage(Vector3.new(standAt.X, floor.Y, standAt.Z), caster)
 
 	-- Ends after CageSeconds, or straight away if they die (so a respawn starts free).
 	local released = false
