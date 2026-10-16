@@ -369,6 +369,66 @@ function GhostModels.spectre_king(model: Model, body: BasePart, def): number?
 	return labelHeight
 end
 
+-- Extra particles every ghost of the top rarities gets, on top of its own look (so a new Divine
+-- or Secret ghost has them without any extra work). Divine: gold and white sparkles rising like
+-- a blessing. Secret: dark smoke with silver and blood-red stars flickering in it.
+function GhostModels.addRarityAura(body: BasePart, rarity: string, size: number)
+	if rarity == "Divine" then
+		local sparkles = Instance.new("ParticleEmitter")
+		sparkles.Name = "DivineAura"
+		sparkles.Texture = SPARKLE_TEXTURE
+		sparkles.Color = Theme.RarityGradients.Divine
+		sparkles.LightEmission = 1
+		sparkles.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.3, size * 0.25),
+			NumberSequenceKeypoint.new(1, 0),
+		})
+		sparkles.Lifetime = NumberRange.new(1.2, 2)
+		sparkles.Rate = 10
+		sparkles.Speed = NumberRange.new(0.8, 1.6)
+		sparkles.SpreadAngle = Vector2.new(40, 40)
+		sparkles.EmissionDirection = Enum.NormalId.Top
+		sparkles.Rotation = NumberRange.new(0, 360)
+		sparkles.RotSpeed = NumberRange.new(-40, 40)
+		sparkles.Parent = body
+	elseif rarity == "Secret" then
+		local smoke = Instance.new("ParticleEmitter")
+		smoke.Name = "SecretSmoke"
+		smoke.Color = ColorSequence.new(Color3.fromRGB(15, 12, 20))
+		smoke.LightEmission = 0
+		smoke.Size = NumberSequence.new(size * 0.2, size * 0.45)
+		smoke.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.3, 0.5),
+			NumberSequenceKeypoint.new(1, 1),
+		})
+		smoke.Lifetime = NumberRange.new(1.4, 2.2)
+		smoke.Rate = 10
+		smoke.Speed = NumberRange.new(0.4, 0.9)
+		smoke.SpreadAngle = Vector2.new(180, 180)
+		smoke.Parent = body
+
+		local stars = Instance.new("ParticleEmitter")
+		stars.Name = "SecretStars"
+		stars.Texture = SPARKLE_TEXTURE
+		stars.Color = Theme.RarityGradients.Secret
+		stars.LightEmission = 1
+		stars.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.5, size * 0.22),
+			NumberSequenceKeypoint.new(1, 0),
+		})
+		stars.Lifetime = NumberRange.new(0.6, 1.1)
+		stars.Rate = 6
+		stars.Speed = NumberRange.new(0)
+		stars.Rotation = NumberRange.new(0, 360)
+		stars.Shape = Enum.ParticleEmitterShape.Sphere
+		stars.ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface
+		stars.Parent = body
+	end
+end
+
 -- Sheet Ghost: someone hiding under a white bedsheet with eye holes, with their bare feet
 -- showing underneath. Solid (not see-through), unlike the others.
 function GhostModels.sheet_ghost(model: Model, body: BasePart, def): number?

@@ -119,6 +119,7 @@ local function buildModel(def, infoLines: { GhostLabel.InfoLine }): Model
 		end
 	end
 
+	GhostModels.addRarityAura(body, def.rarity, def.size)
 	GhostLabel.create(body, def, rarity, infoLines, labelHeight + 0.4)
 
 	return model

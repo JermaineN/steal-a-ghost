@@ -2,6 +2,7 @@
 --   Legendary: slides down in shimmering gold with the ghost's name and price, with a chime.
 --   Mythic:    the screen flashes, a dark strip drops in, and a huge rainbow title lands with a
 --              bigger sound; its colours drift slowly and it stays longer.
+--   Divine / Secret: the same big banner in their own colours (Secret flashes the screen dark).
 -- The server only says which ghost spawned (Remotes.RareSpawn); everything here is visual.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -139,14 +140,22 @@ local function showLegendary(def, announcement)
 	return { destroy = destroy }
 end
 
-local function showMythic(def, announcement)
+-- The big banner, used for Mythic and every rarity above it, each in its own colours.
+-- `flashColor`: Secret flashes the screen dark instead of white.
+local BIG_BANNERS = {
+	Mythic = { flashColor = Color3.new(1, 1, 1) },
+	Divine = { flashColor = Color3.fromRGB(255, 245, 210) },
+	Secret = { flashColor = Color3.new(0, 0, 0) },
+}
+
+local function showBig(def, announcement)
 	local scale = screenScale()
 
-	-- A quick white flash over the whole screen.
+	-- A quick flash over the whole screen.
 	local flash = new("Frame", {
 		Name = "MythicFlash",
 		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundColor3 = BIG_BANNERS[def.rarity].flashColor,
 		BackgroundTransparency = 0.25,
 		BorderSizePixel = 0,
 		ZIndex = 10,
@@ -185,10 +194,10 @@ local function showMythic(def, announcement)
 		Size = UDim2.new(1, 0, 0, 72),
 		TextSize = 66,
 		TextColor3 = Color3.new(1, 1, 1),
-		Text = "MYTHIC GHOST SPAWNED!",
+		Text = string.upper(def.rarity) .. " GHOST SPAWNED!",
 		Parent = content,
 	}, 5)
-	local rainbow = new("UIGradient", { Color = Theme.RarityGradients.Mythic, Parent = title })
+	local rainbow = new("UIGradient", { Color = Theme.RarityGradients[def.rarity], Parent = title })
 	local titleScale = new("UIScale", { Scale = 2.5, Parent = title })
 	outlinedText({
 		Position = UDim2.fromOffset(0, 74),
@@ -254,7 +263,7 @@ function RareSpawnBanner.start()
 		if current then
 			current.destroy()
 		end
-		current = if def.rarity == "Mythic" then showMythic(def, announcement) else showLegendary(def, announcement)
+		current = if BIG_BANNERS[def.rarity] then showBig(def, announcement) else showLegendary(def, announcement)
 	end)
 end
 

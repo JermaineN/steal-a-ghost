@@ -12,6 +12,8 @@ GhostConfig.Rarities = {
 	Epic = { order = 4, color = Color3.fromRGB(180, 90, 255), indexGems = 40 },
 	Legendary = { order = 5, color = Color3.fromRGB(255, 190, 40), indexGems = 75 },
 	Mythic = { order = 6, color = Color3.fromRGB(255, 60, 90), indexGems = 150 },
+	Divine = { order = 7, color = Color3.fromRGB(255, 240, 170), indexGems = 300 },
+	Secret = { order = 8, color = Color3.fromRGB(230, 230, 240), indexGems = 600 },
 }
 
 -- stylua: ignore
@@ -24,6 +26,11 @@ GhostConfig.Ghosts = {
 	{ id = "phantom_knight", name = "Phantom Knight", rarity = "Legendary", price = 25000,  income = 350,  spawnWeight = 2.5, size = 4.2, color = Color3.fromRGB(120, 255, 200) },
 	{ id = "wraith",         name = "Wraith",         rarity = "Legendary", price = 100000, income = 1200, spawnWeight = 1.2, size = 4.6, color = Color3.fromRGB(70, 70, 100) },
 	{ id = "spectre_king",   name = "Spectre King",   rarity = "Mythic",    price = 500000, income = 5000, spawnWeight = 0.4, size = 5.2, color = Color3.fromRGB(255, 215, 90) },
+	-- PLACEHOLDERS: rename these and give them a mesh (ServerStorage.GhostMeshes.<id> plus a
+	-- GhostModels.<id> look). Until then they use the simple ball look. Keep the ids: players'
+	-- saves store ghosts by id, so changing one would delete it from everyone who owns it.
+	{ id = "divine_1",       name = "Divine Ghost",   rarity = "Divine",    price = 2500000,  income = 20000, spawnWeight = 0.15, size = 5.5, color = Color3.fromRGB(255, 245, 200) },
+	{ id = "secret_1",       name = "Secret Ghost",   rarity = "Secret",    price = 10000000, income = 75000, spawnWeight = 0.05, size = 6,   color = Color3.fromRGB(30, 30, 38) },
 }
 
 GhostConfig.byId = {}
