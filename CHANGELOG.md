@@ -6,6 +6,37 @@ it does for players, how it works, what was tested and what still needs a test f
 Remember: merged changes only reach players after you **publish** from Studio
 (File → Publish to Roblox).
 
+## When you're back: quick summary
+
+| # | Change | PR |
+|---|---|---|
+| 1 | Bug fix: the thief keeps the ghost if the owner leaves mid-steal, plus a "Don't leave!" warning | #28 |
+| 2 | New rarities: Divine and Secret, with one placeholder ghost each | #29 |
+| 3 | Rebirth system and Rebirth window | #30 |
+| 4 | Haunted Hour server event (every 15 min) | #31 |
+| 5 | Friend boost (+10% income per friend) and an Invite friends button | #32 |
+| 6 | Shop and Inventory windows, with placeholder items | #33 |
+| 7 | Daily reward streak (gems) | #34 |
+
+**Your to-do list:**
+1. **Publish** from Studio so players get all of this.
+2. **Design the placeholders:** the Divine and Secret ghosts (names and models,
+   `GhostConfig`, section 2) and the 6 Shop items (names, pictures, prices and what they do,
+   `ItemConfig`, section 6).
+3. **Pick sounds by ear** if you don't like mine: Divine/Secret spawn banners (they reuse the
+   Mythic sound), the rebirth sound and the Haunted Hour thunder (all in `GameConfig`).
+4. **2-player tests** I couldn't do alone (Test → Clients and Servers, 2 players):
+   leaving mid-steal (section 1), the rebirth pillar and message as seen by the other player
+   (section 3), and rebirth being blocked while someone steals from you.
+5. **In the live game:** real friends joining (section 5), the invite window, and the
+   next-day daily streak (section 7).
+6. Tune numbers if needed: rebirth costs, Haunted Hour timing and luck, friend boost, daily
+   gems, and the new ghosts' prices/odds are all in `GameConfig` / `GhostConfig`.
+
+Nothing was removed. The only behaviour changes to existing features are: the leave-mid-steal
+rule (section 1), the ghost label in your base showing rebirth-boosted income, and pop-up
+messages now drawing above open windows (section 6).
+
 ---
 
 ## 1. Bug fix: leaving while being robbed no longer saves your ghost
