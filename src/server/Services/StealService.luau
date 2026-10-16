@@ -174,6 +174,7 @@ local function deliver(thief: Player)
 	local name = GhostService.displayName(GhostConfig.byId[entry.id], entry.mutation)
 	GhostService.removeGhost(carry.owner, carry.slot)
 	GhostService.placeGhost(thief, newSlot, entry.id, nil, entry.mutation)
+	DataService.addSteal(thief)
 	Notify.send(thief, "You stole " .. name .. "!", "success")
 	Notify.send(carry.owner, thief.DisplayName .. " stole your " .. name .. "!", "error")
 end
@@ -262,6 +263,7 @@ local function giveToThief(thief: Player)
 	local newSlot = GhostService.firstFreeSlot(thief)
 	if newSlot then
 		GhostService.placeGhost(thief, newSlot, entry.id, nil, entry.mutation)
+		DataService.addSteal(thief)
 		Notify.send(thief, `{carry.owner.DisplayName} left the game, so {name} is yours!`, "success")
 	else
 		local refund = math.floor(def.price * GameConfig.SellRefund)

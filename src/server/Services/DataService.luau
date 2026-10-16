@@ -38,6 +38,7 @@ local function newData()
 		items = {}, -- [itemId] = how many they own (bought in the Shop, see ItemConfig)
 		daily = {}, -- daily reward: { day = the day they last claimed, streak = which streak day that was }
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
+		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
 	}
 end
 
@@ -315,6 +316,18 @@ end
 function DataService.getCash(player: Player): number
 	local profile = profiles[player]
 	return if profile then profile.data.cash else 0
+end
+
+function DataService.getSteals(player: Player): number
+	local profile = profiles[player]
+	return if profile then profile.data.steals else 0
+end
+
+function DataService.addSteal(player: Player)
+	local profile = profiles[player]
+	if profile then
+		profile.data.steals += 1
+	end
 end
 
 function DataService.getRebirths(player: Player): number
