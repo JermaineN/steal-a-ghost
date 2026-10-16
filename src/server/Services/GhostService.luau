@@ -36,6 +36,8 @@ type Entry = {
 -- has been re-bought in flight (0 for a first purchase from the walkway).
 type Arrival = { from: CFrame, paid: number, buyCount: number }
 local placed: { [Player]: { [number]: Entry } } = {}
+-- A sale waiting for the owner to confirm it (rare ghosts only, see trySell).
+local pendingSells: { [Player]: { slot: number, ghostId: string, expiresAt: number } } = {}
 local walkwayFolder: Folder
 
 -- Turns a model to face `destination` (turning flat, without tilting), then moves it there in a
@@ -378,7 +380,10 @@ function GhostService.removeGhost(owner: Player, slot: number)
 	DataService.setGhost(owner, slot, nil)
 end
 
-function GhostService.trySell(player: Player, owner: Player, slot: number)
+-- Sells a ghost. Ghosts of GameConfig.SellConfirmMinRarity or higher aren't sold straight away:
+-- the owner first gets an "are you sure?" pop-up (SellConfirm remote, shown by SellConfirmPopup),
+-- and only their answer (SellConfirmed remote) sells it, with `confirmed` true.
+function GhostService.trySell(player: Player, owner: Player, slot: number, confirmed: boolean?)
 	if player ~= owner then
 		return
 	end
@@ -388,6 +393,15 @@ function GhostService.trySell(player: Player, owner: Player, slot: number)
 	end
 	local def = GhostConfig.byId[entry.id]
 	local refund = math.floor(def.price * GameConfig.SellRefund)
+	local rarityOrder = GhostConfig.Rarities[def.rarity].order
+	local needsConfirm = rarityOrder >= GhostConfig.Rarities[GameConfig.SellConfirmMinRarity].order
+	if needsConfirm and not confirmed then
+		pendingSells[owner] =
+			{ slot = slot, ghostId = entry.id, expiresAt = os.clock() + GameConfig.SellConfirmSeconds }
+		Remotes.SellConfirm:FireClient(owner, slot, entry.id, refund)
+		return
+	end
+	pendingSells[owner] = nil
 	GhostService.removeGhost(owner, slot)
 	DataService.addCash(owner, refund)
 	Notify.send(owner, "Sold " .. def.name .. " for $" .. Format.cash(refund) .. ".", "success")
@@ -409,6 +423,7 @@ function GhostService.loadGhosts(player: Player)
 end
 
 function GhostService.playerRemoving(player: Player)
+	pendingSells[player] = nil
 	for _, entry in placed[player] or {} do
 		entry.model:Destroy()
 	end
@@ -416,6 +431,20 @@ function GhostService.playerRemoving(player: Player)
 end
 
 function GhostService.start(map)
+	-- The owner confirmed a rare-ghost sale. Never trust the client: it only counts if it matches
+	-- the sale we asked about, in time, and the same ghost is still in that slot.
+	Remotes.SellConfirmed.OnServerEvent:Connect(function(player: Player, slot: unknown)
+		local pending = pendingSells[player]
+		pendingSells[player] = nil
+		if not pending or slot ~= pending.slot or os.clock() > pending.expiresAt then
+			return
+		end
+		local entry = GhostService.getEntry(player, pending.slot)
+		if entry and entry.id == pending.ghostId then
+			GhostService.trySell(player, player, pending.slot, true)
+		end
+	end)
+
 	walkwayFolder = Instance.new("Folder")
 	walkwayFolder.Name = "WalkwayGhosts"
 	walkwayFolder.Parent = workspace
