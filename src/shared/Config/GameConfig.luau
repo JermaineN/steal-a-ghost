@@ -73,7 +73,7 @@ return {
 	CageIcon = "rbxassetid://83040114543592", -- hotbar picture (source: assets/cage-icon.png)
 	CageRange = 8, -- studs in front of the swinger that count as a hit
 	CageSeconds = 8, -- how long a caged player stays stuck
-	CageCooldownSeconds = 12, -- after each use (hit or miss) before the cage can be used again
+	CageCooldownSeconds = 12, -- after caging someone, before the cage can be used again (misses are free)
 
 	-- Base lock
 	LockDurationSeconds = 60,
