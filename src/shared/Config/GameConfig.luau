@@ -58,9 +58,9 @@ return {
 	-- sends the stolen ghost home
 	BatIcon = "rbxassetid://81006760675555", -- hotbar picture (source: assets/bat-icon.png)
 	BatRange = 8, -- studs from the swinger (centre to centre) that count as a hit
-	-- How wide a bat or cage swing reaches, as a cone centred on where you face (150 = 75 degrees to
+	-- How wide a bat swing reaches, as a cone centred on where you face (150 = 75 degrees to
 	-- either side; 180 would be everything in front of you).
-	ItemHitArcDegrees = 150,
+	BatHitArcDegrees = 150,
 	BatSwingCooldown = 0.7, -- seconds between swings (the swing animation lasts about this long)
 	BatHitDelay = 0.22, -- seconds from click to the bat reaching the front (matches the animation)
 	BatKnockbackSpeed = 5, -- sideways push away from the swinger, in studs per second (5 lands about 4 studs back)
@@ -79,7 +79,8 @@ return {
 		701124691, -- Winter_Unicorn79
 	},
 	CageIcon = "rbxassetid://83040114543592", -- hotbar picture (source: assets/cage-icon.png)
-	CageRange = 8, -- studs from the swinger (centre to centre) that count as a hit
+	CageRange = 12, -- studs from the swinger (centre to centre) that count as a hit
+	CageHitArcDegrees = 180, -- cone centred on where you face (180 = everything in front of you)
 	CageSeconds = 7, -- how long a caged player stays stuck
 	CageCooldownSeconds = 12, -- after caging someone, before the cage can be used again (misses are free)
 
