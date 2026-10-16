@@ -3,6 +3,8 @@
 -- - Bat (slot 1, everyone): a hit knocks the player over (RagdollService).
 -- - Cage (slot 2, only players in GameConfig.CageAllowedUserIds): the closest player hit is
 --   frozen inside a cage (CageService). Long cooldown, but only after a successful cage.
+-- - Landmine (only players in GameConfig.LandmineAllowedUserIds): click to place a hidden mine
+--   (LandmineService).
 -- Either way, a thief who gets hit drops the stolen ghost, which flies home.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
@@ -13,6 +15,7 @@ local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local CageService = require(script.Parent.CageService)
+local LandmineService = require(script.Parent.LandmineService)
 local RagdollService = require(script.Parent.RagdollService)
 local StealService = require(script.Parent.StealService)
 
@@ -23,6 +26,7 @@ local lastSwing: { [Player]: number } = {}
 -- same clock on the server and every device). Only set by a successful cage.
 local cageReadyAt: { [Player]: number } = {}
 local cageTemplate: Tool
+local landmineTemplate: Tool
 
 local function getAliveRoot(player: Player): BasePart?
 	local character = player.Character
@@ -32,22 +36,6 @@ local function getAliveRoot(player: Player): BasePart?
 		return root :: BasePart
 	end
 	return nil
-end
-
--- If the target is carrying a stolen ghost, it flies home.
-local function dropStolenGhost(swinger: Player, target: Player, verb: string)
-	local carry = StealService.getCarry(target)
-	if not carry then
-		return
-	end
-	local owner = carry.owner
-	StealService.returnGhost(target, swinger.DisplayName .. " " .. verb .. " you! The ghost flew home.")
-	if owner == swinger then
-		Notify.send(owner, "You got your ghost back!", "success")
-	else
-		Notify.send(swinger, "You " .. verb .. " a thief!", "success")
-		Notify.send(owner, swinger.DisplayName .. " got your ghost back!", "success")
-	end
 end
 
 -- The bonk, played from the hit player so everyone nearby hears it. A sound played on the
@@ -68,11 +56,6 @@ local function playBonk(target: Player)
 	Debris:AddItem(sound, 4)
 end
 
--- Can't hit players who are already knocked over or caged.
-local function canBeHit(target: Player): boolean
-	return RagdollService.canKnock(target) and not CageService.isCaged(target)
-end
-
 -- Players within `range` and roughly in front of the swinger (server positions), closest first.
 -- Each comes with the flat direction from the swinger to them.
 type Target = { player: Player, direction: Vector3, distance: number }
@@ -80,7 +63,8 @@ local function findTargets(swinger: Player, root: BasePart, range: number): { Ta
 	local targets = {}
 	for _, target in Players:GetPlayers() do
 		local targetRoot = getAliveRoot(target)
-		if target == swinger or not targetRoot or not canBeHit(target) then
+		-- Can't hit players who are already knocked over or caged.
+		if target == swinger or not targetRoot or not RagdollService.canKnock(target) then
 			continue
 		end
 		local offset = targetRoot.Position - root.Position
@@ -102,7 +86,7 @@ end
 local function batHits(swinger: Player, targets: { Target }, _tool: Tool)
 	for _, target in targets do
 		playBonk(target.player)
-		dropStolenGhost(swinger, target.player, "bonked")
+		StealService.knockLoose(swinger, target.player, "bonked")
 		local push = target.direction * GameConfig.BatKnockbackSpeed + Vector3.new(0, GameConfig.BatKnockbackLift, 0)
 		RagdollService.knock(target.player, push)
 	end
@@ -113,7 +97,7 @@ local function cageHits(swinger: Player, targets: { Target }, tool: Tool)
 	if not target then
 		return -- a miss costs nothing
 	end
-	dropStolenGhost(swinger, target.player, "caged")
+	StealService.knockLoose(swinger, target.player, "caged")
 	if CageService.trap(target.player) then
 		Notify.send(target.player, swinger.DisplayName .. " caged you!", "error")
 		Notify.send(swinger, "You caged " .. target.player.DisplayName .. "!", "success")
@@ -158,6 +142,10 @@ local function swing(tool: Tool)
 		or CageService.isCaged(swinger)
 		or StealService.getCarry(swinger)
 	then
+		return
+	end
+	if tool.Name == "Landmine" then
+		LandmineService.tryPlace(swinger) -- no swing; it handles its own cooldown and messages
 		return
 	end
 	local now = os.clock()
@@ -269,20 +257,60 @@ local function buildCage(): Tool
 	return tool
 end
 
--- Gives the cage to an allowed player each time their character spawns. Waits until the bat is
--- in their current Backpack (loading can take a while), so the cage lands in slot 2.
-local function giveCage(player: Player, character: Model)
-	if not table.find(GameConfig.CageAllowedUserIds, player.UserId) then
-		return
-	end
+-- Builds the handheld landmine: a squat olive disc (the Handle) with a red light on top.
+local function buildLandmine(): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = "Landmine"
+	tool.ToolTip = "Click to place a hidden landmine at your feet"
+	tool.TextureId = GameConfig.LandmineIcon
+	tool.CanBeDropped = false
+	-- Hold it flat in front of the hand rather than edge-on.
+	tool.Grip = CFrame.new(0, 0, -0.3) * CFrame.Angles(0, 0, math.rad(90))
+
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Shape = Enum.PartType.Cylinder -- a cylinder's round faces point along its X axis
+	handle.Size = Vector3.new(0.35, 1.3, 1.3)
+	handle.Color = Color3.fromRGB(88, 94, 74)
+	handle.Material = Enum.Material.Metal
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	local light = Instance.new("Part")
+	light.Shape = Enum.PartType.Ball
+	light.Size = Vector3.new(0.3, 0.3, 0.3)
+	light.Color = Color3.fromRGB(255, 50, 35)
+	light.Material = Enum.Material.Neon
+	light.CFrame = handle.CFrame * CFrame.new(handle.Size.X / 2, 0, 0)
+	addWelded(tool, handle, light)
+
+	return tool
+end
+
+-- The items only some players get, in hotbar order after the bat.
+local EXTRA_ITEMS = {
+	{ name = "Cage", allowed = GameConfig.CageAllowedUserIds },
+	{ name = "Landmine", allowed = GameConfig.LandmineAllowedUserIds },
+}
+
+-- Gives allowed players their extra items each time their character spawns. Waits until the bat
+-- is in their current Backpack (loading can take a while), so these land in the slots after it.
+local function giveExtraItems(player: Player, character: Model)
+	local templates = { Cage = cageTemplate, Landmine = landmineTemplate }
 	while player.Parent and player.Character == character do
 		local backpack = player:FindFirstChildOfClass("Backpack")
 		local hasBat = backpack and (backpack:FindFirstChild("Bat") or character:FindFirstChild("Bat"))
 		if backpack and hasBat then
-			if not backpack:FindFirstChild("Cage") and not character:FindFirstChild("Cage") then
-				local cage = cageTemplate:Clone()
-				cage:SetAttribute("ReadyAt", cageReadyAt[player]) -- a cooldown still running
-				cage.Parent = backpack
+			for _, extra in EXTRA_ITEMS do
+				local owned = backpack:FindFirstChild(extra.name) or character:FindFirstChild(extra.name)
+				if table.find(extra.allowed, player.UserId) and not owned then
+					local item = templates[extra.name]:Clone()
+					if extra.name == "Cage" then
+						item:SetAttribute("ReadyAt", cageReadyAt[player]) -- a cooldown still running
+					end
+					item.Parent = backpack
+				end
 			end
 			return
 		end
@@ -296,10 +324,12 @@ function ItemService.start()
 	local bat = buildBat()
 	bat.Parent = StarterPack
 	cageTemplate = buildCage()
+	landmineTemplate = buildLandmine()
 
 	-- Tool.Activated fires on the server too, so each copy of an item is wired up here.
 	local function onToolAdded(item: Instance)
-		if item:IsA("Tool") and ITEMS[item.Name] and not item:GetAttribute("Wired") then
+		local usable = ITEMS[item.Name] or item.Name == "Landmine"
+		if item:IsA("Tool") and usable and not item:GetAttribute("Wired") then
 			item:SetAttribute("Wired", true)
 			item.Activated:Connect(function()
 				swing(item)
@@ -321,10 +351,10 @@ function ItemService.start()
 			onBackpack(child)
 		end
 		player.CharacterAdded:Connect(function(character)
-			giveCage(player, character)
+			giveExtraItems(player, character)
 		end)
 		if player.Character then
-			task.spawn(giveCage, player, player.Character)
+			task.spawn(giveExtraItems, player, player.Character)
 		end
 	end
 	Players.PlayerAdded:Connect(watchPlayer)

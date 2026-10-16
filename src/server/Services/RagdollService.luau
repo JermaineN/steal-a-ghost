@@ -32,13 +32,15 @@ function RagdollService.isRagdolled(player: Player): boolean
 	return ragdolled[player] == true
 end
 
--- Can this player be knocked over right now?
+-- Can this player be knocked over right now? Not while already down, just after getting up, or
+-- while caged (CageService pins them in place).
 function RagdollService.canKnock(player: Player): boolean
-	return not ragdolled[player] and os.clock() >= (immuneUntil[player] or 0)
+	return not ragdolled[player] and os.clock() >= (immuneUntil[player] or 0) and player:GetAttribute("Caged") ~= true
 end
 
--- Knocks the player over, pushing them with `velocity` (studs per second).
-function RagdollService.knock(player: Player, velocity: Vector3)
+-- Knocks the player over, pushing them with `velocity` (studs per second), for `seconds`
+-- (the bat's GameConfig.BatRagdollSeconds if not given).
+function RagdollService.knock(player: Player, velocity: Vector3, seconds: number?)
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	if not character or not humanoid or humanoid.Health <= 0 or not RagdollService.canKnock(player) then
@@ -54,7 +56,7 @@ function RagdollService.knock(player: Player, velocity: Vector3)
 	end
 	Remotes.Ragdoll:FireClient(player, true, velocity)
 
-	task.delay(GameConfig.BatRagdollSeconds, function()
+	task.delay(seconds or GameConfig.BatRagdollSeconds, function()
 		ragdolled[player] = nil
 		immuneUntil[player] = os.clock() + GameConfig.BatHitImmunitySeconds
 		-- They may have respawned or left meanwhile; a new character starts with its joints on.

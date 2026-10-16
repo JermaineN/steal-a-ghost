@@ -122,6 +122,23 @@ function StealService.returnGhost(thief: Player, message: string?)
 	end
 end
 
+-- When `attacker` hits a thief (bat, cage or landmine), the stolen ghost flies home.
+-- `verb` describes the hit: "bonked", "caged", "blasted".
+function StealService.knockLoose(attacker: Player, thief: Player, verb: string)
+	local carry = carries[thief]
+	if not carry then
+		return
+	end
+	local owner = carry.owner
+	StealService.returnGhost(thief, attacker.DisplayName .. " " .. verb .. " you! The ghost flew home.")
+	if owner == attacker then
+		Notify.send(owner, "You got your ghost back!", "success")
+	else
+		Notify.send(attacker, "You " .. verb .. " a thief!", "success")
+		Notify.send(owner, attacker.DisplayName .. " got your ghost back!", "success")
+	end
+end
+
 local function deliver(thief: Player)
 	local carry = carries[thief]
 	local entry = GhostService.getEntry(carry.owner, carry.slot)
