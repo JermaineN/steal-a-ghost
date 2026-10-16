@@ -29,6 +29,9 @@ local TOAST_STYLES = {
 }
 local TOAST_FONT = Enum.Font.FredokaOne -- rounded and bold
 local TOAST_TEXT_SIZE = 40
+-- The optional smaller line above a message (e.g. "Don't leave!" while being robbed).
+local TOAST_NOTE_SIZE = 24
+local TOAST_NOTE_COLOR = Color3.fromRGB(255, 240, 200)
 local MAX_TOASTS = 4
 local TOAST_SECONDS = 3
 
@@ -248,9 +251,12 @@ local function buildToasts(gui: ScreenGui)
 
 	local toastCount = 0
 	-- Shows a pop-up message. Messages from the server arrive through Notify; scripts on this
-	-- device (like the sidebar) can call Hud.showToast directly.
-	local function showToast(message: string, kind: string)
+	-- device (like the sidebar) can call Hud.showToast directly. `options.note` adds a smaller
+	-- line above the message (e.g. a warning), and `options.seconds` keeps it up longer.
+	local function showToast(message: string, kind: string, options: { note: string?, seconds: number? }?)
 		local style = TOAST_STYLES[kind] or TOAST_STYLES.info
+		local note = options and options.note
+		local seconds = options and options.seconds or TOAST_SECONDS
 		toastCount += 1
 
 		-- The list layout positions this holder; the text inside it pops in and floats away.
@@ -261,21 +267,45 @@ local function buildToasts(gui: ScreenGui)
 			BackgroundTransparency = 1,
 			Parent = toasts,
 		})
-		local label = new("TextLabel", {
+		-- The note (if any) sits above the message; both move together.
+		local content = new("Frame", {
 			Size = UDim2.fromScale(1, 0),
 			AutomaticSize = Enum.AutomaticSize.Y,
 			BackgroundTransparency = 1,
-			Font = TOAST_FONT,
-			TextSize = TOAST_TEXT_SIZE,
-			TextWrapped = true,
-			RichText = true,
-			TextColor3 = style.color,
-			Text = toastRichText(message, style.money),
-			Rotation = if math.random() < 0.5 then -6 else 6,
 			Parent = holder,
 		})
-		local labelOutline = outline(label, 3.5)
-		local pop = new("UIScale", { Scale = 0.2, Parent = label })
+		new("UIListLayout", {
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			Parent = content,
+		})
+		local tilt = if math.random() < 0.5 then -6 else 6
+		local labels: { TextLabel } = {}
+		local outlines: { UIStroke } = {}
+		local function addLine(lineText: string, size: number, color: Color3, order: number): TextLabel
+			local line = new("TextLabel", {
+				Size = UDim2.fromScale(1, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				BackgroundTransparency = 1,
+				Font = TOAST_FONT,
+				TextSize = size,
+				TextWrapped = true,
+				RichText = true,
+				TextColor3 = color,
+				Text = lineText,
+				Rotation = tilt,
+				LayoutOrder = order,
+				Parent = content,
+			})
+			table.insert(labels, line)
+			table.insert(outlines, outline(line, if size < TOAST_TEXT_SIZE then 2.5 else 3.5))
+			return line
+		end
+		if note then
+			addLine(toastRichText(note, style.money), TOAST_NOTE_SIZE, TOAST_NOTE_COLOR, 1)
+		end
+		addLine(toastRichText(message, style.money), TOAST_TEXT_SIZE, style.color, 2)
+		local pop = new("UIScale", { Scale = 0.2, Parent = content })
 
 		-- Keep only the newest few.
 		local holders = {}
@@ -294,19 +324,23 @@ local function buildToasts(gui: ScreenGui)
 		-- Pop in: grow past full size with a bounce, straightening out the tilt.
 		local bounce = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 		TweenService:Create(pop, bounce, { Scale = 1 }):Play()
-		TweenService:Create(label, bounce, { Rotation = 0 }):Play()
+		for _, line in labels do
+			TweenService:Create(line, bounce, { Rotation = 0 }):Play()
+		end
 
 		-- Then float up and fade away.
-		task.delay(TOAST_SECONDS, function()
-			if not label.Parent then
+		task.delay(seconds, function()
+			if not content.Parent then
 				return
 			end
 			local away = TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-			TweenService:Create(labelOutline, away, { Transparency = 1 }):Play()
-			local fade = TweenService:Create(label, away, {
-				Position = UDim2.fromOffset(0, -24),
-				TextTransparency = 1,
-			})
+			for _, lineOutline in outlines do
+				TweenService:Create(lineOutline, away, { Transparency = 1 }):Play()
+			end
+			for _, line in labels do
+				TweenService:Create(line, away, { TextTransparency = 1 }):Play()
+			end
+			local fade = TweenService:Create(content, away, { Position = UDim2.fromOffset(0, -24) })
 			fade.Completed:Connect(function()
 				holder:Destroy()
 			end)

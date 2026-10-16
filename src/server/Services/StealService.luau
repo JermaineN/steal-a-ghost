@@ -1,5 +1,6 @@
 -- Stealing: grab a ghost from someone else's base and carry it back to yours.
 -- The steal fails if the thief dies, gets hit with a bat (ItemService), or the base locks with them inside.
+-- If the owner leaves the game mid-steal, the thief keeps the ghost (the owner is warned).
 -- While carrying, the thief can't jump or hold items, and their device hides the hotbar (CarryControls
 -- reads the "Carrying" attribute set here).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -7,8 +8,10 @@ local RunService = game:GetService("RunService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
+local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Notify = require(script.Parent.Parent.Util.Notify)
+local DataService = require(script.Parent.DataService)
 local GhostService = require(script.Parent.GhostService)
 local PlotService = require(script.Parent.PlotService)
 
@@ -230,7 +233,39 @@ function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
 
 	local def = GhostConfig.byId[entry.id]
 	Notify.send(thief, "Run back to your base!", "info")
-	Notify.send(owner, thief.DisplayName .. " is stealing your " .. def.name .. "! Hit them with your bat!", "error")
+	Notify.send(
+		owner,
+		thief.DisplayName .. " is stealing your " .. def.name .. "! Hit them with your bat!",
+		"error",
+		{ note = "Don't leave! If you leave now, the thief gets your ghost.", seconds = 6 }
+	)
+end
+
+-- The owner left the game while `thief` was carrying their ghost away: leaving doesn't save it,
+-- the thief keeps it. It's taken out of the owner's base (and save) and goes straight into the
+-- thief's. If the thief's base filled up meanwhile, they get the ghost's sell price instead.
+local function giveToThief(thief: Player)
+	local carry = carries[thief]
+	local entry = GhostService.getEntry(carry.owner, carry.slot)
+	endCarry(thief)
+	if not entry or entry.model ~= carry.model then
+		return
+	end
+	local def = GhostConfig.byId[entry.id]
+	GhostService.removeGhost(carry.owner, carry.slot)
+	local newSlot = GhostService.firstFreeSlot(thief)
+	if newSlot then
+		GhostService.placeGhost(thief, newSlot, entry.id)
+		Notify.send(thief, `{carry.owner.DisplayName} left the game, so {def.name} is yours!`, "success")
+	else
+		local refund = math.floor(def.price * GameConfig.SellRefund)
+		DataService.addCash(thief, refund)
+		Notify.send(
+			thief,
+			`{carry.owner.DisplayName} left, but your base is full, so you got ${Format.cash(refund)} for {def.name}.`,
+			"success"
+		)
+	end
 end
 
 function StealService.playerRemoving(player: Player)
@@ -239,8 +274,7 @@ function StealService.playerRemoving(player: Player)
 	end
 	for thief, carry in carries do
 		if carry.owner == player then
-			endCarry(thief)
-			Notify.send(thief, "The owner left, so their ghost vanished.", "error")
+			giveToThief(thief)
 		end
 	end
 	cooldownUntil[player] = nil
