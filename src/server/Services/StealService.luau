@@ -7,6 +7,7 @@ local RunService = game:GetService("RunService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
+local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local GhostService = require(script.Parent.GhostService)
 local PlotService = require(script.Parent.PlotService)
@@ -26,6 +27,18 @@ type Carry = {
 	toolConnection: RBXScriptConnection,
 }
 local carries: { [Player]: Carry } = {}
+-- How many of each owner's ghosts are being carried away right now. Their alarm (StealAlarm
+-- remote, played by StealAlarm on the client) is on while this is above 0.
+local beingRobbed: { [Player]: number } = {}
+
+local function setRobbed(owner: Player, change: number)
+	local before = beingRobbed[owner] or 0
+	local after = math.max(before + change, 0)
+	beingRobbed[owner] = if after > 0 then after else nil
+	if owner.Parent and (before == 0) ~= (after == 0) then
+		Remotes.StealAlarm:FireClient(owner, after > 0)
+	end
+end
 local cooldownUntil: { [Player]: number } = {}
 
 local function getAliveRoot(player: Player): (BasePart?, Humanoid?)
@@ -84,6 +97,7 @@ local function endCarry(thief: Player): Carry?
 		return nil
 	end
 	carries[thief] = nil
+	setRobbed(carry.owner, -1)
 	cooldownUntil[thief] = os.clock() + GameConfig.StealCooldownSeconds
 	for _, weld in carry.welds do
 		weld:Destroy()
@@ -207,6 +221,7 @@ function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
 		end),
 	}
 	carries[thief] = carry
+	setRobbed(owner, 1)
 	humanoid.WalkSpeed = GameConfig.CarryWalkSpeed
 	-- Jump strength 0 = no jumping (whichever of the two settings the character uses).
 	humanoid.JumpPower = 0
@@ -229,6 +244,7 @@ function StealService.playerRemoving(player: Player)
 		end
 	end
 	cooldownUntil[player] = nil
+	beingRobbed[player] = nil
 end
 
 local function checkCarries()

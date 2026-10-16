@@ -66,9 +66,16 @@ function MusicPlayer.start()
 		return
 	end
 
+	-- The music plays through a SoundGroup, so other things (the steal alarm) can turn it down
+	-- for a moment without touching the mute button's volume.
+	local group = Instance.new("SoundGroup")
+	group.Name = "Music"
+	group.Parent = SoundService
+
 	local sound = Instance.new("Sound")
 	sound.Name = "BackgroundMusic"
 	sound.Volume = GameConfig.MusicVolume
+	sound.SoundGroup = group
 	sound.Parent = SoundService
 
 	local muted = false

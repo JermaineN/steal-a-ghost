@@ -114,6 +114,10 @@ return {
 	-- Background music: Roblox-licensed tracks (free to use in any experience), played in a
 	-- shuffled loop. Swap an ID for any other audio from the Creator Store.
 	MusicVolume = 0.24,
+	-- While someone is carrying one of your ghosts away: a looping alarm, the music dips to this
+	-- fraction of its volume, and a red border pulses around your screen.
+	StealAlarmSound = { soundId = 7846610326, volume = 0.5 }, -- "Audio/Looped alarm" (ilmue), picked by ear
+	StealAlarmMusicDuck = 0.3,
 	MusicTracks = {
 		111631783838916, -- Spooky cartoon music
 		137626560269194, -- Foggy Nights
