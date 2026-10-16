@@ -56,6 +56,11 @@ return {
 	-- equally likely to spawn and halves the spawn interval. Set to false for normal rates.
 	StudioBoostSpawns = false,
 
+	-- Friend boost: each of your Roblox friends in the same server adds this much to your income
+	-- (0.1 = +10%), up to FriendBoostMax. The Invite button (bottom right) invites friends.
+	FriendBoostPerFriend = 0.1,
+	FriendBoostMax = 0.5,
+
 	-- Haunted Hour: a server-wide event. A countdown at the top of the screen shows when the next
 	-- one starts; while it's on, the sky turns blood red, ghosts spawn faster and the rarest ones
 	-- are much more likely.
