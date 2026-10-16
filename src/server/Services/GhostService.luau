@@ -94,6 +94,7 @@ local function buildModel(def, infoLines: { GhostLabel.InfoLine }, mutationId: s
 	local mutation = mutationId and MutationConfig.byId[mutationId]
 	local model = Instance.new("Model")
 	model.Name = GhostService.displayName(def, mutationId)
+	model:SetAttribute("GhostId", def.id)
 	model:SetAttribute("Mutation", mutationId)
 	-- Stream the whole ghost in/out at once so client-side prompt setup always sees every part.
 	model.ModelStreamingMode = Enum.ModelStreamingMode.Atomic

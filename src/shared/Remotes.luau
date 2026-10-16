@@ -19,6 +19,7 @@ local EVENT_NAMES = {
 	"Rebirthed", -- server -> all clients: a player rebirthed (player, rebirth number reached)
 	"ShopBuy", -- client -> server: buy one of a Shop item (itemId); the server checks the price
 	"DailyClaim", -- client -> server: claim today's daily reward (no arguments)
+	"TutorialComplete", -- client -> server: finished the first-time tutorial (no arguments)
 }
 
 local folder
