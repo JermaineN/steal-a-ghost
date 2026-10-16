@@ -120,6 +120,11 @@ function StealService.getCarry(thief: Player): Carry?
 	return carries[thief]
 end
 
+-- True while someone is carrying one of `owner`'s ghosts away.
+function StealService.isBeingRobbed(owner: Player): boolean
+	return beingRobbed[owner] ~= nil
+end
+
 -- Sends the ghost back to its owner's slot.
 function StealService.returnGhost(thief: Player, message: string?)
 	local carry = endCarry(thief)

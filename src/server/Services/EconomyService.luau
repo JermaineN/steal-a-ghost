@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
+local Rebirth = require(ReplicatedStorage.Shared.Rebirth)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local DataService = require(script.Parent.DataService)
@@ -83,18 +84,20 @@ local function isStandingOn(player: Player, pad: BasePart): boolean
 		and offset.Y < 6
 end
 
--- Every income tick: each ghost in a base (not being carried off) adds to its pad.
+-- Every income tick: each ghost in a base (not being carried off) adds to its pad, boosted by
+-- the owner's rebirths.
 local function incomeTick()
 	for _, player in Players:GetPlayers() do
 		if not DataService.isLoaded(player) then
 			continue
 		end
 		local plot = PlotService.getPlot(player)
+		local rebirths = DataService.getRebirths(player)
 		local income = 0
 		for slot = 1, if plot then #plot.slots else 0 do
 			local entry = GhostService.getEntry(player, slot)
 			if entry and GhostService.isInBase(entry) then
-				local slotIncome = GhostConfig.byId[entry.id].income
+				local slotIncome = Rebirth.income(GhostConfig.byId[entry.id].income, rebirths)
 				income += slotIncome
 				DataService.addStored(player, slot, slotIncome * GameConfig.IncomeTickSeconds)
 			end
