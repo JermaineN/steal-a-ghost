@@ -42,11 +42,15 @@ return {
 	RepurchaseMarkup = 0.5,
 
 	-- Banner across the top of everyone's screen when a top-rarity ghost spawns on the walkway
-	-- (gold for Legendary, a bigger rainbow one for Mythic). Sounds are free Creator Store audio
-	-- (the Mythic one is a Roblox-licensed APM Music track); swap the IDs for any other audio.
+	-- (gold for Legendary, a bigger rainbow one for Mythic, and the big one again in heavenly
+	-- colours for Divine and silver-and-red with a dark flash for Secret). Sounds are free Creator
+	-- Store audio (the Mythic one is a Roblox-licensed APM Music track); swap the IDs for any other
+	-- audio. Divine and Secret reuse the Mythic sound until you pick their own.
 	RareSpawnAnnouncements = {
 		Legendary = { soundId = 104000340117740, volume = 0.6, seconds = 4 }, -- "Notification Chime"
 		Mythic = { soundId = 9047100306, volume = 0.6, seconds = 6 }, -- "Hustler Sting 2"
+		Divine = { soundId = 9047100306, volume = 0.7, seconds = 7 },
+		Secret = { soundId = 9047100306, volume = 0.8, seconds = 8 },
 	},
 	-- Testing only, ONLY when playing in Studio (live servers ignore it): true makes every ghost
 	-- equally likely to spawn and halves the spawn interval. Set to false for normal rates.
