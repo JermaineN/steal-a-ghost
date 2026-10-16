@@ -18,6 +18,7 @@ local LandmineService = require(Services.LandmineService)
 local IndexService = require(Services.IndexService)
 local ItemService = require(Services.ItemService)
 local RebirthService = require(Services.RebirthService)
+local HauntedHourService = require(Services.HauntedHourService)
 
 local map = MapBuilder.build()
 PlotService.start(map.plots)
@@ -32,6 +33,7 @@ LandmineService.start()
 IndexService.start()
 ItemService.start()
 RebirthService.start()
+HauntedHourService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).
 local function applyWalkSpeed(character: Model)
