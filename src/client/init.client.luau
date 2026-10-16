@@ -1,6 +1,7 @@
 -- Client entry point.
 local Hud = require(script.UI.Hud)
 local RareSpawnBanner = require(script.UI.RareSpawnBanner)
+local SellConfirmPopup = require(script.UI.SellConfirmPopup)
 local GhostPrompts = require(script.GhostPrompts)
 local GhostAnimation = require(script.GhostAnimation)
 local MusicPlayer = require(script.MusicPlayer)
@@ -13,6 +14,7 @@ local CageClient = require(script.CageClient)
 
 Hud.start()
 RareSpawnBanner.start()
+SellConfirmPopup.start()
 GhostPrompts.start()
 GhostAnimation.start()
 MusicPlayer.start()

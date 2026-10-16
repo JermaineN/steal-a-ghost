@@ -14,6 +14,9 @@ return {
 	-- A test profile is never saved. Set to 0 to test with normal starting cash.
 	StudioTestCash = 0,
 	SellRefund = 0.5, -- selling a ghost returns 50% of its price
+	-- Selling a ghost of this rarity or higher asks "Are you sure?" first (see GhostConfig.Rarities).
+	SellConfirmMinRarity = "Mythic",
+	SellConfirmSeconds = 15, -- the question goes away (and nothing is sold) after this long
 	IncomeTickSeconds = 1,
 	-- Each ghost's income piles up on the green pad in front of its grave until the owner
 	-- steps on the pad to collect it.

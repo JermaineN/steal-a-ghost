@@ -11,6 +11,8 @@ local EVENT_NAMES = {
 	"Ragdoll", -- server -> the hit player only: go floppy (true, knockback velocity) or get up (false)
 	"Landmine", -- server -> the mine's owner only: draw ("placed", id, position) or remove ("removed", id)
 	"LandmineExploded", -- server -> all clients: play the explosion (position, radius)
+	"SellConfirm", -- server -> the owner only: ask "sell this rare ghost?" (slot, ghostId, refund)
+	"SellConfirmed", -- client -> server: the owner said yes (slot)
 }
 
 local folder
