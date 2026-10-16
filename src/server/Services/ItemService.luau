@@ -98,7 +98,7 @@ local function cageHits(swinger: Player, targets: { Target }, tool: Tool)
 		return -- a miss costs nothing
 	end
 	StealService.knockLoose(swinger, target.player, "caged")
-	if CageService.trap(target.player) then
+	if CageService.trap(target.player, swinger) then
 		Notify.send(target.player, swinger.DisplayName .. " caged you!", "error")
 		Notify.send(swinger, "You caged " .. target.player.DisplayName .. "!", "success")
 		-- The cooldown starts now. The tool carries it too, so the swinger's device skips the
@@ -264,8 +264,8 @@ local function buildLandmine(): Tool
 	tool.ToolTip = "Click to place a hidden landmine at your feet"
 	tool.TextureId = GameConfig.LandmineIcon
 	tool.CanBeDropped = false
-	-- Hold it flat in front of the hand rather than edge-on.
-	tool.Grip = CFrame.new(0, 0, -0.3) * CFrame.Angles(0, 0, math.rad(90))
+	-- Hold it flat with the red light facing up, resting just in front of and on top of the hand.
+	tool.Grip = CFrame.new(-0.15, 0, 0.45) * CFrame.Angles(0, 0, math.rad(-90))
 
 	local handle = Instance.new("Part")
 	handle.Name = "Handle"
