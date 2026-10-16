@@ -35,6 +35,7 @@ local function newData()
 		gems = 0,
 		rebirths = 0, -- how many times they've rebirthed (each one boosts income, see Shared.Rebirth)
 		items = {}, -- [itemId] = how many they own (bought in the Shop, see ItemConfig)
+		daily = {}, -- daily reward: { day = the day they last claimed, streak = which streak day that was }
 	}
 end
 
@@ -222,6 +223,19 @@ function DataService.addItem(player: Player, itemId: string, count: number)
 	local owned = (profile.data.items[itemId] or 0) + count
 	profile.data.items[itemId] = if owned > 0 then owned else nil
 	player:SetAttribute("Item_" .. itemId, if owned > 0 then owned else nil)
+end
+
+-- The daily reward record: { day = last claim day, streak = streak day claimed then }, or nil.
+function DataService.getDaily(player: Player): { day: number?, streak: number? }?
+	local profile = profiles[player]
+	return if profile then profile.data.daily else nil
+end
+
+function DataService.setDaily(player: Player, day: number, streak: number)
+	local profile = profiles[player]
+	if profile then
+		profile.data.daily = { day = day, streak = streak }
+	end
 end
 
 -- Can the player claim the Index reward for this ghost? (Found it, and hasn't claimed it yet.)

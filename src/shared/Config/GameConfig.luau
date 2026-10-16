@@ -56,6 +56,11 @@ return {
 	-- equally likely to spawn and halves the spawn interval. Set to false for normal rates.
 	StudioBoostSpawns = false,
 
+	-- Daily rewards: gems for joining on consecutive days (a new day starts at midnight UTC).
+	-- Day 1, 2, 3 ... of a streak; after the last day it keeps giving the last reward. Missing a
+	-- day starts the streak over at day 1.
+	DailyRewardGems = { 10, 15, 20, 30, 40, 60, 100 },
+
 	-- Friend boost: each of your Roblox friends in the same server adds this much to your income
 	-- (0.1 = +10%), up to FriendBoostMax. The Invite button (bottom right) invites friends.
 	FriendBoostPerFriend = 0.1,
