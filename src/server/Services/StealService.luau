@@ -171,11 +171,11 @@ local function deliver(thief: Player)
 	end
 
 	endCarry(thief)
-	local def = GhostConfig.byId[entry.id]
+	local name = GhostService.displayName(GhostConfig.byId[entry.id], entry.mutation)
 	GhostService.removeGhost(carry.owner, carry.slot)
-	GhostService.placeGhost(thief, newSlot, entry.id)
-	Notify.send(thief, "You stole " .. def.name .. "!", "success")
-	Notify.send(carry.owner, thief.DisplayName .. " stole your " .. def.name .. "!", "error")
+	GhostService.placeGhost(thief, newSlot, entry.id, nil, entry.mutation)
+	Notify.send(thief, "You stole " .. name .. "!", "success")
+	Notify.send(carry.owner, thief.DisplayName .. " stole your " .. name .. "!", "error")
 end
 
 function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
@@ -236,11 +236,11 @@ function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
 	humanoid.JumpHeight = 0
 	thief:SetAttribute("Carrying", true)
 
-	local def = GhostConfig.byId[entry.id]
+	local name = GhostService.displayName(GhostConfig.byId[entry.id], entry.mutation)
 	Notify.send(thief, "Run back to your base!", "info")
 	Notify.send(
 		owner,
-		thief.DisplayName .. " is stealing your " .. def.name .. "! Hit them with your bat!",
+		thief.DisplayName .. " is stealing your " .. name .. "! Hit them with your bat!",
 		"error",
 		{ note = "Don't leave! If you leave now, the thief gets your ghost.", seconds = 6 }
 	)
@@ -257,17 +257,18 @@ local function giveToThief(thief: Player)
 		return
 	end
 	local def = GhostConfig.byId[entry.id]
+	local name = GhostService.displayName(def, entry.mutation)
 	GhostService.removeGhost(carry.owner, carry.slot)
 	local newSlot = GhostService.firstFreeSlot(thief)
 	if newSlot then
-		GhostService.placeGhost(thief, newSlot, entry.id)
-		Notify.send(thief, `{carry.owner.DisplayName} left the game, so {def.name} is yours!`, "success")
+		GhostService.placeGhost(thief, newSlot, entry.id, nil, entry.mutation)
+		Notify.send(thief, `{carry.owner.DisplayName} left the game, so {name} is yours!`, "success")
 	else
 		local refund = math.floor(def.price * GameConfig.SellRefund)
 		DataService.addCash(thief, refund)
 		Notify.send(
 			thief,
-			`{carry.owner.DisplayName} left, but your base is full, so you got ${Format.cash(refund)} for {def.name}.`,
+			`{carry.owner.DisplayName} left, but your base is full, so you got ${Format.cash(refund)} for {name}.`,
 			"success"
 		)
 	end

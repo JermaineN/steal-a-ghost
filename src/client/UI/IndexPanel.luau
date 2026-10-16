@@ -7,6 +7,7 @@
 -- It's built from GhostConfig.Ghosts, so new ghosts appear here automatically. The server saves
 -- what you've found and marks each one with an "Index_<ghostId>" attribute on your player, and
 -- puts a preview copy of every ghost in ReplicatedStorage.GhostPreviews.
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -142,7 +143,8 @@ local function buildCard(def, order: number, parent: Instance): Card
 		Parent = card,
 	})
 	if gradientText then
-		new("UIGradient", { Color = gradientText, Parent = rarityLabel })
+		local gradient = new("UIGradient", { Color = gradientText, Parent = rarityLabel })
+		CollectionService:AddTag(gradient, "AnimatedGradient") -- shimmers (client GradientAnimator)
 	end
 	local income = text({
 		Size = UDim2.fromScale(0.9, 0.1),

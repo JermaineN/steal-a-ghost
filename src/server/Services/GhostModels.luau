@@ -429,6 +429,29 @@ function GhostModels.addRarityAura(body: BasePart, rarity: string, size: number)
 	end
 end
 
+-- Sparkles in a mutation's colours around any ghost that has one (MutationConfig), so it stands
+-- out on the walkway. Rarer mutations sparkle more.
+function GhostModels.addMutationAura(body: BasePart, mutation, size: number)
+	local sparkles = Instance.new("ParticleEmitter")
+	sparkles.Name = "MutationAura"
+	sparkles.Texture = SPARKLE_TEXTURE
+	sparkles.Color = mutation.gradient
+	sparkles.LightEmission = 1
+	sparkles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.5, size * 0.18),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	sparkles.Lifetime = NumberRange.new(0.7, 1.2)
+	sparkles.Rate = 2 + mutation.multiplier * 3
+	sparkles.Speed = NumberRange.new(0.3, 0.8)
+	sparkles.Rotation = NumberRange.new(0, 360)
+	sparkles.RotSpeed = NumberRange.new(-60, 60)
+	sparkles.Shape = Enum.ParticleEmitterShape.Sphere
+	sparkles.ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface
+	sparkles.Parent = body
+end
+
 -- Sheet Ghost: someone hiding under a white bedsheet with eye holes, with their bare feet
 -- showing underneath. Solid (not see-through), unlike the others.
 function GhostModels.sheet_ghost(model: Model, body: BasePart, def): number?

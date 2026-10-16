@@ -34,11 +34,12 @@ return {
 			ColorSequenceKeypoint.new(0.75, Color3.fromRGB(110, 170, 255)),
 			ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 120, 255)),
 		}),
-		-- Heavenly white, gold and sky blue.
+		-- Heavenly white and blue.
 		Divine = ColorSequence.new({
 			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-			ColorSequenceKeypoint.new(0.35, Color3.fromRGB(255, 225, 120)),
-			ColorSequenceKeypoint.new(0.65, Color3.fromRGB(160, 230, 255)),
+			ColorSequenceKeypoint.new(0.3, Color3.fromRGB(110, 180, 255)),
+			ColorSequenceKeypoint.new(0.55, Color3.fromRGB(255, 255, 255)),
+			ColorSequenceKeypoint.new(0.8, Color3.fromRGB(150, 205, 255)),
 			ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
 		}),
 		-- Silver stripes with a blood-red streak.
