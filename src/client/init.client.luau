@@ -22,6 +22,7 @@ local ShopPanel = require(script.UI.ShopPanel)
 local InventoryPanel = require(script.UI.InventoryPanel)
 local DailyRewardPanel = require(script.UI.DailyRewardPanel)
 local GradientAnimator = require(script.GradientAnimator)
+local Tutorial = require(script.UI.Tutorial)
 
 GradientAnimator.start()
 Hud.start()
@@ -46,3 +47,4 @@ StealAlarm.start()
 RebirthEffects.start()
 HauntedHourHud.start()
 InviteButton.start()
+task.spawn(Tutorial.start) -- runs until the tutorial is finished

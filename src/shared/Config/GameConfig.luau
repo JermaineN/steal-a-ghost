@@ -65,6 +65,9 @@ return {
 		shiny = { soundId = 9047100306, volume = 0.7, seconds = 7 },
 	},
 
+	-- First-time tutorial: gems for finishing it (buy a ghost, collect, lock your base).
+	TutorialGems = 25,
+
 	-- Daily rewards: gems for joining on consecutive days (a new day starts at midnight UTC).
 	-- Day 1, 2, 3 ... of a streak; after the last day it keeps giving the last reward. Missing a
 	-- day starts the streak over at day 1.

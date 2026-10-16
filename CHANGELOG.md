@@ -332,3 +332,31 @@ Divine $30K/s, Eerie Secret $120K/s, Shiny Secret $300K/s); the Shiny and Undead
 including a real "SHINY LEGENDARY GHOST SPAWNED!"; Divine's new colours; bought an Undead
 Sheet Ghost: it kept "UNDEAD" in the base and earned $20/s. **Not tested:** a stolen mutated
 ghost keeping its mutation (2 players), and saving (Studio doesn't save).
+
+---
+
+## 9. First-time tutorial
+
+**For players:** new players get a 3-step tutorial on a card at the bottom of the screen
+(above the hotbar), with a glowing line from their character to the target and a bouncing
+orange "▼" above it:
+1. **Buy a ghost from the walkway!** Points at the nearest walkway ghost they can afford
+   (or the cheapest one).
+2. **Collect your cash!** Points at the new ghost while it flies in, then at the green collect
+   pad in front of its grave. Done on the first collect.
+3. **Lock your base!** Points at the lock button. Done when the base locks.
+
+Finishing pays **25 gems** (`GameConfig.TutorialGems`) with a message. Players who already
+have progress (ghosts, found ghosts or rebirths) skip it, so existing players never see it.
+Saved as `tutorialDone`.
+
+**How it works:** `TutorialService` sets the `TutorialDone` attribute when data loads and pays
+the reward on `TutorialComplete` (once, and only if they own a ghost). `UI/Tutorial.luau` runs
+the steps on the player's device. Players now get a `PlotIndex` attribute (so their device can
+find their base), and walkway ghosts a `GhostId` attribute.
+
+**Tested (solo):** fresh profile: the card appeared, buying a Wisp moved to step 2, the marker
+sat on the new ghost's pad, stepping on it moved to step 3, stepping on the lock button
+finished it with +25 gems; a repeated completion request was refused; everything was cleaned
+up. You confirmed the line and arrow show in-game, and spotted the card under the hotbar (now
+fixed).

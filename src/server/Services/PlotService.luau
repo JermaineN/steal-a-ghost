@@ -21,6 +21,8 @@ function PlotService.playerAdded(player: Player)
 			plot.owner = player
 			plotByPlayer[player] = plot
 			plot.signLabel.Text = player.DisplayName .. "'s Base"
+			-- Lets the player's device find its own base (workspace.GeneratedMap.Plot<n>).
+			player:SetAttribute("PlotIndex", plot.index)
 
 			player.CharacterAdded:Connect(function(character)
 				teleportToPlot(character, plot)

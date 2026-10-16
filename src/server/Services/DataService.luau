@@ -37,6 +37,7 @@ local function newData()
 		rebirths = 0, -- how many times they've rebirthed (each one boosts income, see Shared.Rebirth)
 		items = {}, -- [itemId] = how many they own (bought in the Shop, see ItemConfig)
 		daily = {}, -- daily reward: { day = the day they last claimed, streak = which streak day that was }
+		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 	}
 end
 
@@ -236,6 +237,24 @@ function DataService.setDaily(player: Player, day: number, streak: number)
 	local profile = profiles[player]
 	if profile then
 		profile.data.daily = { day = day, streak = streak }
+	end
+end
+
+-- The first-time tutorial. Players who already have progress (from before the tutorial
+-- existed) count as done. Only meaningful when they join (buying a ghost is progress too).
+function DataService.isTutorialDone(player: Player): boolean
+	local profile = profiles[player]
+	if not profile then
+		return true
+	end
+	local data = profile.data
+	return data.tutorialDone or next(data.ghosts) ~= nil or data.rebirths > 0 or next(data.discovered) ~= nil
+end
+
+function DataService.setTutorialDone(player: Player)
+	local profile = profiles[player]
+	if profile then
+		profile.data.tutorialDone = true
 	end
 end
 
