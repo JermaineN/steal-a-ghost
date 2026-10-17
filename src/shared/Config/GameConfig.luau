@@ -15,6 +15,9 @@ return {
 	-- A test profile is never saved. Turn StudioTestCashOn on to start with StudioTestCash.
 	StudioTestCashOn = false,
 	StudioTestCash = 1000000000, -- $1B
+	-- Same for gems: start with StudioTestGems (Studio only, never saved).
+	StudioTestGemsOn = false,
+	StudioTestGems = 10000,
 	SellRefund = 0.5, -- selling a ghost returns 50% of its price
 	-- Selling a ghost of this rarity or higher asks "Are you sure?" first (see GhostConfig.Rarities).
 	SellConfirmMinRarity = "Mythic",
@@ -185,6 +188,16 @@ return {
 
 	-- Hotbar: how many Inventory items can be equipped at once (they go in the slots after the bat).
 	MaxEquippedItems = 3,
+
+	-- Smoke Bomb (Shop item): click to vanish in a smoke cloud. You're invisible for
+	-- SmokeBombSeconds, or until you're knocked over, caged or die, then you reappear in another
+	-- puff. No other items while invisible. The cooldown starts when you use it.
+	SmokeBombSeconds = 7,
+	SmokeBombCooldownSeconds = 35,
+	SmokeBombFadeSeconds = 3, -- how long each smoke cloud takes to fade away
+	SmokeBombIcon = "rbxassetid://109587585269112", -- source: assets/smoke-bomb-icon.png
+	-- "Smoke_Teleport_Poof_4" (aarondeminecraft1, unknown uploader); swap it if you prefer another.
+	SmokeBombSound = { soundId = 108688312097046, volume = 0.8 },
 
 	-- Base upgrades (the Upgrades signpost at each base's entrance). Kept through rebirths.
 	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.

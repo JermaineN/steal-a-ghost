@@ -16,6 +16,11 @@ local function tryBuy(player: Player, itemId: unknown)
 	if not item or not DataService.isLoaded(player) then
 		return
 	end
+	-- Reusable items (once = true) can only be bought once.
+	if item.once and DataService.getItemCount(player, item.id) > 0 then
+		Notify.send(player, "You already own " .. item.name .. "!", "info")
+		return
+	end
 	local paid = if item.currency == "gems"
 		then DataService.spendGems(player, item.price)
 		else DataService.spendCash(player, item.price)
@@ -27,7 +32,7 @@ local function tryBuy(player: Player, itemId: unknown)
 		return
 	end
 	DataService.addItem(player, item.id, 1)
-	Notify.send(player, "You bought " .. item.name .. "! It's in your Inventory.", "success")
+	Notify.send(player, "You bought " .. item.name .. "! Equip it from your Inventory.", "success")
 end
 
 -- Equips (puts in the hotbar) or unequips an owned item. Max GameConfig.MaxEquippedItems.

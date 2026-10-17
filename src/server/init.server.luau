@@ -26,6 +26,7 @@ local TutorialService = require(Services.TutorialService)
 local LeaderboardService = require(Services.LeaderboardService)
 local UpgradeService = require(Services.UpgradeService)
 local OfflineService = require(Services.OfflineService)
+local SmokeBombService = require(Services.SmokeBombService)
 
 local map = MapBuilder.build()
 PlotService.start(map.plots)
@@ -47,6 +48,7 @@ DailyRewardService.start()
 TutorialService.start()
 LeaderboardService.start(map.plots)
 UpgradeService.start(map.plots)
+SmokeBombService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).
 local function applyWalkSpeed(character: Model)

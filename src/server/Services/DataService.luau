@@ -117,6 +117,11 @@ function DataService.playerAdded(player: Player): boolean
 	elseif not canSave then
 		Notify.send(player, "Progress won't be saved this session.", "error")
 	end
+	-- Studio-only test gems (GameConfig.StudioTestGemsOn / StudioTestGems), never saved either.
+	if RunService:IsStudio() and GameConfig.StudioTestGemsOn then
+		data.gems = math.max(data.gems, GameConfig.StudioTestGems)
+		canSave = false
+	end
 
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
