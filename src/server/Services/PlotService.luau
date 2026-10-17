@@ -49,6 +49,10 @@ function PlotService.playerRemoving(player: Player)
 	plot.signLabel.Text = "Empty Base"
 end
 
+function PlotService.getPlots()
+	return plots
+end
+
 function PlotService.getPlot(player: Player)
 	return plotByPlayer[player]
 end
@@ -64,6 +68,14 @@ end
 
 function PlotService.isLocked(plot): boolean
 	return os.clock() < plot.lockedUntil
+end
+
+-- Ends a base's lock now (the Universal Key). The owner's usual wait before locking again
+-- starts now, so they can't relock straight away. LockService hides the bars on its next update.
+function PlotService.forceUnlock(plot, cooldownSeconds: number)
+	local now = os.clock()
+	plot.lockedUntil = now
+	plot.lockCooldownUntil = now + cooldownSeconds
 end
 
 return PlotService
