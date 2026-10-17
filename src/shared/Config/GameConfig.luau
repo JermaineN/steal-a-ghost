@@ -107,6 +107,11 @@ return {
 	WalkSpeed = 24.5, -- increased from the default
 	CarryWalkSpeed = 14.3, -- decreased from the default, while carrying a stolen ghost (no jumping or items)
 	StealCooldownSeconds = 3, -- after a failed steal
+	-- Wanted: this many successful steals in a row (without being stopped) make a thief WANTED,
+	-- with a bounty of BountyShare of the price of every ghost they stole in the streak. Whoever
+	-- hits them first (bat, cage or landmine) gets the bounty, paid from the thief's own cash.
+	WantedStreak = 3,
+	BountyShare = 0.25,
 
 	-- Bat (every player's slot-1 item): hitting a player knocks them over; hitting a thief also
 	-- sends the stolen ghost home

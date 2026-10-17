@@ -444,3 +444,29 @@ sends `OfflineEarnings` to the player's device (`UI/WelcomeBackPanel.luau`). Bra
 in a playtest, the window showed the amount and time, and the daily reward pop-up waited until
 "Nice!" was pressed. **Not tested:** a real rejoin paying out (Studio doesn't save, so it needs
 the live game: play, leave for a few minutes, rejoin).
+
+---
+
+## 13. Wanted / bounty
+
+**For players:** a thief who pulls off **3 steals in a row** without being stopped becomes
+**WANTED**:
+- Everyone gets "*<name> is WANTED! Bonk them to claim the $X bounty!*".
+- The thief **glows red** and gets a shimmering red-and-yellow **"WANTED / $32.8K BOUNTY"**
+  tag over their head, visible from far away. It stays after respawning.
+- The bounty is **25% of the price of every ghost stolen in the streak** and keeps growing with
+  each further steal (`GameConfig.WantedStreak`, `BountyShare`).
+- The **first player to hit them** with any item (bat, cage or landmine) claims it, and
+  everyone sees "*<attacker> claimed the $X bounty on <thief>!*". It's **paid from the thief's
+  own cash** (as much as they have), so friends can't farm free money.
+- A failed steal (hit, base locked, died) resets a not-yet-wanted thief's streak; once wanted,
+  only a hit clears it. Leaving clears it too. Nothing about it is saved.
+
+**How it works:** `BountyService` (streak, bounty, the glow and tag on the character). StealService
+calls it on every delivered steal, failed steal and item hit (`knockLoose`, which all items
+already go through). `Wanted` / `Bounty` player attributes.
+
+**Tested (solo):** 2 steals → not wanted, 3 → WANTED with the right bounty ($6K + $25K + $100K
+→ $32,750), the red glow and the tag (shown in a screenshot); a hit cleared it and paid out.
+**Not tested:** real steals and a real bonk between 2 players, and the messages other players
+see. A 2-player test is the next thing to do.

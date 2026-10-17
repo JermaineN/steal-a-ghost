@@ -11,6 +11,7 @@ local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Notify = require(script.Parent.Parent.Util.Notify)
+local BountyService = require(script.Parent.BountyService)
 local DataService = require(script.Parent.DataService)
 local GhostService = require(script.Parent.GhostService)
 local PlotService = require(script.Parent.PlotService)
@@ -131,6 +132,7 @@ function StealService.returnGhost(thief: Player, message: string?)
 	if not carry then
 		return
 	end
+	BountyService.onStopped(thief) -- a failed steal ends their streak
 	local entry = GhostService.getEntry(carry.owner, carry.slot)
 	local slotCFrame = GhostService.getSlotCFrame(carry.owner, carry.slot)
 	if entry and entry.model == carry.model and slotCFrame then
@@ -145,8 +147,10 @@ function StealService.returnGhost(thief: Player, message: string?)
 end
 
 -- When `attacker` hits a thief (bat, cage or landmine), the stolen ghost flies home.
--- `verb` describes the hit: "bonked", "caged", "blasted".
+-- `verb` describes the hit: "bonked", "caged", "blasted". Every item hit comes through here,
+-- carrying or not, so it's also where a WANTED player's bounty is claimed.
 function StealService.knockLoose(attacker: Player, thief: Player, verb: string)
+	BountyService.onHit(attacker, thief)
 	local carry = carries[thief]
 	if not carry then
 		return
@@ -176,6 +180,7 @@ local function deliver(thief: Player)
 	GhostService.placeGhost(thief, newSlot, entry.id, nil, entry.mutation)
 	DataService.addSteal(thief)
 	Notify.send(thief, "You stole " .. name .. "!", "success")
+	BountyService.onSteal(thief, GhostConfig.byId[entry.id].price)
 	Notify.send(carry.owner, thief.DisplayName .. " stole your " .. name .. "!", "error")
 end
 
@@ -264,6 +269,7 @@ local function giveToThief(thief: Player)
 	if newSlot then
 		GhostService.placeGhost(thief, newSlot, entry.id, nil, entry.mutation)
 		DataService.addSteal(thief)
+		BountyService.onSteal(thief, def.price)
 		Notify.send(thief, `{carry.owner.DisplayName} left the game, so {name} is yours!`, "success")
 	else
 		local refund = math.floor(def.price * GameConfig.SellRefund)
@@ -287,6 +293,7 @@ function StealService.playerRemoving(player: Player)
 	end
 	cooldownUntil[player] = nil
 	beingRobbed[player] = nil
+	BountyService.playerRemoving(player)
 end
 
 local function checkCarries()
