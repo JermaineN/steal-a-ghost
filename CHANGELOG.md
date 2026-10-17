@@ -470,3 +470,33 @@ already go through). `Wanted` / `Bounty` player attributes.
 → $32,750), the red glow and the tag (shown in a screenshot); a hit cleared it and paid out.
 **Not tested:** real steals and a real bonk between 2 players, and the messages other players
 see. A 2-player test is the next thing to do.
+
+---
+
+## 14. New hotbar and equipping items
+
+**For players:** Roblox's built-in hotbar is replaced by one in the game's own style, matching
+the Inventory cards (dark gradient, rounded, outlined in the item's colour, a number badge per
+slot):
+- **Slot 1:** the Bat (always there).
+- **Slots 2–4:** the items you've **equipped** from the Inventory (max 3,
+  `GameConfig.MaxEquippedItems`). Empty slots show a "+" that opens the Inventory.
+- After that: the Cage and Landmine, for the allow-listed players only (unchanged).
+- Press **1–9** or click a slot to select it (it grows and gets a white outline); select it
+  again to put it away. It hides while you carry a ghost or are caged.
+
+**Inventory:** each card now has an **Equip / Unequip** button, an orange **"EQUIPPED"**
+ribbon and outline while it's in the hotbar, and "Hotbar full" when 3 are already equipped.
+The header shows "Hotbar: 2/3 equipped". Equipped items are saved (`equipped`).
+
+**Placeholder items still don't do anything:** selecting one in the hotbar just highlights it
+(and puts the bat away). Each item's behaviour comes next.
+
+**How it works:** `UI/Hotbar.luau` (turns off Roblox's Backpack hotbar and equips tools itself
+with `Humanoid:EquipTool`), `EquipItem` remote handled in `ShopService` (must own it, max 3),
+`Equipped` player attribute ("item_4,item_6"). CarryControls no longer touches Roblox's hotbar.
+
+**Tested (solo, with test cash):** bought 3 cash items, equipped all three from the Inventory
+(ribbons, "Unequip", counter 2/3 → 3/3, hotbar slots filled in order), key 1 held the bat,
+key 3 selected an item and put the bat away, and forged equip requests (unowned or unknown
+item) were refused. **Not checked:** the hotbar on a phone-sized screen.
