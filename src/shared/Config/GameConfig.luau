@@ -70,6 +70,13 @@ return {
 	LeaderboardRefreshSeconds = 60,
 	LeaderboardSize = 10, -- rows per board
 
+	-- Offline earnings: rejoining pays OfflineIncomeShare of your ghosts' income (with your
+	-- rebirth boost) for the time you were away, up to OfflineMaxHours. Shorter absences than
+	-- OfflineMinSeconds pay nothing (so rejoining doesn't farm it).
+	OfflineIncomeShare = 0.5,
+	OfflineMaxHours = 8,
+	OfflineMinSeconds = 60,
+
 	-- First-time tutorial: gems for finishing it (buy a ghost, collect, lock your base).
 	TutorialGems = 25,
 

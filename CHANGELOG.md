@@ -421,3 +421,26 @@ MapBuilder builds the signpost.
 window; buying More Graves opened grave 7 and Longer Lock made the lock last 75 s; the
 window updated (pips, next level, prices). **Not tested:** the free levels for old saves
 (needs a live save with ghosts in graves 7–10), and a non-owner using the sign (2 players).
+
+---
+
+## 12. Offline earnings
+
+**For players:** rejoining after at least a minute away pays **50% of your ghosts' income** for
+the time you were gone, **up to 8 hours** (`GameConfig.OfflineIncomeShare`,
+`OfflineMaxHours`, `OfflineMinSeconds`). It includes your rebirth boost and mutations, but not
+the friend boost. The cash is added straight away, and a green **"Welcome back!"** window says
+"You were away for 2h 15m. Your ghosts earned: **+$405K**" (the amount counts up), with a
+"Nice!" button. The daily reward pop-up waits until it's closed.
+
+Examples at $100/s: 10 minutes away → $30K; 2h 15m → $405K; 3 days → $1.44M (capped at 8 h).
+
+**How it works:** every save now stores `lastSeen` (the time). `OfflineService` runs when data
+loads: it works out the saved ghosts' income per second, pays `Shared/Offline.earnings`, and
+sends `OfflineEarnings` to the player's device (`UI/WelcomeBackPanel.luau`). Brand-new players
+(no `lastSeen`) get nothing.
+
+**Tested:** the maths for every case (too short, normal, capped, no ghosts) and the time text;
+in a playtest, the window showed the amount and time, and the daily reward pop-up waited until
+"Nice!" was pressed. **Not tested:** a real rejoin paying out (Studio doesn't save, so it needs
+the live game: play, leave for a few minutes, rejoin).

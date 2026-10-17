@@ -22,6 +22,7 @@ local EVENT_NAMES = {
 	"TutorialComplete", -- client -> server: finished the first-time tutorial (no arguments)
 	"OpenUpgrades", -- server -> a base's owner: they used their Upgrades signpost, open the window
 	"BuyUpgrade", -- client -> server: buy the next level of a base upgrade (kindId: "graves" or "lock")
+	"OfflineEarnings", -- server -> a rejoining player: their ghosts earned this while away (amount, secondsAway)
 }
 
 local folder

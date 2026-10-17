@@ -13,6 +13,7 @@ local Format = require(ReplicatedStorage.Shared.Format)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local WelcomeBackPanel = require(script.Parent.WelcomeBackPanel)
 local Window = require(script.Parent.Window)
 
 local DailyRewardPanel = {}
@@ -240,6 +241,10 @@ function DailyRewardPanel.start()
 		if available() and not poppedUp then
 			poppedUp = true
 			task.delay(POPUP_DELAY, function()
+				-- Wait until the Welcome Back window (offline earnings) has been closed.
+				while WelcomeBackPanel.isOpen() do
+					task.wait(0.5)
+				end
 				if available() then
 					panel.open()
 				end
