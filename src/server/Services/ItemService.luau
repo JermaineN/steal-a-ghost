@@ -6,7 +6,8 @@
 -- - Landmine (only players in GameConfig.LandmineAllowedUserIds): click to place a hidden mine
 --   (LandmineService).
 -- - Inventory items that are tools (ItemConfig `tool = true`, e.g. the Smoke Bomb): given while
---   equipped in the Inventory (syncItemTools), named by item id (SmokeBombService).
+--   equipped in the Inventory (syncItemTools), named by item id, each run by its own service
+--   (SmokeBombService, GravityService; see ITEM_TOOLS).
 -- Either way, a thief who gets hit drops the stolen ghost, which flies home.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
@@ -20,6 +21,7 @@ local CageService = require(script.Parent.CageService)
 local DataService = require(script.Parent.DataService)
 local LandmineService = require(script.Parent.LandmineService)
 local RagdollService = require(script.Parent.RagdollService)
+local GravityService = require(script.Parent.GravityService)
 local SmokeBombService = require(script.Parent.SmokeBombService)
 local StealService = require(script.Parent.StealService)
 
@@ -304,6 +306,42 @@ local function buildSmokeBomb(): Tool
 	return tool
 end
 
+-- Builds the handheld gravity orb: a dark core (the Handle) inside a glowing purple shell.
+local function buildGravity(): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = GravityService.ITEM_ID
+	tool.ToolTip = "Click to pull everyone nearby toward you"
+	tool.TextureId = GameConfig.GravityIcon
+	tool.CanBeDropped = false
+	tool.Grip = CFrame.new(0, 0, 0.2)
+
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Shape = Enum.PartType.Ball
+	handle.Size = Vector3.new(0.7, 0.7, 0.7)
+	handle.Color = Color3.fromRGB(25, 12, 45)
+	handle.Material = Enum.Material.Neon
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	local shell = Instance.new("Part")
+	shell.Shape = Enum.PartType.Ball
+	shell.Size = Vector3.new(1.1, 1.1, 1.1)
+	shell.Color = Color3.fromRGB(110, 60, 200)
+	shell.Material = Enum.Material.ForceField
+	shell.CFrame = handle.CFrame
+	addWelded(tool, handle, shell)
+
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(205, 150, 255)
+	light.Range = 6
+	light.Brightness = 1.5
+	light.Parent = handle
+
+	return tool
+end
+
 -- Builds the handheld landmine: a squat olive disc (the Handle) with a red light on top.
 local function buildLandmine(): Tool
 	local tool = Instance.new("Tool")
@@ -341,8 +379,14 @@ local EXTRA_ITEMS = {
 	{ name = "Landmine", allowed = GameConfig.LandmineAllowedUserIds },
 }
 
--- Inventory items that are tools (ItemConfig `tool = true`), by item id.
-local ITEM_TOOLS: { [string]: Tool } = {}
+-- Inventory items that are tools (ItemConfig `tool = true`), by item id: the tool to hand out
+-- and the service that runs it (tryUse when clicked, readyAt for a cooldown that survives
+-- respawning). Filled in ItemService.start.
+type ItemTool = {
+	template: Tool,
+	handler: { tryUse: (Player, Tool) -> (), readyAt: (Player) -> number? },
+}
+local ITEM_TOOLS: { [string]: ItemTool } = {}
 
 -- Makes the player's Backpack hold exactly the tools of their equipped Inventory items: adds the
 -- missing ones, removes ones they've unequipped. Runs on every spawn and whenever they equip.
@@ -353,14 +397,12 @@ local function syncItemTools(player: Player)
 		return
 	end
 	local equipped = DataService.getEquipped(player)
-	for itemId, template in ITEM_TOOLS do
+	for itemId, itemTool in ITEM_TOOLS do
 		local existing = backpack:FindFirstChild(itemId) or (character and character:FindFirstChild(itemId))
 		local wanted = table.find(equipped, itemId) ~= nil
 		if wanted and not existing then
-			local tool = template:Clone()
-			if itemId == SmokeBombService.ITEM_ID then
-				tool:SetAttribute("ReadyAt", SmokeBombService.readyAt(player)) -- a cooldown still running
-			end
+			local tool = itemTool.template:Clone()
+			tool:SetAttribute("ReadyAt", itemTool.handler.readyAt(player)) -- a cooldown still running
 			tool.Parent = backpack
 		elseif not wanted and existing then
 			existing:Destroy()
@@ -399,19 +441,21 @@ function ItemService.start()
 	bat.Parent = StarterPack
 	cageTemplate = buildCage()
 	landmineTemplate = buildLandmine()
-	ITEM_TOOLS[SmokeBombService.ITEM_ID] = buildSmokeBomb()
+	ITEM_TOOLS[SmokeBombService.ITEM_ID] = { template = buildSmokeBomb(), handler = SmokeBombService }
+	ITEM_TOOLS[GravityService.ITEM_ID] = { template = buildGravity(), handler = GravityService }
 
 	-- Tool.Activated fires on the server too, so each copy of an item is wired up here.
 	local function onToolAdded(item: Instance)
 		if not item:IsA("Tool") or item:GetAttribute("Wired") then
 			return
 		end
-		if item.Name == SmokeBombService.ITEM_ID then
+		local itemTool = ITEM_TOOLS[item.Name]
+		if itemTool then
 			item:SetAttribute("Wired", true)
 			item.Activated:Connect(function()
 				local player = Players:GetPlayerFromCharacter(item.Parent)
 				if player then
-					SmokeBombService.tryUse(player, item)
+					itemTool.handler.tryUse(player, item)
 				end
 			end)
 		elseif ITEMS[item.Name] or item.Name == "Landmine" then

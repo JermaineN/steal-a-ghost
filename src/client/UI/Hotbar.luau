@@ -46,6 +46,11 @@ local TOOL_COLORS = {
 	Cage = Color3.fromRGB(255, 140, 30),
 	Landmine = Color3.fromRGB(255, 70, 60),
 }
+local TOOL_ICONS = {
+	Bat = GameConfig.BatIcon,
+	Cage = GameConfig.CageIcon,
+	Landmine = GameConfig.LandmineIcon,
+}
 local new = Window.new
 
 local player = Players.LocalPlayer
@@ -220,7 +225,9 @@ function Hotbar.start()
 				Position = UDim2.fromScale(0.5, 0.5),
 				Size = UDim2.fromScale(0.8, 0.8),
 				BackgroundTransparency = 1,
-				Image = if tool then tool.TextureId else "",
+				-- The tool can be missing for a moment (respawning, carrying a ghost), so the built-in
+				-- items have their icons here too.
+				Image = if tool and tool.TextureId ~= "" then tool.TextureId else TOOL_ICONS[contents.name] or "",
 				Parent = button,
 			})
 		elseif item then
@@ -373,6 +380,7 @@ function Hotbar.start()
 	local COOLDOWN_LENGTHS = {
 		Cage = GameConfig.CageCooldownSeconds,
 		smoke_bomb = GameConfig.SmokeBombCooldownSeconds,
+		gravity = GameConfig.GravityCooldownSeconds,
 	}
 	task.spawn(function()
 		while true do

@@ -199,6 +199,24 @@ return {
 	-- "Smoke_Teleport_Poof_4" (aarondeminecraft1, unknown uploader); swap it if you prefer another.
 	SmokeBombSound = { soundId = 108688312097046, volume = 0.8 },
 
+	-- Gravity (Shop item): click to open a gravity well around you for GravitySeconds. You're slowed
+	-- to GravityUserWalkSpeed, and everyone else within GravityRadius is slowed to
+	-- GravityVictimWalkSpeed and pulled toward you at GravityPullSpeed (always stronger than they
+	-- can walk, so everyone caught reaches the middle in time). Anyone pulled within
+	-- GravityCatchRadius drops a ghost they're stealing (it flies home). The cooldown starts when
+	-- you use it.
+	GravitySeconds = 5,
+	GravityCooldownSeconds = 35,
+	GravityRadius = 60, -- studs: the area is 120 across, three times a base's 40-stud length
+	GravityPullSpeed = 30, -- studs per second at the edge, rising to about 40 near the middle
+	GravityUserWalkSpeed = 8,
+	GravityVictimWalkSpeed = 8, -- players being pulled can barely walk against it
+	GravityCatchRadius = 7,
+	GravityIcon = "rbxassetid://100121928705722", -- source: assets/gravity-icon.png
+	GravitySound = { soundId = 9114344093, volume = 0.7 }, -- "Energy Presence 8" (Pro Sound Effects), loops
+	-- Played once as the well opens: a reversed whoosh swelling inward, the space warping.
+	GravityWarpSound = { soundId = 9043345004, volume = 0.8 }, -- "REVERSE NOISE VERB TAIL 10" (APM Music)
+
 	-- Base upgrades (the Upgrades signpost at each base's entrance). Kept through rebirths.
 	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.
 	StartingGraves = 6,
