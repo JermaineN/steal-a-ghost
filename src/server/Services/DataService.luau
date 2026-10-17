@@ -40,6 +40,7 @@ local function newData()
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
 		upgrades = {}, -- base upgrade levels: { graves = n, lock = n } (see Shared.Upgrades)
+		lastSeen = 0, -- os.time() of the last save (offline earnings measure the time since)
 	}
 end
 
@@ -77,6 +78,7 @@ local function save(player: Player, profile: Profile)
 		return
 	end
 	activeSaves += 1
+	profile.data.lastSeen = os.time() -- offline earnings count from the last save
 	local ok, err = pcall(store.UpdateAsync, store, keyFor(player), function()
 		return profile.data
 	end)
@@ -317,6 +319,12 @@ end
 function DataService.getCash(player: Player): number
 	local profile = profiles[player]
 	return if profile then profile.data.cash else 0
+end
+
+-- When the player's data was last saved (os.time()), or 0 for a brand-new player.
+function DataService.getLastSeen(player: Player): number
+	local profile = profiles[player]
+	return if profile then profile.data.lastSeen or 0 else 0
 end
 
 -- A base upgrade's level (0 = not upgraded).
