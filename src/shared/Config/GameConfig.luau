@@ -61,10 +61,11 @@ return {
 	-- Testing only, ONLY in Studio: true gives every walkway ghost a random mutation (see
 	-- MutationConfig for the real chances). Set to false for normal rates.
 	StudioBoostMutations = false,
-	-- Big spawn banner sounds for the mutations that announce (MutationConfig `announce`).
-	-- They reuse the Mythic sound until you pick their own.
+	-- Spawn banner sounds for the mutations that announce (MutationConfig `announce`). Undead uses
+	-- the Legendary chime and timing (on a Mythic or rarer ghost, the longer rarity sound wins);
+	-- Shiny reuses the Mythic sound until you pick its own.
 	MutationAnnouncements = {
-		undead = { soundId = 9047100306, volume = 0.6, seconds = 6 },
+		undead = { soundId = 104000340117740, volume = 0.6, seconds = 4 }, -- "Notification Chime", like Legendary
 		shiny = { soundId = 9047100306, volume = 0.7, seconds = 7 },
 	},
 
@@ -216,6 +217,16 @@ return {
 	GravitySound = { soundId = 9114344093, volume = 0.7 }, -- "Energy Presence 8" (Pro Sound Effects), loops
 	-- Played once as the well opens: a reversed whoosh swelling inward, the space warping.
 	GravityWarpSound = { soundId = 9043345004, volume = 0.8 }, -- "REVERSE NOISE VERB TAIL 10" (APM Music)
+
+	-- Universal Key (Shop item): click near a locked base's gate to unlock it. The unlock takes
+	-- UniversalKeyUnlockSeconds (the owner is told the moment it starts) and is cancelled if you're
+	-- knocked over, caged, die or walk off. The cooldown starts when the unlock begins.
+	UniversalKeyUnlockSeconds = 2.5,
+	UniversalKeyCooldownSeconds = 120,
+	UniversalKeyRange = 12, -- studs from the base's gate (its lock bars)
+	UniversalKeyIcon = "rbxassetid://86142974980494", -- source: assets/key-icon.png
+	UniversalKeyPickSound = { soundId = 9114152830, volume = 0.6 }, -- "Door Shake 4" (Pro Sound Effects)
+	UniversalKeyUnlockSound = { soundId = 9116723292, volume = 0.9 }, -- "Metal Latches 8" (Pro Sound Effects)
 
 	-- Base upgrades (the Upgrades signpost at each base's entrance). Kept through rebirths.
 	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.

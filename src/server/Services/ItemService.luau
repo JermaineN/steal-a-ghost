@@ -7,7 +7,7 @@
 --   (LandmineService).
 -- - Inventory items that are tools (ItemConfig `tool = true`, e.g. the Smoke Bomb): given while
 --   equipped in the Inventory (syncItemTools), named by item id, each run by its own service
---   (SmokeBombService, GravityService; see ITEM_TOOLS).
+--   (SmokeBombService, GravityService, UniversalKeyService; see ITEM_TOOLS).
 -- Either way, a thief who gets hit drops the stolen ghost, which flies home.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
@@ -24,6 +24,7 @@ local RagdollService = require(script.Parent.RagdollService)
 local GravityService = require(script.Parent.GravityService)
 local SmokeBombService = require(script.Parent.SmokeBombService)
 local StealService = require(script.Parent.StealService)
+local UniversalKeyService = require(script.Parent.UniversalKeyService)
 
 local ItemService = {}
 
@@ -342,6 +343,51 @@ local function buildGravity(): Tool
 	return tool
 end
 
+-- Builds the handheld Universal Key: a gold shaft (the Handle) with a round bow and two teeth.
+local function buildUniversalKey(): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = UniversalKeyService.ITEM_ID
+	tool.ToolTip = "Click at a locked base's gate to unlock it"
+	tool.TextureId = GameConfig.UniversalKeyIcon
+	tool.CanBeDropped = false
+	tool.Grip = CFrame.new(0, 0, 0.3)
+
+	local gold = Color3.fromRGB(255, 190, 40)
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.2, 0.2, 1.4)
+	handle.Color = gold
+	handle.Material = Enum.Material.Metal
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	local bow = Instance.new("Part")
+	bow.Shape = Enum.PartType.Cylinder
+	bow.Size = Vector3.new(0.15, 0.7, 0.7)
+	bow.Color = gold
+	bow.Material = Enum.Material.Metal
+	bow.CFrame = handle.CFrame * CFrame.new(0, 0, 0.95) * CFrame.Angles(0, 0, math.rad(90))
+	addWelded(tool, handle, bow)
+
+	for index, length in { 0.35, 0.25 } do
+		local tooth = Instance.new("Part")
+		tooth.Size = Vector3.new(0.15, length, 0.15)
+		tooth.Color = gold
+		tooth.Material = Enum.Material.Metal
+		tooth.CFrame = handle.CFrame * CFrame.new(0, -length / 2 - 0.08, -0.6 + (index - 1) * 0.25)
+		addWelded(tool, handle, tooth)
+	end
+
+	local light = Instance.new("PointLight")
+	light.Color = gold
+	light.Range = 4
+	light.Brightness = 1
+	light.Parent = bow
+
+	return tool
+end
+
 -- Builds the handheld landmine: a squat olive disc (the Handle) with a red light on top.
 local function buildLandmine(): Tool
 	local tool = Instance.new("Tool")
@@ -443,6 +489,7 @@ function ItemService.start()
 	landmineTemplate = buildLandmine()
 	ITEM_TOOLS[SmokeBombService.ITEM_ID] = { template = buildSmokeBomb(), handler = SmokeBombService }
 	ITEM_TOOLS[GravityService.ITEM_ID] = { template = buildGravity(), handler = GravityService }
+	ITEM_TOOLS[UniversalKeyService.ITEM_ID] = { template = buildUniversalKey(), handler = UniversalKeyService }
 
 	-- Tool.Activated fires on the server too, so each copy of an item is wired up here.
 	local function onToolAdded(item: Instance)

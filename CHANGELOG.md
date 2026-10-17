@@ -577,3 +577,40 @@ caught you! The ghost flew home."), walk speed 8 during and 24.5 after.
 
 **Also fixed:** the hotbar's bat slot could show no picture right after carrying a ghost or
 respawning (the tool was briefly missing); built-in items now always have their icon.
+
+---
+
+## 17. Universal Key
+
+**For players:** buy the **Universal Key** in the Shop for **250 gems** (one-time; a gold key
+icon with a little ghost cut into it), equip it, and click while standing at someone's
+**locked** base gate (within 12 studs of the bars):
+- The base's owner is told **immediately**: "*<name> is unlocking your base with a Universal
+  Key!*", with "*Stop them! Bonk or cage them before the lock breaks.*" above it.
+- The unlock takes **2.5 seconds**. A gold key jiggles over the gate with "*<name> is
+  unlocking...*" and a progress bar filling up, everyone can see it, and the bars rattle
+  ("Door Shake 4", Pro Sound Effects).
+- When it finishes, the **lock breaks** with a heavy latch clunk ("Metal Latches 8", Pro Sound
+  Effects): the bars drop, both players are told, and the owner's normal wait before relocking
+  starts (so they can't relock instantly).
+- It's **cancelled** if the key user is knocked over, caged, dies or walks away from the gate
+  (the owner is told if they stopped it), or the lock ends on its own first.
+- **120 second cooldown**, starting when the unlock begins. Clicking away from a locked gate
+  just says "Stand at a locked base's gate to use the key." and doesn't use it up. You can't use
+  it on your own base, while invisible, caged or carrying a ghost.
+
+Tuning in `GameConfig`: `UniversalKeyUnlockSeconds`, `UniversalKeyCooldownSeconds`,
+`UniversalKeyRange`, `UniversalKeyPickSound`, `UniversalKeyUnlockSound`.
+
+**How it works:** `UniversalKeyService` (finds the nearest locked gate, runs the unlock, shows
+the progress over the gate), `PlotService.forceUnlock` / `getPlots`.
+
+**2-player test:** Player1 locked their base; Player2 bought the key (−250 gems), equipped it,
+stood at the gate and clicked: Player1 got the warning (with the note) at 0.0 s and "Player2
+unlocked your base!" at 2.5 s, the lock wall opened, and the key's 120 s cooldown started.
+**Not tested:** the cancel cases (bonked, caged or walking away mid-unlock), because of the long
+cooldown.
+
+**Also:** the **Undead** mutation's spawn banner now plays the Legendary chime ("Notification
+Chime") and lasts 4 s like the Legendary banner. On an Undead Mythic-or-rarer ghost, the bigger
+rarity sound plays instead (`GameConfig.MutationAnnouncements`).
