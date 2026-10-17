@@ -5,6 +5,8 @@
 --   frozen inside a cage (CageService). Long cooldown, but only after a successful cage.
 -- - Landmine (only players in GameConfig.LandmineAllowedUserIds): click to place a hidden mine
 --   (LandmineService).
+-- - Inventory items that are tools (ItemConfig `tool = true`, e.g. the Smoke Bomb): given while
+--   equipped in the Inventory (syncItemTools), named by item id (SmokeBombService).
 -- Either way, a thief who gets hit drops the stolen ghost, which flies home.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
@@ -15,8 +17,10 @@ local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local CageService = require(script.Parent.CageService)
+local DataService = require(script.Parent.DataService)
 local LandmineService = require(script.Parent.LandmineService)
 local RagdollService = require(script.Parent.RagdollService)
+local SmokeBombService = require(script.Parent.SmokeBombService)
 local StealService = require(script.Parent.StealService)
 
 local ItemService = {}
@@ -139,9 +143,10 @@ end
 local function swing(tool: Tool)
 	local character = tool.Parent
 	local swinger = Players:GetPlayerFromCharacter(character)
-	-- Thieves carrying a ghost and caged players can't use items (they can't hold one either).
+	-- Thieves carrying a ghost, caged and invisible (Smoke Bomb) players can't use items.
 	if
 		not swinger
+		or swinger:GetAttribute("Invisible")
 		or RagdollService.isRagdolled(swinger)
 		or CageService.isCaged(swinger)
 		or StealService.getCarry(swinger)
@@ -261,6 +266,44 @@ local function buildCage(): Tool
 	return tool
 end
 
+-- Builds the handheld smoke bomb: a dark purple ball (the Handle) with a glowing purple band and
+-- a fuse.
+local function buildSmokeBomb(): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = SmokeBombService.ITEM_ID -- the hotbar finds an item's tool by its item id
+	tool.ToolTip = "Click to vanish in a puff of smoke"
+	tool.TextureId = GameConfig.SmokeBombIcon
+	tool.CanBeDropped = false
+	tool.Grip = CFrame.new(0, 0, 0.2)
+
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Shape = Enum.PartType.Ball
+	handle.Size = Vector3.new(1, 1, 1)
+	handle.Color = Color3.fromRGB(52, 40, 72)
+	handle.Material = Enum.Material.SmoothPlastic
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	local band = Instance.new("Part")
+	band.Shape = Enum.PartType.Cylinder
+	band.Size = Vector3.new(0.2, 1.04, 1.04)
+	band.Color = Color3.fromRGB(175, 95, 255)
+	band.Material = Enum.Material.Neon
+	band.CFrame = handle.CFrame * CFrame.Angles(0, 0, math.rad(90))
+	addWelded(tool, handle, band)
+
+	local fuse = Instance.new("Part")
+	fuse.Size = Vector3.new(0.12, 0.35, 0.12)
+	fuse.Color = Color3.fromRGB(150, 110, 70)
+	fuse.Material = Enum.Material.Fabric
+	fuse.CFrame = handle.CFrame * CFrame.new(0, 0.6, 0)
+	addWelded(tool, handle, fuse)
+
+	return tool
+end
+
 -- Builds the handheld landmine: a squat olive disc (the Handle) with a red light on top.
 local function buildLandmine(): Tool
 	local tool = Instance.new("Tool")
@@ -298,6 +341,33 @@ local EXTRA_ITEMS = {
 	{ name = "Landmine", allowed = GameConfig.LandmineAllowedUserIds },
 }
 
+-- Inventory items that are tools (ItemConfig `tool = true`), by item id.
+local ITEM_TOOLS: { [string]: Tool } = {}
+
+-- Makes the player's Backpack hold exactly the tools of their equipped Inventory items: adds the
+-- missing ones, removes ones they've unequipped. Runs on every spawn and whenever they equip.
+local function syncItemTools(player: Player)
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	local character = player.Character
+	if not backpack then
+		return
+	end
+	local equipped = DataService.getEquipped(player)
+	for itemId, template in ITEM_TOOLS do
+		local existing = backpack:FindFirstChild(itemId) or (character and character:FindFirstChild(itemId))
+		local wanted = table.find(equipped, itemId) ~= nil
+		if wanted and not existing then
+			local tool = template:Clone()
+			if itemId == SmokeBombService.ITEM_ID then
+				tool:SetAttribute("ReadyAt", SmokeBombService.readyAt(player)) -- a cooldown still running
+			end
+			tool.Parent = backpack
+		elseif not wanted and existing then
+			existing:Destroy()
+		end
+	end
+end
+
 -- Gives allowed players their extra items each time their character spawns. Waits until the bat
 -- is in their current Backpack (loading can take a while), so these land in the slots after it.
 local function giveExtraItems(player: Player, character: Model)
@@ -329,11 +399,22 @@ function ItemService.start()
 	bat.Parent = StarterPack
 	cageTemplate = buildCage()
 	landmineTemplate = buildLandmine()
+	ITEM_TOOLS[SmokeBombService.ITEM_ID] = buildSmokeBomb()
 
 	-- Tool.Activated fires on the server too, so each copy of an item is wired up here.
 	local function onToolAdded(item: Instance)
-		local usable = ITEMS[item.Name] or item.Name == "Landmine"
-		if item:IsA("Tool") and usable and not item:GetAttribute("Wired") then
+		if not item:IsA("Tool") or item:GetAttribute("Wired") then
+			return
+		end
+		if item.Name == SmokeBombService.ITEM_ID then
+			item:SetAttribute("Wired", true)
+			item.Activated:Connect(function()
+				local player = Players:GetPlayerFromCharacter(item.Parent)
+				if player then
+					SmokeBombService.tryUse(player, item)
+				end
+			end)
+		elseif ITEMS[item.Name] or item.Name == "Landmine" then
 			item:SetAttribute("Wired", true)
 			item.Activated:Connect(function()
 				swing(item)
@@ -356,10 +437,18 @@ function ItemService.start()
 		end
 		player.CharacterAdded:Connect(function(character)
 			giveExtraItems(player, character)
+			syncItemTools(player)
 		end)
 		if player.Character then
-			task.spawn(giveExtraItems, player, player.Character)
+			task.spawn(function()
+				giveExtraItems(player, player.Character)
+				syncItemTools(player)
+			end)
 		end
+		-- Equipping or unequipping an item in the Inventory adds or removes its tool.
+		player:GetAttributeChangedSignal("Equipped"):Connect(function()
+			syncItemTools(player)
+		end)
 	end
 	Players.PlayerAdded:Connect(watchPlayer)
 	for _, player in Players:GetPlayers() do

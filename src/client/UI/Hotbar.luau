@@ -5,7 +5,8 @@
 --               Empty ones show a dashed "+" that opens the Inventory.
 --   After that: any other tools in your Backpack (the Cage and Landmine, for allow-listed players).
 -- Number keys (or clicking a slot) select it; selecting the selected slot again puts it away.
--- Tool slots hold the real Roblox tool; item slots are just selected until items do something.
+-- Tool slots hold the real Roblox tool. An item that's a tool (the Smoke Bomb) does the same with
+-- its tool; other items are just highlighted. A cooldown shows as a shade with seconds left.
 -- While you carry a ghost or are caged, the hotbar hides (CarryControls handles jumping).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -15,6 +16,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
+local Hud = require(script.Parent.Hud)
 local InventoryPanel = require(script.Parent.InventoryPanel)
 local Window = require(script.Parent.Window)
 
@@ -84,7 +86,8 @@ local function layout(): { Contents }
 	end
 	local extras = {}
 	for name in backpackTools() do
-		if name ~= "Bat" then
+		-- Item tools (named by item id) already sit in their item's slot.
+		if name ~= "Bat" and not ItemConfig.byId[name] then
 			table.insert(extras, name)
 		end
 	end
@@ -144,13 +147,22 @@ function Hotbar.start()
 		if not humanoid then
 			return
 		end
-		if contents.kind == "tool" then
+		-- An item that's a tool (e.g. the Smoke Bomb) works like any other tool slot.
+		local toolName = if contents.kind == "tool"
+			then contents.name
+			elseif contents.kind == "item" and backpackTools()[contents.id] then contents.id
+			else nil
+		if toolName and player:GetAttribute("Invisible") then
+			Hud.showToast("You can't use items while invisible!", "error")
+			return
+		end
+		if toolName then
 			selectedItem = nil
 			local held = heldTool()
-			if held and held.Name == contents.name then
+			if held and held.Name == toolName then
 				humanoid:UnequipTools()
 			else
-				local tool = backpackTools()[contents.name]
+				local tool = backpackTools()[toolName]
 				if tool then
 					humanoid:EquipTool(tool)
 				end
@@ -252,6 +264,29 @@ function Hotbar.start()
 		})
 		new("UIPadding", { PaddingTop = UDim.new(0, 3), PaddingBottom = UDim.new(0, 3), Parent = badge })
 
+		-- Cooldown: a dark shade that shrinks downward as the item gets ready, with the seconds left.
+		local cooldown = new("Frame", {
+			Name = "Cooldown",
+			AnchorPoint = Vector2.new(0, 1),
+			Position = UDim2.fromScale(0, 1),
+			Size = UDim2.fromScale(1, 1),
+			BackgroundColor3 = Color3.new(0, 0, 0),
+			BackgroundTransparency = 0.35,
+			ZIndex = 2,
+			Visible = false,
+			Parent = button,
+		})
+		new("UICorner", { CornerRadius = UDim.new(0.2, 0), Parent = cooldown })
+		local cooldownText = Window.text({
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromScale(0.7, 0.45),
+			TextColor3 = WHITE,
+			ZIndex = 2,
+			Visible = false,
+			Parent = button,
+		}, 2)
+
 		button.MouseEnter:Connect(function()
 			TweenService:Create(scale, QUICK, { Scale = if scale:GetAttribute("Selected") then 1.12 else 1.06 }):Play()
 		end)
@@ -261,10 +296,27 @@ function Hotbar.start()
 		button.Activated:Connect(function()
 			select(index)
 		end)
-		return button, stroke, scale
+		return button, stroke, scale, cooldown, cooldownText
 	end
 
-	local built: { { contents: Contents, stroke: UIStroke, scale: UIScale } } = {}
+	type Built = {
+		contents: Contents,
+		stroke: UIStroke,
+		scale: UIScale,
+		cooldown: Frame,
+		cooldownText: TextLabel,
+	}
+	local built: { Built } = {}
+
+	-- The tool a slot uses, if any (a tool slot, or an item that's a tool).
+	local function slotToolName(contents: Contents): string?
+		if contents.kind == "tool" then
+			return contents.name
+		elseif contents.kind == "item" then
+			return contents.id
+		end
+		return nil
+	end
 	local lastLayout = ""
 
 	-- Rebuilds the slots when what's in them changes, and shows which one is selected.
@@ -285,8 +337,14 @@ function Hotbar.start()
 			end
 			table.clear(built)
 			for index, contents in slots do
-				local _, stroke, scale = buildSlot(index, contents)
-				built[index] = { contents = contents, stroke = stroke, scale = scale }
+				local _, stroke, scale, cooldown, cooldownText = buildSlot(index, contents)
+				built[index] = {
+					contents = contents,
+					stroke = stroke,
+					scale = scale,
+					cooldown = cooldown,
+					cooldownText = cooldownText,
+				}
 			end
 			-- An unequipped item can't stay selected.
 			if selectedItem and not table.find(equippedIds(), selectedItem) then
@@ -298,7 +356,8 @@ function Hotbar.start()
 		local held = heldTool()
 		for _, slot in built do
 			local contents = slot.contents
-			local selected = (contents.kind == "tool" and held ~= nil and held.Name == contents.name)
+			local toolName = slotToolName(contents)
+			local selected = (held ~= nil and toolName ~= nil and held.Name == toolName)
 				or (contents.kind == "item" and selectedItem == contents.id)
 			if slot.scale:GetAttribute("Selected") ~= selected then
 				slot.scale:SetAttribute("Selected", selected)
@@ -309,6 +368,33 @@ function Hotbar.start()
 			end
 		end
 	end
+
+	-- Cooldowns: any slot whose tool has a "ReadyAt" time (server clock) in the future.
+	local COOLDOWN_LENGTHS = {
+		Cage = GameConfig.CageCooldownSeconds,
+		smoke_bomb = GameConfig.SmokeBombCooldownSeconds,
+	}
+	task.spawn(function()
+		while true do
+			local tools = backpackTools()
+			local now = workspace:GetServerTimeNow()
+			for _, slot in built do
+				local toolName = slotToolName(slot.contents)
+				local tool = toolName and tools[toolName]
+				local readyAt = tool and tool:GetAttribute("ReadyAt")
+				local left = if readyAt then readyAt - now else 0
+				local active = left > 0
+				slot.cooldown.Visible = active
+				slot.cooldownText.Visible = active
+				if active then
+					local total = COOLDOWN_LENGTHS[toolName :: string] or left
+					slot.cooldown.Size = UDim2.fromScale(1, math.clamp(left / total, 0, 1))
+					slot.cooldownText.Text = tostring(math.ceil(left))
+				end
+			end
+			task.wait(0.1)
+		end
+	end)
 
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if gameProcessed then
@@ -330,6 +416,11 @@ function Hotbar.start()
 	player:GetAttributeChangedSignal("Carrying"):Connect(updateVisible)
 	player:GetAttributeChangedSignal("Caged"):Connect(updateVisible)
 	updateVisible()
+	-- Going invisible puts your item away (the server does too); show that straight away.
+	player:GetAttributeChangedSignal("Invisible"):Connect(function()
+		selectedItem = nil
+		Hotbar.refresh()
+	end)
 
 	-- Refresh when items are equipped or tools come and go (each spawn brings a new Backpack).
 	player:GetAttributeChangedSignal("Equipped"):Connect(Hotbar.refresh)

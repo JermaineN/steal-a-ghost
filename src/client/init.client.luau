@@ -26,6 +26,7 @@ local Tutorial = require(script.UI.Tutorial)
 local UpgradePanel = require(script.UI.UpgradePanel)
 local WelcomeBackPanel = require(script.UI.WelcomeBackPanel)
 local Hotbar = require(script.UI.Hotbar)
+local SmokeBombClient = require(script.SmokeBombClient)
 
 GradientAnimator.start()
 Hud.start()
@@ -53,4 +54,5 @@ StealAlarm.start()
 RebirthEffects.start()
 HauntedHourHud.start()
 InviteButton.start()
+SmokeBombClient.start()
 task.spawn(Tutorial.start) -- runs until the tutorial is finished

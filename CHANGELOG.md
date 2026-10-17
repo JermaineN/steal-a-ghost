@@ -500,3 +500,38 @@ with `Humanoid:EquipTool`), `EquipItem` remote handled in `ShopService` (must ow
 (ribbons, "Unequip", counter 2/3 → 3/3, hotbar slots filled in order), key 1 held the bat,
 key 3 selected an item and put the bat away, and forged equip requests (unowned or unknown
 item) were refused. **Not checked:** the hotbar on a phone-sized screen.
+
+---
+
+## 15. Smoke Bomb (first real item)
+
+**For players:** buy the **Smoke Bomb** in the Shop for **125 gems** (one-time purchase; the
+Shop then says "Owned"), equip it from the Inventory, and it appears in your hotbar with its
+own sticker-style icon (a dark purple bomb with a lit fuse and a puff of smoke).
+- Select it and **click** to use it: a **smoke cloud** bursts where you stand with a **"poof"**,
+  and the smoke fades away over **3 seconds**.
+- You're **invisible to everyone for 7 seconds** (body, accessories, face, name and any WANTED
+  tag). On your own screen a faint purple outline shows where you are.
+- It **ends early** if you're knocked over (bat, landmine), caged or die. Either way you
+  reappear in **another puff of smoke** with the same poof.
+- **No other items while invisible:** the bomb is put away, the hotbar won't select tools
+  ("You can't use items while invisible!"), and the server ignores item use.
+- **35 second cooldown** from when you use it, shown on the hotbar slot as a shade that shrinks
+  with the seconds left (the Cage's cooldown now shows the same way). It survives respawning.
+
+Tuning in `GameConfig`: `SmokeBombSeconds`, `SmokeBombCooldownSeconds`, `SmokeBombFadeSeconds`,
+`SmokeBombSound` ("Smoke_Teleport_Poof_4", unknown uploader; pick another by ear if you like).
+Price and colour in `ItemConfig`.
+
+**How items work now** (for the next ones): an `ItemConfig` row with `tool = true` gets a real
+tool, named by its item id, put in the Backpack while it's equipped (`ItemService.syncItemTools`);
+the hotbar's item slot uses that tool. `once = true` makes it a one-time purchase.
+
+**Also:** `GameConfig.StudioTestGemsOn` / `StudioTestGems` (10K gems in Studio, never saved),
+like test cash.
+
+**Tested (solo, test cash + gems):** bought it (125 gems, "Owned"), equipped it, used it from
+slot 2: invisible for exactly 7.0 s with the bomb put away and the own-outline showing, visible
+again after; the smoke cloud showed and faded; the cooldown counted down (tested at 20 s, since changed to 35 s); getting caged
+ended it at 2.1 s. **Not tested:** a real bat hit ending it, and what other players see
+(2 players).

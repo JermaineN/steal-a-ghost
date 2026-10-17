@@ -111,7 +111,16 @@ local function buildCard(item, order: number, parent: Instance)
 		Parent = card,
 	}, SHOP_GREEN)
 	local waiting = false
+	-- One-time items (ItemConfig `once`) you already have just say "Owned".
+	local function alreadyOwned(): boolean
+		return item.once == true and (player:GetAttribute("Item_" .. item.id) or 0) > 0
+	end
 	local function refresh()
+		if alreadyOwned() then
+			buyLabel.Text = "Owned"
+			Window.paintButton(buy, LOCKED_GREY)
+			return
+		end
 		local affordable = balance(item.currency) >= item.price
 		if not waiting then
 			buyLabel.Text = if affordable then "Buy" else "Can't afford"
@@ -120,7 +129,7 @@ local function buildCard(item, order: number, parent: Instance)
 	end
 	table.insert(refreshers, refresh)
 	buy.Activated:Connect(function()
-		if waiting or balance(item.currency) < item.price then
+		if waiting or alreadyOwned() or balance(item.currency) < item.price then
 			return
 		end
 		waiting = true
