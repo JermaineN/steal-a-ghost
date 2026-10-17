@@ -227,10 +227,12 @@ local function buildPlot(mapFolder: Folder, index: number, plotCFrame: CFrame)
 	-- that reads "UPGRADES" on both sides. Its prompt opens the owner's Upgrades window
 	-- (UpgradeService).
 	local signX = -(half - 5)
+	-- The post stops at the board's bottom edge (y 5.3); it's thicker than the board, so going
+	-- any higher would poke out through the sign's faces.
 	makePart(model, {
 		Name = "UpgradePost",
-		Size = Vector3.new(0.6, 6, 0.6),
-		CFrame = at(signX, 4, -half + 5),
+		Size = Vector3.new(0.6, 4.3, 0.6),
+		CFrame = at(signX, 3.15, -half + 5),
 		Color = Color3.fromRGB(70, 48, 34),
 		Material = Enum.Material.Wood,
 	})
