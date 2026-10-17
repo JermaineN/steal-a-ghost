@@ -36,6 +36,7 @@ local function newData()
 		gems = 0,
 		rebirths = 0, -- how many times they've rebirthed (each one boosts income, see Shared.Rebirth)
 		items = {}, -- [itemId] = how many they own (bought in the Shop, see ItemConfig)
+		equipped = {}, -- itemIds in the hotbar, in slot order (max GameConfig.MaxEquippedItems)
 		daily = {}, -- daily reward: { day = the day they last claimed, streak = which streak day that was }
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
@@ -156,6 +157,8 @@ function DataService.playerAdded(player: Player): boolean
 	for itemId, count in data.items do
 		player:SetAttribute("Item_" .. itemId, count)
 	end
+	-- Equipped items (the hotbar), as "item_1,item_3" (attributes can't hold lists).
+	player:SetAttribute("Equipped", table.concat(data.equipped, ","))
 	return true
 end
 
@@ -219,6 +222,26 @@ function DataService.spendGems(player: Player, amount: number): boolean
 	end
 	DataService.addGems(player, -amount)
 	return true
+end
+
+-- How many of an item the player owns.
+function DataService.getItemCount(player: Player, itemId: string): number
+	local profile = profiles[player]
+	return if profile then profile.data.items[itemId] or 0 else 0
+end
+
+-- The equipped items (hotbar), in slot order.
+function DataService.getEquipped(player: Player): { string }
+	local profile = profiles[player]
+	return if profile then profile.data.equipped else {}
+end
+
+function DataService.setEquipped(player: Player, equipped: { string })
+	local profile = profiles[player]
+	if profile then
+		profile.data.equipped = equipped
+		player:SetAttribute("Equipped", table.concat(equipped, ","))
+	end
 end
 
 function DataService.addItem(player: Player, itemId: string, count: number)

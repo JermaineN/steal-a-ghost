@@ -183,6 +183,9 @@ return {
 	-- Tier" (Los Calientes Studio, unknown uploader; swap it if you prefer another).
 	RebirthSound = { soundId = 134821092416328, volume = 0.7 },
 
+	-- Hotbar: how many Inventory items can be equipped at once (they go in the slots after the bat).
+	MaxEquippedItems = 3,
+
 	-- Base upgrades (the Upgrades signpost at each base's entrance). Kept through rebirths.
 	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.
 	StartingGraves = 6,
