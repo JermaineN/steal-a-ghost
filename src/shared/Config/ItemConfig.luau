@@ -18,6 +18,7 @@ local ItemConfig = {}
 -- stylua: ignore
 ItemConfig.Items = {
 	{ id = "smoke_bomb", name = "Smoke Bomb", description = "Vanish in a puff of smoke", price = 125, currency = "gems", color = Color3.fromRGB(175, 95, 255), image = "rbxassetid://109587585269112", once = true, tool = true },
+	{ id = "gravity",    name = "Gravity",    description = "Pull everyone toward you",  price = 350, currency = "gems", color = Color3.fromRGB(110, 60, 200),  image = "rbxassetid://100121928705722", once = true, tool = true },
 	{ id = "item_1", name = "Placeholder Item 1", description = "Design me!", price = 25,     currency = "gems", color = Color3.fromRGB(80, 190, 255),  image = "" },
 	{ id = "item_2", name = "Placeholder Item 2", description = "Design me!", price = 75,     currency = "gems", color = Color3.fromRGB(175, 95, 255),  image = "" },
 	{ id = "item_3", name = "Placeholder Item 3", description = "Design me!", price = 200,    currency = "gems", color = Color3.fromRGB(255, 190, 40),  image = "" },

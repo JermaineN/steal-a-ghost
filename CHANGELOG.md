@@ -535,3 +535,45 @@ slot 2: invisible for exactly 7.0 s with the bomb put away and the own-outline s
 again after; the smoke cloud showed and faded; the cooldown counted down (tested at 20 s, since changed to 35 s); getting caged
 ended it at 2.1 s. **Not tested:** a real bat hit ending it, and what other players see
 (2 players).
+
+---
+
+## 16. Gravity item, and the Shop sorted by price
+
+**Gravity** (Shop, **350 gems**, one-time; sticker-style vortex icon): select it and click to
+open a **gravity well** around you for **5 seconds**:
+- **You're slowed** to walk speed 8 while it's open (back to normal after).
+- **Everyone else within 60 studs** (an area 120 studs across, three times a base's length) is
+  **pulled toward you** at 30 studs/s, rising to about 40 near the middle, and **slowed to walk
+  speed 8** while inside, so they can't walk out of it: **everyone caught reaches the middle**
+  (from the very edge, running away, in about 3 seconds).
+- Anyone **pulled within 7 studs** of you is caught: a ghost they're stealing **drops and flies
+  home** (and a WANTED player's bounty is claimed), just like being bonked. Once per well.
+- **Look:** the area is a purple tint on the ground with a **glowing ring at its edge** (the
+  edge of the pull), with **streaks of light swirling in** from the ring toward a **dark vortex
+  under you**, plus a **warping whoosh** as it opens ("REVERSE NOISE VERB TAIL 10", APM Music) and a rumbling hum while it lasts ("Energy Presence 8", Pro Sound Effects). It grows out when
+  opened and shrinks away when closed.
+- Ends early if you're knocked over, caged or die. **35 second cooldown** from when you use it,
+  shown on the hotbar slot.
+
+Tuning in `GameConfig`: `GravitySeconds`, `GravityCooldownSeconds`, `GravityRadius`,
+`GravityPullSpeed`, `GravityUserWalkSpeed`, `GravityVictimWalkSpeed`, `GravityCatchRadius`, `GravitySound`, `GravityWarpSound`.
+
+**Shop order:** cheapest first. Gem items come first, then cash items (125 gems and $5K can't be
+compared directly).
+
+**How it works:** `GravityService` (server: the well, the slowdown, catching, the effects
+welded to the user; a `GravityUntil` attribute marks the well), `GravityClient` (each player's
+own device pulls their character toward an open well, since devices move their own
+characters). Item tools now go through one table in ItemService (`ITEM_TOOLS`: the tool and
+the service that runs it), so the next item is a row plus its service.
+
+**Tested (solo, test cash + gems):** Shop order (25, 75, 125, 200, 350 gems, then $5K, $50K,
+$500K); bought and equipped Gravity; the well lasted 5.2 s, walk speed 8 during and 24.5 after;
+the area was 80 studs across with the ring and vortex (screenshots from the player's view and
+from above; since made 120 across, with a 35 s cooldown); cooldown overlay. **2-player test:** Player2 carrying Player1's stolen Boo, 50 studs away:
+pulled to the middle in 1.5 s (50 -> 40 -> 22 -> 3 studs), dropped the ghost at 1.5 s ("Player1
+caught you! The ghost flew home."), walk speed 8 during and 24.5 after.
+
+**Also fixed:** the hotbar's bat slot could show no picture right after carrying a ghost or
+respawning (the tool was briefly missing); built-in items now always have their icon.

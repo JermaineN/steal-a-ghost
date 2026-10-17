@@ -167,7 +167,15 @@ function ShopPanel.start()
 		onOpen = refreshAll,
 	})
 	local grid = Window.grid(panel.window, Vector2.new(150, 224))
-	for order, item in ItemConfig.Items do
+	-- Cheapest first: gem items, then cash items (the two currencies can't be compared directly).
+	local sorted = table.clone(ItemConfig.Items)
+	table.sort(sorted, function(a, b)
+		if a.currency ~= b.currency then
+			return a.currency == "gems"
+		end
+		return a.price < b.price
+	end)
+	for order, item in sorted do
 		buildCard(item, order, grid)
 	end
 
