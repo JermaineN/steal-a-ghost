@@ -6,6 +6,8 @@
 --   announce   true = everyone gets a spawn banner, like a rare ghost
 --   bigBanner  true = always the big banner (like Mythic); otherwise the smaller one (like
 --              Legendary), unless the ghost itself is Mythic or rarer
+--   indexGems  one-time gem reward in the Index, per ghost found with this mutation (a Spooky Boo
+--              and a Spooky Sheet Ghost each pay it)
 --
 -- Listed rarest first. Each spawn rolls them in this order and the first one that hits wins,
 -- so a rarer mutation always takes precedence.
@@ -33,6 +35,7 @@ MutationConfig.Mutations = {
 		color = Color3.fromRGB(255, 245, 210),
 		announce = true,
 		bigBanner = true,
+		indexGems = 175,
 	},
 	{
 		id = "undead",
@@ -47,6 +50,7 @@ MutationConfig.Mutations = {
 		),
 		color = Color3.fromRGB(120, 255, 110),
 		announce = true,
+		indexGems = 75,
 	},
 	{
 		id = "spooky",
@@ -62,6 +66,7 @@ MutationConfig.Mutations = {
 		),
 		color = Color3.fromRGB(255, 140, 30),
 		announce = false,
+		indexGems = 25,
 	},
 	{
 		id = "eerie",
@@ -76,6 +81,7 @@ MutationConfig.Mutations = {
 		),
 		color = Color3.fromRGB(200, 200, 210),
 		announce = false,
+		indexGems = 10,
 	},
 }
 
