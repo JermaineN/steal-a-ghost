@@ -716,3 +716,40 @@ its own empty message ("Nothing here yet. Visit the Shop!" / "No titles yet."). 
 **Solo test:** with two items bought (test gems), Items showed Smoke Bomb and Gravity and the
 hotbar count; Titles showed THE GOAT (WEARING) and SUPERNOVA, with the count hidden. Pressing Wear
 on SUPERNOVA switched the title above the head to SUPERNOVA.
+
+## 24. Placeholder items removed
+
+The six "Placeholder Item" rows are gone from the Shop and Inventory; only the real items are
+left (Smoke Bomb, Universal Key, Gravity, PolterPuller 4000). Anyone who bought a placeholder is
+refunded its price (gems or cash) when they next join, with a message, and it's removed from
+their save (`RETIRED_ITEMS` in `DataService`). Unknown items are also dropped from the hotbar.
+
+**Solo test:** the Shop showed only the four real items, no errors. **Not tested:** the refund
+(Studio can't load a save that owns placeholders; it runs on join in the live game).
+
+## 25. Shield item
+
+A new Shop item (150 gems, bought once): click it for **7 seconds of immunity to crowd control**.
+
+- While shielded, bat hits and landmines can't knock you over, cages can't catch you, and
+  Gravity wells don't pull, slow or catch you.
+- **Three shield icons circle you** so everyone can see it; they blink in the last second and
+  hide while you're invisible (Smoke Bomb).
+- **Ends straight away when you steal a ghost** (picking one up, or starting a PolterPuller
+  capture), and when you die.
+- **25 second cooldown**, starting on use. Can't be used while invisible, caged, knocked over or
+  carrying a ghost.
+- Icon: a blue shield with a ghost emblem (`scripts/draw-shield-icon.ps1`). No sound yet.
+
+**How it works:** `ShieldService` (`ShieldUntil` attribute), checked by
+`RagdollService.canKnock`, `CageService.trap`, `GravityService` (catch) and client
+`GravityClient` (pull); `CaptureService` ends it on capture; client `ShieldClient` draws the
+orbit; `ItemService` builds the held buckler.
+
+**Solo test:** bought it (−150 gems), equipped and used it: shield for 7.0 s (ended at 7.06 s),
+3 icons circling, 25 s cooldown on the hotbar. While shielded, knockback was refused and a cage
+didn't catch. Setting `Carrying` (picking up a ghost) ended it in 0.03 s.
+**2-player test (Gravity):** Player1 opened a well with shielded Player2 28 studs away: Player2
+stayed at 28 studs and kept full walk speed. The same well without the shield pulled Player2
+from 26 to 3 studs and slowed them to 8. **Not tested:** real bat/cage swings from another player
+(they use the same checks as the solo test).

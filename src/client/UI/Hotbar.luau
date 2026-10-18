@@ -382,6 +382,7 @@ function Hotbar.start()
 		smoke_bomb = GameConfig.SmokeBombCooldownSeconds,
 		gravity = GameConfig.GravityCooldownSeconds,
 		universal_key = GameConfig.UniversalKeyCooldownSeconds,
+		shield = GameConfig.ShieldCooldownSeconds,
 	}
 	task.spawn(function()
 		while true do

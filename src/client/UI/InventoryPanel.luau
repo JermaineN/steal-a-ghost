@@ -49,7 +49,7 @@ local function owned(itemId: string): number
 	return player:GetAttribute("Item_" .. itemId) or 0
 end
 
--- The equipped items (in the hotbar), from the server's "Equipped" attribute ("item_1,item_3").
+-- The equipped items (in the hotbar), from the server's "Equipped" attribute ("smoke_bomb,gravity").
 local function equippedIds(): { string }
 	local ids = {}
 	for id in string.gmatch(player:GetAttribute("Equipped") or "", "[^,]+") do

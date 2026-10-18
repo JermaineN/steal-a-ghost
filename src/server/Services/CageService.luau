@@ -86,6 +86,11 @@ function CageService.trap(player: Player, caster: Player): boolean
 	if not character or not humanoid or not root or humanoid.Health <= 0 or isCaged(player) then
 		return false
 	end
+	-- Shielded players can't be caged (ShieldService).
+	local shieldUntil = player:GetAttribute("ShieldUntil")
+	if shieldUntil and workspace:GetServerTimeNow() < shieldUntil then
+		return false
+	end
 	player:SetAttribute("Caged", true)
 
 	-- Stand them upright on the ground (they might be mid-jump), then pin them there.

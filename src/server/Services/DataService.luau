@@ -5,6 +5,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
+local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
+local Format = require(ReplicatedStorage.Shared.Format)
 local Notify = require(script.Parent.Parent.Util.Notify)
 
 local DataService = {}
@@ -17,6 +19,41 @@ type Profile = {
 	rebirthsValue: IntValue,
 }
 local profiles: { [Player]: Profile } = {}
+
+-- Items taken out of the Shop (ItemConfig), with what they cost. Anyone who still owns one is
+-- refunded and it's removed from their save when they join.
+local RETIRED_ITEMS = {
+	item_1 = { price = 25, currency = "gems" },
+	item_2 = { price = 75, currency = "gems" },
+	item_3 = { price = 200, currency = "gems" },
+	item_4 = { price = 5000, currency = "cash" },
+	item_5 = { price = 50000, currency = "cash" },
+	item_6 = { price = 500000, currency = "cash" },
+}
+
+-- Refunds and removes retired items; also drops any unknown item from the hotbar.
+local function clearRetiredItems(data): (number, number)
+	local gems, cash = 0, 0
+	for itemId, count in data.items do
+		local retired = RETIRED_ITEMS[itemId]
+		if retired then
+			if retired.currency == "gems" then
+				gems += retired.price * count
+			else
+				cash += retired.price * count
+			end
+			data.items[itemId] = nil
+		end
+	end
+	for index = #data.equipped, 1, -1 do
+		if not ItemConfig.byId[data.equipped[index]] then
+			table.remove(data.equipped, index)
+		end
+	end
+	data.gems += gems
+	data.cash += cash
+	return gems, cash
+end
 local activeSaves = 0
 
 local storeOk, store = pcall(DataStoreService.GetDataStore, DataStoreService, GameConfig.DataStoreName)
@@ -109,6 +146,22 @@ function DataService.playerAdded(player: Player): boolean
 		return false
 	end
 
+	local refundGems, refundCash = clearRetiredItems(data)
+	if refundGems > 0 or refundCash > 0 then
+		local parts = {}
+		if refundGems > 0 then
+			table.insert(parts, refundGems .. " gems")
+		end
+		if refundCash > 0 then
+			table.insert(parts, "$" .. Format.cash(refundCash))
+		end
+		Notify.send(
+			player,
+			"Old placeholder items were removed. Refunded " .. table.concat(parts, " and ") .. ".",
+			"success"
+		)
+	end
+
 	-- Studio-only test money (GameConfig.StudioTestCashOn / StudioTestCash). A boosted profile is never saved,
 	-- so test money can't leak into anyone's real save data. Live servers never run this.
 	local testCash = if GameConfig.StudioTestCashOn then GameConfig.StudioTestCash else 0
@@ -164,7 +217,7 @@ function DataService.playerAdded(player: Player): boolean
 	for itemId, count in data.items do
 		player:SetAttribute("Item_" .. itemId, count)
 	end
-	-- Equipped items (the hotbar), as "item_1,item_3" (attributes can't hold lists).
+	-- Equipped items (the hotbar), as "smoke_bomb,gravity" (attributes can't hold lists).
 	player:SetAttribute("Equipped", table.concat(data.equipped, ","))
 	return true
 end

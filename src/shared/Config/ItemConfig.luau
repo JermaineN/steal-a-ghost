@@ -11,8 +11,8 @@
 --   tool        true = equipping it puts a usable tool (named by its id) in the hotbar; what it
 --               does is built in ItemService
 --
--- The "Placeholder Item" rows are stand-ins so the Shop and Inventory work end to end. They can
--- be bought and are saved, but don't do anything. Replace them with real items.
+-- Removing an item: take its row out and add it to RETIRED_ITEMS in DataService, so anyone who
+-- bought it gets refunded.
 local ItemConfig = {}
 
 -- stylua: ignore
@@ -20,13 +20,8 @@ ItemConfig.Items = {
 	{ id = "smoke_bomb", name = "Smoke Bomb", description = "Vanish in a puff of smoke", price = 125, currency = "gems", color = Color3.fromRGB(175, 95, 255), image = "rbxassetid://109587585269112", once = true, tool = true },
 	{ id = "universal_key", name = "Universal Key", description = "Unlock any locked base", price = 250, currency = "gems", color = Color3.fromRGB(255, 190, 40), image = "rbxassetid://86142974980494", once = true, tool = true },
 	{ id = "polterpuller", name = "PolterPuller 4000", description = "Capture ghosts straight home", price = 550, currency = "gems", color = Color3.fromRGB(120, 255, 130), image = "rbxassetid://110348892274923", once = true, tool = true },
+	{ id = "shield",     name = "Shield",     description = "Shrug off knockbacks and cages", price = 150, currency = "gems", color = Color3.fromRGB(80, 200, 255), image = "rbxassetid://108221968843411", once = true, tool = true },
 	{ id = "gravity",    name = "Gravity",    description = "Pull everyone toward you",  price = 350, currency = "gems", color = Color3.fromRGB(110, 60, 200),  image = "rbxassetid://100121928705722", once = true, tool = true },
-	{ id = "item_1", name = "Placeholder Item 1", description = "Design me!", price = 25,     currency = "gems", color = Color3.fromRGB(80, 190, 255),  image = "" },
-	{ id = "item_2", name = "Placeholder Item 2", description = "Design me!", price = 75,     currency = "gems", color = Color3.fromRGB(175, 95, 255),  image = "" },
-	{ id = "item_3", name = "Placeholder Item 3", description = "Design me!", price = 200,    currency = "gems", color = Color3.fromRGB(255, 190, 40),  image = "" },
-	{ id = "item_4", name = "Placeholder Item 4", description = "Design me!", price = 5000,   currency = "cash", color = Color3.fromRGB(60, 255, 60),   image = "" },
-	{ id = "item_5", name = "Placeholder Item 5", description = "Design me!", price = 50000,  currency = "cash", color = Color3.fromRGB(255, 140, 30),  image = "" },
-	{ id = "item_6", name = "Placeholder Item 6", description = "Design me!", price = 500000, currency = "cash", color = Color3.fromRGB(255, 60, 90),   image = "" },
 }
 
 ItemConfig.byId = {}
