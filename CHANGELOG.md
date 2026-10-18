@@ -673,3 +673,8 @@ The server already refused upgrades from anyone but the owner.
 **Solo test:** in a playtest on Plot 1, only Plot 1's prompt was enabled; the other 7 were off.
 **Not tested:** pressing the prompt to open the window (the Daily Reward pop-up was in the way;
 that code didn't change).
+
+## 21. Lower offline earnings
+
+Offline earnings now pay 20% of your income while you were away, down from 50%
+(`GameConfig.OfflineIncomeShare`, changed by the user). Not playtested (a one-number change).
