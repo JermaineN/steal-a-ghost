@@ -30,6 +30,7 @@ local SmokeBombService = require(Services.SmokeBombService)
 local GravityService = require(Services.GravityService)
 local UniversalKeyService = require(Services.UniversalKeyService)
 local CaptureService = require(Services.CaptureService)
+local TitleService = require(Services.TitleService)
 
 local map = MapBuilder.build()
 PlotService.start(map.plots)
@@ -55,6 +56,7 @@ SmokeBombService.start()
 GravityService.start()
 UniversalKeyService.start()
 CaptureService.start()
+TitleService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).
 local function applyWalkSpeed(character: Model)
@@ -78,6 +80,7 @@ local function onPlayerAdded(player: Player)
 		OfflineService.playerLoaded(player)
 		DailyRewardService.playerLoaded(player)
 		LeaderboardService.playerLoaded(player)
+		TitleService.playerLoaded(player)
 	end
 end
 

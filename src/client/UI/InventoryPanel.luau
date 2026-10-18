@@ -2,12 +2,16 @@
 -- item you own (bought in the Shop), with how many you have, and an Equip button that puts it
 -- in the hotbar (max GameConfig.MaxEquippedItems; equipped cards get an "EQUIPPED" ribbon). The
 -- server marks owned items with "Item_<itemId>" = count and the equipped ones with "Equipped".
+-- Titles you own (TitleConfig, "Title_<id>" attributes) get cards too, after the items: Wear
+-- shows that title above your head (one at a time, the "Title" attribute), Take off removes it.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
+local TitleConfig = require(ReplicatedStorage.Shared.Config.TitleConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local TitleText = require(ReplicatedStorage.Shared.TitleText)
 local Hud = require(script.Parent.Hud)
 local Window = require(script.Parent.Window)
 
@@ -30,6 +34,8 @@ type Card = {
 	equipLabel: TextLabel,
 }
 local cards: { [string]: Card } = {}
+type TitleCard = { card: Frame, stroke: UIStroke, ribbon: Frame, wear: TextButton, wearLabel: TextLabel }
+local titleCards: { [string]: TitleCard } = {}
 local emptyLabel: TextLabel
 local slotsLabel: TextLabel
 
@@ -63,6 +69,18 @@ local function refresh()
 		entry.equipLabel.Text = if isEquipped then "Unequip" elseif full then "Hotbar full" else "Equip"
 		Window.paintButton(entry.equip, if isEquipped or full then LOCKED_GREY else INVENTORY_ORANGE)
 		any = any or count > 0
+	end
+	local wearing = player:GetAttribute("Title")
+	for _, title in TitleConfig.Titles do
+		local entry = titleCards[title.id]
+		local isOwned = player:GetAttribute("Title_" .. title.id) == true
+		local isWorn = wearing == title.id
+		entry.card.Visible = isOwned
+		entry.ribbon.Visible = isWorn
+		entry.stroke.Thickness = if isWorn then 4 else 2.5
+		entry.wearLabel.Text = if isWorn then "Take off" else "Wear"
+		Window.paintButton(entry.wear, if isWorn then LOCKED_GREY else title.color)
+		any = any or isOwned
 	end
 	emptyLabel.Visible = not any
 	slotsLabel.Text = `Hotbar: {#equipped}/{GameConfig.MaxEquippedItems} equipped`
@@ -180,6 +198,94 @@ local function buildCard(item, order: number, parent: Instance)
 	}
 end
 
+-- A title's card: the title itself, animated, where an item's picture would be.
+local function ribbonOn(card: Frame, text: string, color: Color3): Frame
+	local ribbon = new("Frame", {
+		Name = "Ribbon",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0, 10),
+		Size = UDim2.fromOffset(110, 24),
+		BackgroundColor3 = color,
+		Rotation = -6,
+		ZIndex = 3,
+		Visible = false,
+		Parent = card,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = ribbon })
+	new("UIStroke", {
+		Color = Window.TEXT_OUTLINE,
+		Thickness = 2,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Parent = ribbon,
+	})
+	Window.text({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.new(1, -12, 1, -6),
+		TextColor3 = WHITE,
+		Text = text,
+		ZIndex = 3,
+		Parent = ribbon,
+	})
+	return ribbon
+end
+
+local function buildTitleCard(title, order: number, parent: Instance)
+	local card = new("Frame", {
+		Name = "Title_" .. title.id,
+		LayoutOrder = order,
+		BackgroundColor3 = WHITE,
+		Visible = false,
+		Parent = parent,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0.1, 0), Parent = card })
+	new("UIGradient", {
+		Rotation = 90,
+		Color = ColorSequence.new(title.color:Lerp(Window.PANEL_DARK, 0.6), Window.PANEL_DARK),
+		Parent = card,
+	})
+	local stroke = new("UIStroke", { Color = title.color, Thickness = 2.5, Parent = card })
+
+	local holder = new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 40),
+		Size = UDim2.new(1, -14, 0, 40),
+		BackgroundTransparency = 1,
+		Parent = card,
+	})
+	TitleText.create(holder, title, 2.5)
+
+	Window.text({
+		Position = UDim2.fromOffset(8, 110),
+		Size = UDim2.new(1, -16, 0, 22),
+		TextColor3 = WHITE,
+		Text = "Title",
+		Parent = card,
+	})
+	Window.text({
+		Position = UDim2.fromOffset(8, 133),
+		Size = UDim2.new(1, -16, 0, 16),
+		TextColor3 = Color3.fromRGB(205, 190, 230),
+		Text = "Shown above your head",
+		Parent = card,
+	})
+	local ribbon = ribbonOn(card, "WEARING", title.color)
+
+	local wear, wearLabel = Window.button({
+		Name = "Wear",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 160),
+		Size = UDim2.new(1, -24, 0, 34),
+		Parent = card,
+	}, title.color)
+	wear.Activated:Connect(function()
+		local isWorn = player:GetAttribute("Title") == title.id
+		Remotes.EquipTitle:FireServer(if isWorn then "" else title.id)
+	end)
+
+	titleCards[title.id] = { card = card, stroke = stroke, ribbon = ribbon, wear = wear, wearLabel = wearLabel }
+end
+
 function InventoryPanel.isOpen(): boolean
 	return panel ~= nil and panel.isOpen()
 end
@@ -216,6 +322,9 @@ function InventoryPanel.start()
 	for order, item in ItemConfig.Items do
 		buildCard(item, order, grid)
 	end
+	for order, title in TitleConfig.Titles do
+		buildTitleCard(title, #ItemConfig.Items + order, grid)
+	end
 	emptyLabel = Window.text({
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0.5, 0, 0.5, 20),
@@ -227,7 +336,7 @@ function InventoryPanel.start()
 
 	-- Buying something updates the window straight away.
 	player.AttributeChanged:Connect(function(attribute)
-		if string.match(attribute, "^Item_") or attribute == "Equipped" then
+		if string.match(attribute, "^Item_") or string.match(attribute, "^Title") or attribute == "Equipped" then
 			refresh()
 		end
 	end)

@@ -37,6 +37,8 @@ local function newData()
 		rebirths = 0, -- how many times they've rebirthed (each one boosts income, see Shared.Rebirth)
 		items = {}, -- [itemId] = how many they own (bought in the Shop, see ItemConfig)
 		equipped = {}, -- itemIds in the hotbar, in slot order (max GameConfig.MaxEquippedItems)
+		titles = {}, -- [titleId] = true for titles earned in game (see TitleConfig)
+		title = nil :: string?, -- the title shown above their head; "" = they chose none, nil = never chose
 		daily = {}, -- daily reward: { day = the day they last claimed, streak = which streak day that was }
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
@@ -257,6 +259,32 @@ function DataService.addItem(player: Player, itemId: string, count: number)
 	local owned = (profile.data.items[itemId] or 0) + count
 	profile.data.items[itemId] = if owned > 0 then owned else nil
 	player:SetAttribute("Item_" .. itemId, if owned > 0 then owned else nil)
+end
+
+-- Titles earned in game (special ones come from TitleConfig's allow-lists instead, TitleService).
+function DataService.hasEarnedTitle(player: Player, titleId: string): boolean
+	local profile = profiles[player]
+	return profile ~= nil and profile.data.titles[titleId] == true
+end
+
+function DataService.grantTitle(player: Player, titleId: string)
+	local profile = profiles[player]
+	if profile then
+		profile.data.titles[titleId] = true
+	end
+end
+
+-- The title shown above their head: an id, "" for none, or nil if they've never chosen.
+function DataService.getTitle(player: Player): string?
+	local profile = profiles[player]
+	return if profile then profile.data.title else nil
+end
+
+function DataService.setTitle(player: Player, titleId: string)
+	local profile = profiles[player]
+	if profile then
+		profile.data.title = titleId
+	end
 end
 
 -- The daily reward record: { day = last claim day, streak = streak day claimed then }, or nil.

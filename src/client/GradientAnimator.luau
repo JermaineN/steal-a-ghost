@@ -2,6 +2,8 @@
 -- forth, like the rare-spawn banners. The server tags the rarity (Legendary and rarer) and
 -- mutation words on ghost labels (GhostLabel); windows can tag their own gradients too.
 -- Each gradient starts at a different point, so labels next to each other don't move in step.
+-- Gradients tagged "ShineGradient" (the glint on shiny titles, Shared.TitleText) instead sweep
+-- across once every few seconds, like light catching the letters.
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
@@ -10,6 +12,9 @@ local GradientAnimator = {}
 GradientAnimator.TAG = "AnimatedGradient"
 local SPEED = 0.9 -- how fast the colours drift
 local SWING = 0.5 -- how far they slide each way (in widths of the text)
+local SHINE_TAG = "ShineGradient"
+local SHINE_SWEEP = 0.8 -- seconds for the glint to cross the text
+local SHINE_EVERY = 2.6 -- seconds from one glint to the next
 
 function GradientAnimator.start()
 	local gradients: { [UIGradient]: number } = {} -- gradient -> its starting point
@@ -27,10 +32,31 @@ function GradientAnimator.start()
 		gradients[instance :: UIGradient] = nil
 	end)
 
+	local shines: { [UIGradient]: boolean } = {}
+	local function addShine(instance: Instance)
+		if instance:IsA("UIGradient") then
+			shines[instance] = true
+		end
+	end
+	for _, instance in CollectionService:GetTagged(SHINE_TAG) do
+		addShine(instance)
+	end
+	CollectionService:GetInstanceAddedSignal(SHINE_TAG):Connect(addShine)
+	CollectionService:GetInstanceRemovedSignal(SHINE_TAG):Connect(function(instance)
+		shines[instance :: UIGradient] = nil
+	end)
+
 	RunService.RenderStepped:Connect(function()
-		local t = os.clock() * SPEED
+		local now = os.clock()
+		local t = now * SPEED
 		for gradient, phase in gradients do
 			gradient.Offset = Vector2.new(math.sin(t + phase) * SWING, 0)
+		end
+		-- All glints sweep together (left to right, then wait off to the side).
+		local sweep = math.min((now % SHINE_EVERY) / SHINE_SWEEP, 1)
+		local shineOffset = Vector2.new(-1 + 2 * sweep, 0)
+		for gradient in shines do
+			gradient.Offset = shineOffset
 		end
 	end)
 end

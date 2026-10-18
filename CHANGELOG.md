@@ -678,3 +678,31 @@ that code didn't change).
 
 Offline earnings now pay 20% of your income while you were away, down from 50%
 (`GameConfig.OfflineIncomeShare`, changed by the user). Not playtested (a one-number change).
+
+## 22. Titles: THE GOAT and SUPERNOVA
+
+Titles are words shown above a player's head (everyone sees them) and in front of their name in
+chat. One at a time, picked in the Inventory.
+
+- **THE GOAT:** the Secret rarity's colours (silver stripes with a blood-red streak).
+  **SUPERNOVA:** red and purple with a hot pink flash. Both slide their colours like the high
+  rarities, and a white glint sweeps across them every few seconds so they look reflective.
+- Both are only available to the game's creator for now (`allowedUserIds` in `TitleConfig`).
+  Titles can also be saved as earned (`DataService.grantTitle`), ready for ways to earn them later.
+- **Inventory:** owned titles get cards after the items, showing the animated title, with
+  **Wear** / **Take off**; the worn one has a "WEARING" ribbon. The first time you own a title
+  (and have never picked one), it's put on for you. The choice is saved.
+- **Chat:** your messages start with the title, e.g. "[THE GOAT] jerizaxe:", each letter coloured
+  from its gradient (chat text can't animate).
+- Hidden while invisible (Smoke Bomb). A WANTED tag moves up above the title.
+
+**How it works:** `Config/TitleConfig` (the titles), `Shared/TitleText` (draws a title with its
+gradient and glint, plus the chat version), `TitleService` (ownership, `Title` / `Title_<id>`
+attributes, the head tag, `EquipTitle` remote), client `ChatTitles`, the Inventory cards, and
+`GradientAnimator` sweeping `ShineGradient` glints. New save keys: `title`, `titles`.
+
+**Solo test:** THE GOAT was put on automatically and showed above the head; the Inventory showed
+both title cards (THE GOAT "WEARING" with Take off, SUPERNOVA with Wear); a chat message came
+through as "[THE GOAT] jerizaxe:" with the coloured letters. **Not tested:** pressing Wear on
+SUPERNOVA (the test click failed), how the title sits with someone else's name tag and a WANTED
+tag (needs 2 players), and saving (live game only).

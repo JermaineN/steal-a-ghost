@@ -63,7 +63,8 @@ local function decorate(character: Model, bounty: number)
 	tag.Name = "WantedTag"
 	tag.Adornee = head
 	tag.Size = UDim2.fromOffset(220, 70)
-	tag.StudsOffset = Vector3.new(0, 3.2, 0)
+	-- Above their title (TitleService), if they wear one.
+	tag.StudsOffset = Vector3.new(0, if character:FindFirstChild("TitleTag") then 4.6 else 3.2, 0)
 	tag.AlwaysOnTop = true
 	tag.MaxDistance = 250
 	tag.LightInfluence = 0
