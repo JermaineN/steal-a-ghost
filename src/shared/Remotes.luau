@@ -20,6 +20,7 @@ local EVENT_NAMES = {
 	"ShopBuy", -- client -> server: buy one of a Shop item (itemId); the server checks the price
 	"DailyClaim", -- client -> server: claim today's daily reward (no arguments)
 	"EquipItem", -- client -> server: put an owned item in the hotbar or take it out (itemId, equip: boolean)
+	"EquipTitle", -- client -> server: show one of your titles above your head (titleId), or none ("")
 	"TutorialComplete", -- client -> server: finished the first-time tutorial (no arguments)
 	"OpenUpgrades", -- server -> a base's owner: they used their Upgrades signpost, open the window
 	"BuyUpgrade", -- client -> server: buy the next level of a base upgrade (kindId: "graves" or "lock")
