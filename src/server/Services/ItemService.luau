@@ -7,8 +7,8 @@
 --   (LandmineService).
 -- - Inventory items that are tools (ItemConfig `tool = true`, e.g. the Smoke Bomb): given while
 --   equipped in the Inventory (syncItemTools), named by item id, each run by its own service
---   (SmokeBombService, GravityService, UniversalKeyService, CaptureService, ShieldService; see
---   ITEM_TOOLS).
+--   (SmokeBombService, GravityService, UniversalKeyService, CaptureService, ShieldService,
+--   MalletService; see ITEM_TOOLS).
 -- Either way, a thief who gets hit drops the stolen ghost, which flies home.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
@@ -28,6 +28,7 @@ local SmokeBombService = require(script.Parent.SmokeBombService)
 local StealService = require(script.Parent.StealService)
 local UniversalKeyService = require(script.Parent.UniversalKeyService)
 local ShieldService = require(script.Parent.ShieldService)
+local MalletService = require(script.Parent.MalletService)
 
 local ItemService = {}
 
@@ -430,6 +431,78 @@ local function buildShield(): Tool
 	return tool
 end
 
+-- Builds the Mega Mallet: a long wooden handle (the Handle, held near its end) with a huge iron
+-- head across the far end. The head's two striking faces glow red, with a dark band round the
+-- middle. "Strike" (an attachment on the lower face) is where the slam hits the ground.
+local function buildMegaMallet(): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = MalletService.ITEM_ID
+	tool.ToolTip = "Click to slam the ground and launch everyone in front of you"
+	tool.TextureId = GameConfig.MegaMalletIcon
+	tool.CanBeDropped = false
+	-- Held near the end of the handle, tipped up like the bat.
+	tool.Grip = CFrame.new(0, 0, 2) * CFrame.Angles(math.rad(-60), 0, 0)
+
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.35, 0.35, 4.8)
+	handle.Color = Color3.fromRGB(120, 75, 45)
+	handle.Material = Enum.Material.Wood
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	-- Grip wraps near the hand.
+	for index = 0, 2 do
+		local wrap = Instance.new("Part")
+		wrap.Size = Vector3.new(0.42, 0.42, 0.18)
+		wrap.Color = Color3.fromRGB(30, 22, 28)
+		wrap.Material = Enum.Material.Fabric
+		wrap.CFrame = handle.CFrame * CFrame.new(0, 0, 2.1 - index * 0.35)
+		addWelded(tool, handle, wrap)
+	end
+
+	-- The head: across the far end of the handle, its long side up and down.
+	local headCFrame = handle.CFrame * CFrame.new(0, 0, -2.6)
+	local head = Instance.new("Part")
+	head.Name = "Head"
+	head.Size = Vector3.new(1.9, 3.2, 1.9)
+	head.Color = Color3.fromRGB(85, 80, 100)
+	head.Material = Enum.Material.Metal
+	head.CFrame = headCFrame
+	addWelded(tool, handle, head)
+
+	local band = Instance.new("Part")
+	band.Size = Vector3.new(2.05, 0.5, 2.05)
+	band.Color = Color3.fromRGB(35, 30, 45)
+	band.Material = Enum.Material.Metal
+	band.CFrame = headCFrame
+	addWelded(tool, handle, band)
+
+	for _, side in { 1, -1 } do
+		local face = Instance.new("Part")
+		face.Size = Vector3.new(1.6, 0.2, 1.6)
+		face.Color = Color3.fromRGB(255, 70, 50)
+		face.Material = Enum.Material.Neon
+		face.CFrame = headCFrame * CFrame.new(0, side * 1.62, 0)
+		addWelded(tool, handle, face)
+		if side == -1 then
+			local strike = Instance.new("Attachment")
+			strike.Name = "Strike"
+			strike.Position = Vector3.new(0, -0.15, 0)
+			strike.Parent = face
+		end
+	end
+
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(255, 80, 60)
+	light.Range = 6
+	light.Brightness = 1.2
+	light.Parent = head
+
+	return tool
+end
+
 -- The PolterPuller 4000's colours: purple tank and nozzle, glowing green suction parts.
 local VACUUM_PURPLE = Color3.fromRGB(110, 60, 200)
 local VACUUM_GREEN = Color3.fromRGB(120, 255, 130)
@@ -676,6 +749,7 @@ function ItemService.start()
 	ITEM_TOOLS[UniversalKeyService.ITEM_ID] = { template = buildUniversalKey(), handler = UniversalKeyService }
 	ITEM_TOOLS[CaptureService.ITEM_ID] = { template = buildPolterPuller(), handler = CaptureService }
 	ITEM_TOOLS[ShieldService.ITEM_ID] = { template = buildShield(), handler = ShieldService }
+	ITEM_TOOLS[MalletService.ITEM_ID] = { template = buildMegaMallet(), handler = MalletService }
 
 	-- Tool.Activated fires on the server too, so each copy of an item is wired up here.
 	local function onToolAdded(item: Instance)

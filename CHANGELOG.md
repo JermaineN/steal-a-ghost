@@ -796,3 +796,49 @@ and the other three greyed; pressing the row paid 25 ("Claimed ✓"). Bought a S
 (a separate find); the main Claim all paid the Banshee's ghost reward and its Spooky reward
 together. On a Spooky Poltergeist, the page's Claim all paid 25 and the "!" went away; Back
 returned to the grid.
+
+## 28. Mega Mallet
+
+A new Shop item (2,500 gems, bought once): a giant mallet that launches everyone in front of you.
+
+- **Click while standing on the ground:** you're frozen in place (root anchored by the server,
+  like the cage) for a **2 second wind-up**, leaning far back with the mallet raised behind your
+  head, trembling as it loads up.
+- **Red warning cone:** a see-through red slice of the ground grows from you to the full hit
+  area over 1.5 s, then pulses until the slam, so everyone can see where it'll land. The hit area
+  is **112.5 studs** long (1.5x Gravity's radius, plus 25%) and **50 degrees each side** of where
+  you face.
+- **The slam:** you lunge forward and drive the head into the ground in front. A flash, a dust
+  cloud, sparks and flying rocks burst from the impact; three glowing shockwave rings race out
+  through the cone; rows of rock spikes with red-hot bases burst out of the ground as the wave
+  passes, then sink back; nearby cameras shake.
+- **Hits:** everyone the shockwave reaches inside the cone (at 150 studs per second) is launched
+  as high as a landmine and stays floppy for **3.5 s after landing** (double a landmine). A thief
+  drops the ghost they were carrying. Shielded, caged or already knocked-over players aren't hit.
+- **Cancelled** if you're knocked over, caged, die or put the mallet away during the wind-up.
+- **62.5 second cooldown**, starting on use. Can't be used while invisible, caged, knocked over
+  or carrying a ghost.
+
+**How it works:** `MalletService` (checks, the anchored wind-up, `MalletUntil` attribute, the
+cone hit timed to the wave, `MalletSwing` remote to every device); client `MalletClient` (the
+animation on the waist, shoulders, wrist, hips and knees, timed to the server's slam moment; the
+cone and wave as pictures on flat parts; spikes, debris and camera shake). `RagdollService`
+un-anchors a swinger who gets hit. The tool, icon and ground pictures: `ItemService`,
+`scripts/draw-mallet-icon.ps1`, `scripts/draw-mallet-cone.ps1` (drawn at the same angle as
+`MegaMalletHalfAngle`; redraw and re-upload if that changes). Sounds reuse the Gravity warp
+(wind-up) and the landmine boom (slam).
+
+**Solo test:** bought it (2,500 gems), 62.5 s cooldown. The swinger stayed anchored for 2.0 s and
+was released at the slam. Screenshots with a marker in front confirmed the wind-up leans back with the
+mallet raised behind the head and the slam leans forward with the head in the ground (picked by
+the user after trying a few versions); the cone
+grows in front, the size and angle match the settings, and the spikes and waves sweep out
+through it. Putting the mallet away mid wind-up unfroze the player, removed the cone, and no slam
+followed.
+**2-player test:** Player1 swung at Player2 standing 50 studs straight ahead: the hit arrived
+0.33 s after the slam (the wave's travel time), Player2 was launched with (50, 125, 0) (away
+from Player1, landmine strength), got "Player1 flattened you with the Mega Mallet!", and was
+down for 5.1 s (in the air, then 3.5 s after landing); Player1 got "SMASH! You launched 1
+player!". With Player2 40 studs away at 60 degrees to the side (outside the 50 degree cone), the
+swing didn't hit them. One earlier swing hit nobody, most likely because the tool was replaced
+while it was still loading in (that counts as putting it away).

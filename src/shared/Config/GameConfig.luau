@@ -256,6 +256,24 @@ return {
 	ShieldCooldownSeconds = 25,
 	ShieldIcon = "rbxassetid://108221968843411", -- source: assets/shield-icon.png
 
+	-- Mega Mallet (Shop item): click to raise it over your head. You're frozen in place for the
+	-- wind-up while a red cone grows on the ground in front of you, then you slam it down: a
+	-- shockwave and rock spikes rip outward through the cone and launch everyone they reach.
+	MegaMalletWindupSeconds = 2, -- from the click to the slam
+	MegaMalletTelegraphSeconds = 1.5, -- the red cone grows to full size over this long
+	MegaMalletRange = 112.5, -- studs: 1.5x Gravity's 60-stud pull radius, then +25%
+	MegaMalletHalfAngle = 50, -- degrees each side of where you face (a 100 degree cone; the cone pictures are drawn to match)
+	MegaMalletWaveSpeed = 150, -- studs per second the shockwave travels (reaches the edge in 0.75 s)
+	MegaMalletKnockbackSpeed = 50, -- sideways push away from you, like a landmine
+	MegaMalletKnockbackLift = 125, -- upward launch, as high as a landmine
+	MegaMalletRagdollSeconds = 3.5, -- floppy after landing: double a landmine's
+	MegaMalletCooldownSeconds = 62.5,
+	MegaMalletIcon = "rbxassetid://78467553699874", -- source: assets/mallet-icon.png
+	MegaMalletConeImage = "rbxassetid://128411154166555", -- source: assets/mallet-cone.png
+	MegaMalletWaveImage = "rbxassetid://105875569794102", -- source: assets/mallet-wave.png
+	MegaMalletWindupSound = { soundId = 9043345004, volume = 0.9 }, -- same as GravityWarpSound (rising)
+	MegaMalletSlamSound = { soundId = 117211977307268, volume = 1 }, -- same as LandmineSound (boom)
+
 	-- Base upgrades (the Upgrades signpost at each base's entrance). Kept through rebirths.
 	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.
 	StartingGraves = 6,
