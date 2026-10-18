@@ -706,3 +706,13 @@ both title cards (THE GOAT "WEARING" with Take off, SUPERNOVA with Wear); a chat
 through as "[THE GOAT] jerizaxe:" with the coloured letters. **Not tested:** pressing Wear on
 SUPERNOVA (the test click failed), how the title sits with someone else's name tag and a WANTED
 tag (needs 2 players), and saving (live game only).
+
+## 23. Inventory tabs: Items and Titles
+
+The Inventory window now has two tabs under its header: **Items** (the Shop items, with the
+"Hotbar: n/2 equipped" count) and **Titles** (your titles, with Wear / Take off). Each tab has
+its own empty message ("Nothing here yet. Visit the Shop!" / "No titles yet."). It opens on Items.
+
+**Solo test:** with two items bought (test gems), Items showed Smoke Bomb and Gravity and the
+hotbar count; Titles showed THE GOAT (WEARING) and SUPERNOVA, with the count hidden. Pressing Wear
+on SUPERNOVA switched the title above the head to SUPERNOVA.

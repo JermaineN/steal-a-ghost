@@ -2,8 +2,9 @@
 -- item you own (bought in the Shop), with how many you have, and an Equip button that puts it
 -- in the hotbar (max GameConfig.MaxEquippedItems; equipped cards get an "EQUIPPED" ribbon). The
 -- server marks owned items with "Item_<itemId>" = count and the equipped ones with "Equipped".
--- Titles you own (TitleConfig, "Title_<id>" attributes) get cards too, after the items: Wear
--- shows that title above your head (one at a time, the "Title" attribute), Take off removes it.
+-- Two tabs under the header: Items, and Titles (TitleConfig, owned ones are "Title_<id>"
+-- attributes): Wear shows that title above your head (one at a time, the "Title" attribute),
+-- Take off removes it.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -39,6 +40,11 @@ local titleCards: { [string]: TitleCard } = {}
 local emptyLabel: TextLabel
 local slotsLabel: TextLabel
 
+local TAB_HEIGHT = 36
+local TABS = { "Items", "Titles" }
+local currentTab = "Items"
+local tabButtons: { [string]: TextButton } = {}
+
 local function owned(itemId: string): number
 	return player:GetAttribute("Item_" .. itemId) or 0
 end
@@ -56,33 +62,39 @@ end
 local function refresh()
 	local equipped = equippedIds()
 	local full = #equipped >= GameConfig.MaxEquippedItems
+	local showItems = currentTab == "Items"
 	local any = false
 	for _, item in ItemConfig.Items do
 		local count = owned(item.id)
 		local entry = cards[item.id]
 		local isEquipped = table.find(equipped, item.id) ~= nil
-		entry.card.Visible = count > 0
+		entry.card.Visible = showItems and count > 0
 		entry.count.Text = "x" .. count
 		entry.ribbon.Visible = isEquipped
 		entry.stroke.Thickness = if isEquipped then 4 else 2.5
 		entry.stroke.Color = if isEquipped then INVENTORY_ORANGE else item.color
 		entry.equipLabel.Text = if isEquipped then "Unequip" elseif full then "Hotbar full" else "Equip"
 		Window.paintButton(entry.equip, if isEquipped or full then LOCKED_GREY else INVENTORY_ORANGE)
-		any = any or count > 0
+		any = any or (showItems and count > 0)
 	end
 	local wearing = player:GetAttribute("Title")
 	for _, title in TitleConfig.Titles do
 		local entry = titleCards[title.id]
 		local isOwned = player:GetAttribute("Title_" .. title.id) == true
 		local isWorn = wearing == title.id
-		entry.card.Visible = isOwned
+		entry.card.Visible = not showItems and isOwned
 		entry.ribbon.Visible = isWorn
 		entry.stroke.Thickness = if isWorn then 4 else 2.5
 		entry.wearLabel.Text = if isWorn then "Take off" else "Wear"
 		Window.paintButton(entry.wear, if isWorn then LOCKED_GREY else title.color)
-		any = any or isOwned
+		any = any or (not showItems and isOwned)
 	end
 	emptyLabel.Visible = not any
+	emptyLabel.Text = if showItems then "Nothing here yet. Visit the Shop!" else "No titles yet."
+	slotsLabel.Visible = showItems
+	for name, button in tabButtons do
+		Window.paintButton(button, if name == currentTab then INVENTORY_ORANGE else LOCKED_GREY)
+	end
 	slotsLabel.Text = `Hotbar: {#equipped}/{GameConfig.MaxEquippedItems} equipped`
 end
 
@@ -306,7 +318,7 @@ function InventoryPanel.start()
 		icon = GameConfig.MenuIcons.Inventory,
 		accent = INVENTORY_ORANGE,
 		width = 560,
-		height = 480,
+		height = 480 + TAB_HEIGHT + 8,
 		onOpen = refresh,
 	})
 	-- "Hotbar: 2/3 equipped", in the header next to the title.
@@ -318,7 +330,25 @@ function InventoryPanel.start()
 		TextColor3 = INVENTORY_ORANGE,
 		Parent = panel.window,
 	}, 1.5)
+	-- The tabs, under the header.
+	for index, name in TABS do
+		local button, label = Window.button({
+			Name = name .. "Tab",
+			Position = UDim2.fromOffset(20 + (index - 1) * 130, Window.HEADER_HEIGHT),
+			Size = UDim2.fromOffset(120, TAB_HEIGHT),
+			Parent = panel.window,
+		}, LOCKED_GREY)
+		label.Text = name
+		button.Activated:Connect(function()
+			currentTab = name
+			refresh()
+		end)
+		tabButtons[name] = button
+	end
+	-- The cards sit below the tabs.
 	local grid = Window.grid(panel.window, Vector2.new(150, 206))
+	grid.Position += UDim2.fromOffset(0, TAB_HEIGHT + 8)
+	grid.Size -= UDim2.fromOffset(0, TAB_HEIGHT + 8)
 	for order, item in ItemConfig.Items do
 		buildCard(item, order, grid)
 	end
