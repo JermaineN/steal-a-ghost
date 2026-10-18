@@ -614,3 +614,19 @@ cooldown.
 **Also:** the **Undead** mutation's spawn banner now plays the Legendary chime ("Notification
 Chime") and lasts 4 s like the Legendary banner. On an Undead Mythic-or-rarer ghost, the bigger
 rarity sound plays instead (`GameConfig.MutationAnnouncements`).
+
+## 18. Gravity buff, and a fix for being slowed for good after a cage
+
+- **Gravity can't be interrupted by hits any more.** While your well is open you can't be
+  knocked over: bat swings pass you by and landmines don't go off under you
+  (`RagdollService.canKnock` refuses anyone with `GravityUntil` set). Being caged or dying still
+  ends the well.
+- **Fixed:** being caged while using Gravity left you at the slow Gravity speed forever. The
+  cage remembered your speed when it closed (the slowed one) and gave it back when it opened,
+  after the well had already ended. The cage now gives back normal walk speed if Gravity was
+  open, and the well no longer resets your speed while you're caged.
+
+**Solo test:** with the well open, `canKnock` said no and a knock did nothing (joints stayed
+on); the well was still open a second later. Caging then closed the well (speed 0 in the cage),
+and after the cage opened the speed was back to the normal 24.5. **Not tested:** a real bat
+swing from a second player (the swing uses the same `canKnock` check).
