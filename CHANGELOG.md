@@ -630,3 +630,36 @@ rarity sound plays instead (`GameConfig.MutationAnnouncements`).
 on); the well was still open a second later. Caging then closed the well (speed 0 in the cage),
 and after the cage opened the speed was back to the normal 24.5. **Not tested:** a real bat
 swing from a second player (the swing uses the same `canKnock` check).
+
+## 19. PolterPuller 4000, and balance changes
+
+A vacuum that sucks other players' ghosts straight into your base (550 gems, bought once).
+
+- **Hold it to capture.** While the PolterPuller is in your hand, other players' ghosts show
+  **Capture** instead of Steal. You wear a vacuum tank on your back with a hose to the nozzle in
+  your hands (an original design: purple tank with a green glass window).
+- **Capturing takes time, by rarity:** Common 3 s, Uncommon 4 s, Rare 5 s, Epic 6 s, Legendary
+  9 s, Mythic and rarer 16 s (`GameConfig.CaptureSeconds`). Meanwhile a green suction beam runs
+  from the nozzle to the ghost, which shakes, leans in and shrinks; a sign over it shows
+  "CAPTURING!", its rarity in its colours and a countdown bar; the vacuum roars.
+- **Same rules as stealing to start:** the ghost must be in an unlocked base, you must be inside
+  that base, within `CaptureRange` (15 studs), and have a free grave. The owner's steal alarm
+  goes off and they get a warning.
+- **It's cancelled** if you're knocked over, caged, die, put the vacuum away or walk out of
+  range, or the base locks. When it finishes, the ghost pops into the nozzle and appears in your
+  base, counting as a steal (Top Thieves, steal streak / WANTED). If the owner leaves
+  mid-capture, you get the ghost, like stealing.
+- **Cooldown:** 6× the capture time (`CaptureCooldownMultiplier`), whether it worked or not. The
+  hotbar shows the right length from the tool's `CooldownTotal` attribute.
+
+**How it works:** `CaptureService` (checks, effects, countdown, finish), `GhostService`
+(`CapturePrompt` on each base ghost, `capturing` entries can't be stolen/earn/sell),
+`StealService.markRobbed` (alarm for captures), client `GhostPrompts` (Capture vs Steal while
+holding it), `ItemService` (nozzle tool and the worn tank). Icon: `scripts/draw-polterpuller-icon.ps1`.
+
+**Tested:** the user tried it in the live game and it works. In Studio, 2-player: Player2 bought
+and equipped it, wore the tank, and saw Capture instead of Steal on Player1's ghosts.
+
+**Balance changes** (made by the user): mutations are rarer and stronger (Eerie 1/60 ×2, Spooky
+1/120 ×3, Undead 1/250 ×5, Shiny 1/1500 ×10), carrying speed 15.3, cage cooldown 15 s, 2 equip
+slots instead of 3, and pricier later grave/lock upgrades.

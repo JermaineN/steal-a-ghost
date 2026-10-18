@@ -26,8 +26,8 @@ MutationConfig.Mutations = {
 	{
 		id = "shiny",
 		name = "Shiny",
-		chance = 500,
-		multiplier = 3,
+		chance = 1500,
+		multiplier = 10,
 		-- Mostly white with a touch of gold (so it doesn't look like Legendary).
 		gradient = gradient(WHITE, Color3.fromRGB(255, 250, 225), Color3.fromRGB(255, 215, 110), WHITE, WHITE),
 		color = Color3.fromRGB(255, 245, 210),
@@ -37,8 +37,8 @@ MutationConfig.Mutations = {
 	{
 		id = "undead",
 		name = "Undead",
-		chance = 115,
-		multiplier = 2,
+		chance = 250,
+		multiplier = 5,
 		gradient = gradient(
 			Color3.fromRGB(120, 255, 110),
 			Color3.fromRGB(70, 75, 70),
@@ -51,8 +51,8 @@ MutationConfig.Mutations = {
 	{
 		id = "spooky",
 		name = "Spooky",
-		chance = 50,
-		multiplier = 1.5,
+		chance = 120,
+		multiplier = 3,
 		-- Orange and black (the black is a very dark grey, so it still reads on the outline).
 		gradient = gradient(
 			Color3.fromRGB(255, 140, 30),
@@ -66,8 +66,8 @@ MutationConfig.Mutations = {
 	{
 		id = "eerie",
 		name = "Eerie",
-		chance = 20,
-		multiplier = 1.2,
+		chance = 60,
+		multiplier = 2,
 		gradient = gradient(
 			Color3.fromRGB(150, 150, 160),
 			Color3.fromRGB(235, 238, 245),

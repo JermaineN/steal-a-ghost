@@ -23,17 +23,21 @@ local GhostService = {}
 
 -- StealService sets this, so this module doesn't have to require it (that would be a require loop).
 GhostService.onStealPromptTriggered = function(_thief: Player, _owner: Player, _slot: number) end
+-- CaptureService (the PolterPuller 4000) sets this, for the same reason.
+GhostService.onCapturePromptTriggered = function(_capturer: Player, _owner: Player, _slot: number) end
 
 -- `carried`: a thief is running off with it. `arriving`: just bought, still flying to its grave.
 -- `paid` and `buyCount` only matter while arriving: what the owner paid (refunded if someone
 -- re-buys it), and how many times it has been re-bought so far (sets the next re-buy price).
 -- `mutation`: its MutationConfig id, if it has one (it keeps it when bought, re-bought or stolen).
+-- `capturing`: someone is sucking it up with a PolterPuller 4000 (CaptureService).
 type Entry = {
 	id: string,
 	mutation: string?,
 	model: Model,
 	carried: boolean,
 	arriving: boolean,
+	capturing: boolean?,
 	paid: number,
 	buyCount: number,
 }
@@ -292,10 +296,11 @@ function GhostService.firstFreeSlot(player: Player): number?
 	return nil
 end
 
--- True when the ghost is sitting on its grave: not being carried off by a thief and not still
--- flying in after being bought. Only then does it earn, and only then can it be stolen or sold.
+-- True when the ghost is sitting on its grave: not being carried off by a thief, not being
+-- captured, and not still flying in after being bought. Only then does it earn, and only then
+-- can it be stolen, captured or sold.
 function GhostService.isInBase(entry: Entry): boolean
-	return not entry.carried and not entry.arriving
+	return not entry.carried and not entry.arriving and not entry.capturing
 end
 
 -- Cash per second from every ghost sitting in the base.
@@ -360,6 +365,13 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, a
 	local sellPrompt = makePrompt(model.PrimaryPart, "SellPrompt", "Sell for $" .. Format.cash(sellPrice), name, 1)
 	sellPrompt.Triggered:Connect(function(player)
 		GhostService.trySell(player, owner, slot)
+	end)
+	-- Shown instead of Steal to someone holding a PolterPuller 4000 (client GhostPrompts). The
+	-- capture itself takes time (CaptureService), so the prompt is instant.
+	local capturePrompt = makePrompt(model.PrimaryPart, "CapturePrompt", "Capture", name, 0)
+	capturePrompt.MaxActivationDistance = GameConfig.CaptureRange
+	capturePrompt.Triggered:Connect(function(capturer)
+		GhostService.onCapturePromptTriggered(capturer, owner, slot)
 	end)
 
 	local entry: Entry = {

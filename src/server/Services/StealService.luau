@@ -121,9 +121,15 @@ function StealService.getCarry(thief: Player): Carry?
 	return carries[thief]
 end
 
--- True while someone is carrying one of `owner`'s ghosts away.
+-- True while someone is carrying one of `owner`'s ghosts away (or capturing one).
 function StealService.isBeingRobbed(owner: Player): boolean
 	return beingRobbed[owner] ~= nil
+end
+
+-- Turns the owner's steal alarm on (+1) or off (-1) for something other than carrying, such as
+-- a PolterPuller capture (CaptureService). The alarm stays on until every robbery has ended.
+function StealService.markRobbed(owner: Player, change: number)
+	setRobbed(owner, change)
 end
 
 -- Sends the ghost back to its owner's slot.
