@@ -31,6 +31,7 @@ local GravityService = require(Services.GravityService)
 local UniversalKeyService = require(Services.UniversalKeyService)
 local CaptureService = require(Services.CaptureService)
 local ShieldService = require(Services.ShieldService)
+local MalletService = require(Services.MalletService)
 local TitleService = require(Services.TitleService)
 
 local map = MapBuilder.build()
@@ -58,6 +59,7 @@ GravityService.start()
 UniversalKeyService.start()
 CaptureService.start()
 ShieldService.start()
+MalletService.start()
 TitleService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).

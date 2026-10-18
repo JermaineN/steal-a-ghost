@@ -82,6 +82,11 @@ function RagdollService.knock(player: Player, velocity: Vector3, seconds: number
 		return
 	end
 	ragdolled[player] = true
+	-- A Mega Mallet wind-up pins the swinger in place (MalletService); let go so the hit lands.
+	local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	if root and root.Anchored and player:GetAttribute("MalletUntil") then
+		root.Anchored = false
+	end
 
 	local joints = getJoints(character)
 	-- Without this, switching off the neck joint would count as losing your head.
