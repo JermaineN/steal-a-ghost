@@ -181,6 +181,29 @@ function UpgradePanel.start()
 	end
 
 	Remotes.OpenUpgrades.OnClientEvent:Connect(panel.open)
+
+	-- Every base has an Upgrades signpost, but only your own base's prompt shows on your device
+	-- (the server also refuses anyone else's base).
+	task.spawn(function()
+		local map = workspace:WaitForChild("GeneratedMap")
+		local function showOwnPromptOnly()
+			local ownPlot = "Plot" .. tostring(player:GetAttribute("PlotIndex"))
+			for _, plot in map:GetChildren() do
+				local prompt = plot:FindFirstChild("UpgradePrompt", true)
+				if prompt and prompt:IsA("ProximityPrompt") then
+					prompt.Enabled = plot.Name == ownPlot
+				end
+			end
+		end
+		showOwnPromptOnly()
+		player:GetAttributeChangedSignal("PlotIndex"):Connect(showOwnPromptOnly)
+		-- The bases may still be streaming in when this first runs.
+		map.DescendantAdded:Connect(function(descendant)
+			if descendant.Name == "UpgradePrompt" then
+				showOwnPromptOnly()
+			end
+		end)
+	end)
 	player.AttributeChanged:Connect(function(attribute)
 		if string.match(attribute, "^Upgrade_") and panel.isOpen() then
 			refreshAll()

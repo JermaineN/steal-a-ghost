@@ -663,3 +663,13 @@ and equipped it, wore the tank, and saw Capture instead of Steal on Player1's gh
 **Balance changes** (made by the user): mutations are rarer and stronger (Eerie 1/60 ×2, Spooky
 1/120 ×3, Undead 1/250 ×5, Shiny 1/1500 ×10), carrying speed 15.3, cage cooldown 15 s, 2 equip
 slots instead of 3, and pricier later grave/lock upgrades.
+
+## 20. Upgrades prompt only on your own base
+
+Every base still has its UPGRADES signpost, but the "Upgrade" prompt now only shows at your own
+base; other bases' prompts are hidden on your device (`UI/UpgradePanel`, using your `PlotIndex`).
+The server already refused upgrades from anyone but the owner.
+
+**Solo test:** in a playtest on Plot 1, only Plot 1's prompt was enabled; the other 7 were off.
+**Not tested:** pressing the prompt to open the window (the Daily Reward pop-up was in the way;
+that code didn't change).
