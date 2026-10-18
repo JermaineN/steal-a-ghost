@@ -387,7 +387,16 @@ function CaptureService.tryCapture(capturer: Player, owner: Player, slot: number
 end
 
 -- The PolterPuller is used through the Capture prompt, not by clicking, so a click just explains.
+-- Clicking with the vacuum just explains how to use it, at most once every few seconds (the
+-- capture itself starts from the Capture prompt on a ghost).
+local HINT_EVERY = 3
+local lastHint: { [Player]: number } = {}
 function CaptureService.tryUse(player: Player, _tool: Tool)
+	local now = os.clock()
+	if now - (lastHint[player] or -math.huge) < HINT_EVERY then
+		return
+	end
+	lastHint[player] = now
 	Notify.send(player, "Walk up to someone's ghost and press Capture!", "info")
 end
 
@@ -398,6 +407,7 @@ end
 -- Called when a player leaves, before their base is cleared: a capture of their ghost succeeds
 -- straight away (leaving doesn't save it), and a capture they were doing is cancelled.
 function CaptureService.playerRemoving(player: Player)
+	lastHint[player] = nil
 	for capturer, capture in active do
 		if capture.owner == player then
 			capture.finish(true)

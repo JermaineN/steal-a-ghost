@@ -157,7 +157,9 @@ function Hotbar.start()
 			then contents.name
 			elseif contents.kind == "item" and backpackTools()[contents.id] then contents.id
 			else nil
-		if toolName and player:GetAttribute("Invisible") then
+		-- While invisible, only the Smoke Bomb itself can be picked: taking it out again ends the
+		-- invisibility early (the server watches for it, SmokeBombService).
+		if toolName and toolName ~= "smoke_bomb" and player:GetAttribute("Invisible") then
 			Hud.showToast("You can't use items while invisible!", "error")
 			return
 		end

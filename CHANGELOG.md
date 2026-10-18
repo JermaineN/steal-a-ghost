@@ -753,3 +753,18 @@ didn't catch. Setting `Carrying` (picking up a ghost) ended it in 0.03 s.
 stayed at 28 studs and kept full walk speed. The same well without the shield pulled Player2
 from 26 to 3 studs and slowed them to 8. **Not tested:** real bat/cage swings from another player
 (they use the same checks as the solo test).
+
+## 26. Item prices doubled, Smoke Bomb cancels, quieter PolterPuller hint
+
+- **Gem prices doubled:** Smoke Bomb 250, Shield 300, Universal Key 500, Gravity 700,
+  PolterPuller 4000 1,100.
+- **Smoke Bomb can be cancelled:** while invisible, picking the Smoke Bomb again (its hotbar key
+  or slot) ends the invisibility straight away, in a puff of smoke. Picking up a stolen ghost
+  ends it too. Other items still can't be used while invisible; the cooldown isn't reset.
+- **PolterPuller:** clicking with it shows the "Walk up to someone's ghost and press Capture!"
+  hint at most once every 3 seconds, instead of on every click.
+
+**Solo test:** the Shop charged 250 and 1,100 gems. Cast the Smoke Bomb, then took it out again:
+visible again in 0.07 s; cast again and pressed its hotbar key (2): visible again, holding it.
+Cast again and set `Carrying` (picking up a ghost): visible again in 0.03 s. Five PolterPuller
+clicks over about 3.5 s showed the hint twice (0 s and 3.3 s).
