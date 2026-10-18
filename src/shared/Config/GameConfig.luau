@@ -77,7 +77,7 @@ return {
 	-- Offline earnings: rejoining pays OfflineIncomeShare of your ghosts' income (with your
 	-- rebirth boost) for the time you were away, up to OfflineMaxHours. Shorter absences than
 	-- OfflineMinSeconds pay nothing (so rejoining doesn't farm it).
-	OfflineIncomeShare = 0.5,
+	OfflineIncomeShare = 0.2,
 	OfflineMaxHours = 8,
 	OfflineMinSeconds = 60,
 
