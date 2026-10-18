@@ -4,7 +4,8 @@
 -- player's device moves their character. The server marks the well with a "GravityUntil"
 -- attribute on you (server time), draws the swirling vortex everyone sees, and catches anyone
 -- pulled within GravityCatchRadius: they drop a ghost they were stealing (it flies home), like
--- being hit. The well ends early if you're knocked over, caged or die. Cooldown starts on use.
+-- being hit. While it's open you can't be knocked over (RagdollService.canKnock); it still ends
+-- early if you're caged or die. Cooldown starts on use.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -231,10 +232,7 @@ function GravityService.tryUse(player: Player, tool: Tool)
 	local caught: { [Player]: boolean } = {}
 	task.spawn(function()
 		while workspace:GetServerTimeNow() < endsAt and player.Parent do
-			local stillUp = player.Character == character
-				and humanoid.Health > 0
-				and not RagdollService.isRagdolled(player)
-				and not player:GetAttribute("Caged")
+			local stillUp = player.Character == character and humanoid.Health > 0 and not player:GetAttribute("Caged")
 			if not stillUp then
 				break
 			end
@@ -256,7 +254,8 @@ function GravityService.tryUse(player: Player, tool: Tool)
 
 		-- Close the well.
 		player:SetAttribute("GravityUntil", nil)
-		if humanoid.Parent and not player:GetAttribute("Carrying") then
+		-- A cage holds them still and gives back normal speed itself when it opens (CageService).
+		if humanoid.Parent and not player:GetAttribute("Carrying") and not player:GetAttribute("Caged") then
 			humanoid.WalkSpeed = GameConfig.WalkSpeed
 		end
 		fadeOut()

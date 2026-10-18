@@ -34,8 +34,13 @@ end
 
 -- Can this player be knocked over right now? Not while already down, just after getting up, or
 -- while caged (CageService pins them in place).
+-- No knocking someone who is already down, just got up, is caged, or has a Gravity well open
+-- (Gravity can't be interrupted by hits).
 function RagdollService.canKnock(player: Player): boolean
-	return not ragdolled[player] and os.clock() >= (immuneUntil[player] or 0) and player:GetAttribute("Caged") ~= true
+	return not ragdolled[player]
+		and os.clock() >= (immuneUntil[player] or 0)
+		and player:GetAttribute("Caged") ~= true
+		and player:GetAttribute("GravityUntil") == nil
 end
 
 -- Has a launched (floppy) character come back down? Something solid just under the root part,

@@ -104,6 +104,11 @@ function CageService.trap(player: Player, caster: Player): boolean
 	character:PivotTo(CFrame.lookAt(standAt, standAt + facing.Unit))
 
 	local savedSpeed, savedJumpPower, savedJumpHeight = humanoid.WalkSpeed, humanoid.JumpPower, humanoid.JumpHeight
+	-- Caging ends a Gravity well (GravityService), which slows its user: don't hand that slow
+	-- speed back when the cage opens.
+	if player:GetAttribute("GravityUntil") then
+		savedSpeed = GameConfig.WalkSpeed
+	end
 	humanoid.WalkSpeed = 0
 	humanoid.JumpPower = 0
 	humanoid.JumpHeight = 0
