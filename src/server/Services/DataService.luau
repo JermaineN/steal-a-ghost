@@ -70,6 +70,8 @@ local function newData()
 		stored = {}, -- ["slotNumber"] = uncollected cash waiting on that slot's collect pad
 		discovered = {}, -- [ghostId] = true for every ghost the player has owned (the Index)
 		claimed = {}, -- [ghostId] = true once its Index gem reward has been claimed
+		mutationsFound = {}, -- ["ghostId:mutationId"] = true for every ghost owned with that mutation
+		mutationsClaimed = {}, -- ["ghostId:mutationId"] = true once its Index gem reward is claimed
 		gems = 0,
 		rebirths = 0, -- how many times they've rebirthed (each one boosts income, see Shared.Rebirth)
 		items = {}, -- [itemId] = how many they own (bought in the Shop, see ItemConfig)
@@ -212,6 +214,20 @@ function DataService.playerAdded(player: Player): boolean
 	end
 	for ghostId in data.claimed do
 		player:SetAttribute("IndexClaimed_" .. ghostId, true)
+	end
+	-- Mutation finds per ghost (the Index's ghost pages), as "IndexMut_<ghostId>_<mutationId>"
+	-- and "IndexMutClaimed_<ghostId>_<mutationId>". Mutated ghosts already in the base count.
+	for slotKey, mutationId in data.mutations do
+		local ghostId = data.ghosts[slotKey]
+		if ghostId then
+			data.mutationsFound[ghostId .. ":" .. mutationId] = true
+		end
+	end
+	for key in data.mutationsFound do
+		player:SetAttribute("IndexMut_" .. string.gsub(key, ":", "_"), true)
+	end
+	for key in data.mutationsClaimed do
+		player:SetAttribute("IndexMutClaimed_" .. string.gsub(key, ":", "_"), true)
 	end
 	-- Owned items are shown to the player's device as "Item_<itemId>" = count (the Inventory).
 	for itemId, count in data.items do
@@ -377,6 +393,21 @@ function DataService.canClaimIndex(player: Player, ghostId: string): boolean
 	return profile ~= nil and profile.data.discovered[ghostId] == true and not profile.data.claimed[ghostId]
 end
 
+-- Can the player claim the Index reward for this ghost in this mutation?
+function DataService.canClaimIndexMutation(player: Player, ghostId: string, mutationId: string): boolean
+	local profile = profiles[player]
+	local key = ghostId .. ":" .. mutationId
+	return profile ~= nil and profile.data.mutationsFound[key] == true and not profile.data.mutationsClaimed[key]
+end
+
+function DataService.markIndexMutationClaimed(player: Player, ghostId: string, mutationId: string)
+	local profile = profiles[player]
+	if profile then
+		profile.data.mutationsClaimed[ghostId .. ":" .. mutationId] = true
+		player:SetAttribute("IndexMutClaimed_" .. ghostId .. "_" .. mutationId, true)
+	end
+end
+
 function DataService.markIndexClaimed(player: Player, ghostId: string)
 	local profile = profiles[player]
 	if profile then
@@ -395,6 +426,12 @@ function DataService.setGhost(player: Player, slot: number, ghostId: string?, mu
 		if ghostId and not profile.data.discovered[ghostId] then
 			profile.data.discovered[ghostId] = true
 			player:SetAttribute("Index_" .. ghostId, true)
+		end
+		-- ...and this ghost's mutation, on its Index page.
+		local key = ghostId and mutationId and ghostId .. ":" .. mutationId
+		if key and not profile.data.mutationsFound[key] then
+			profile.data.mutationsFound[key] = true
+			player:SetAttribute("IndexMut_" .. ghostId .. "_" .. mutationId, true)
 		end
 	end
 end

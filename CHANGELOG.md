@@ -768,3 +768,31 @@ from 26 to 3 studs and slowed them to 8. **Not tested:** real bat/cage swings fr
 visible again in 0.07 s; cast again and pressed its hotbar key (2): visible again, holding it.
 Cast again and set `Carrying` (picking up a ghost): visible again in 0.03 s. Five PolterPuller
 clicks over about 3.5 s showed the hint twice (0 s and 3.3 s).
+
+## 27. Ghost pages in the Index: mutation finds and gems
+
+- **Click a found ghost in the Index** to open its page: the model big on the left (turning),
+  its name and rarity under it, and its four mutations on the right (Eerie, Spooky, Undead,
+  Shiny) with their income boost. A mutation you haven't owned this ghost with is greyed out
+  ("Not found"); a found one shows in its own colours, shimmering. "< Back" returns to the grid.
+- **Each ghost × mutation pays gems once:** Eerie 10, Spooky 25, Undead 75, Shiny 175 (half the
+  first idea, since every ghost has its own). A Spooky Boo and a Spooky Sheet Ghost each pay.
+  Claim one by pressing its row, or with the page's green **Claim all** (bottom right).
+- The Index's main **Claim all** now claims every ghost reward *and* every mutation reward.
+- Ghost cards with mutation gems waiting show a **red "!"**; the side-menu badge and the Claim
+  all count include mutation rewards.
+- Finds are saved and **not reset by rebirth** (`mutationsFound` / `mutationsClaimed`). Mutated
+  ghosts already in a base count as found when the player joins.
+
+**How it works:** `MutationConfig.indexGems`; `DataService.setGhost` records the find
+(`IndexMut_<ghostId>_<mutationId>` attribute), `canClaimIndexMutation` /
+`markIndexMutationClaimed` (`IndexMutClaimed_...`); `IndexService` handles the new
+`IndexClaimMutation` remote (one, or "all" for a ghost) and adds mutation rewards to "all";
+`UI/IndexPanel` builds the page.
+
+**Solo test** (test cash and every walkway ghost mutated): bought a Spooky Sheet Ghost: found
+attributes set, card "!" and the counts went up; the page showed Spooky in colour with "Claim 💎25"
+and the other three greyed; pressing the row paid 25 ("Claimed ✓"). Bought a Spooky Banshee
+(a separate find); the main Claim all paid the Banshee's ghost reward and its Spooky reward
+together. On a Spooky Poltergeist, the page's Claim all paid 25 and the "!" went away; Back
+returned to the grid.
