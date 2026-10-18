@@ -1,7 +1,8 @@
 -- The Smoke Bomb (a Shop item, used from the hotbar): click to vanish. A smoke cloud bursts where
 -- you stand with a "poof", and you're invisible to everyone for GameConfig.SmokeBombSeconds. It
--- ends early if you're knocked over (bat, landmine), caged or die; either way you reappear in
--- another puff of smoke. While invisible you can't use other items (ItemService checks the
+-- ends early if you're knocked over (bat, landmine), caged, die, pick up a stolen ghost, or take
+-- the Smoke Bomb out again (selecting its hotbar slot "recasts" it to cancel); either way you
+-- reappear in another puff of smoke. While invisible you can't use other items (ItemService checks the
 -- "Invisible" attribute). The cooldown starts when you use it and survives respawning.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
@@ -163,7 +164,8 @@ function SmokeBombService.tryUse(player: Player, tool: Tool)
 	hide(player, character)
 	player:SetAttribute("Invisible", true)
 
-	-- Watch for the end: time's up, knocked over, caged, died, respawned or left.
+	-- Watch for the end: time's up, knocked over, caged, stole a ghost, recast, died, respawned
+	-- or left.
 	local endsAt = os.clock() + GameConfig.SmokeBombSeconds
 	task.spawn(function()
 		while player.Parent and player:GetAttribute("Invisible") do
@@ -173,11 +175,16 @@ function SmokeBombService.tryUse(player: Player, tool: Tool)
 				or os.clock() >= endsAt
 				or RagdollService.isRagdolled(player)
 				or player:GetAttribute("Caged")
+				or player:GetAttribute("Carrying")
 			then
 				break
 			end
-			-- No items while invisible (a held tool would also show).
-			if character:FindFirstChildOfClass("Tool") then
+			-- Taking the Smoke Bomb out again cancels it; no other items while invisible (a held
+			-- tool would also show).
+			local held = character:FindFirstChildOfClass("Tool")
+			if held and held.Name == SmokeBombService.ITEM_ID then
+				break
+			elseif held then
 				humanoid:UnequipTools()
 			end
 			RunService.Heartbeat:Wait()
