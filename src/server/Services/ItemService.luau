@@ -7,7 +7,8 @@
 --   (LandmineService).
 -- - Inventory items that are tools (ItemConfig `tool = true`, e.g. the Smoke Bomb): given while
 --   equipped in the Inventory (syncItemTools), named by item id, each run by its own service
---   (SmokeBombService, GravityService, UniversalKeyService, CaptureService; see ITEM_TOOLS).
+--   (SmokeBombService, GravityService, UniversalKeyService, CaptureService, ShieldService; see
+--   ITEM_TOOLS).
 -- Either way, a thief who gets hit drops the stolen ghost, which flies home.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
@@ -26,6 +27,7 @@ local GravityService = require(script.Parent.GravityService)
 local SmokeBombService = require(script.Parent.SmokeBombService)
 local StealService = require(script.Parent.StealService)
 local UniversalKeyService = require(script.Parent.UniversalKeyService)
+local ShieldService = require(script.Parent.ShieldService)
 
 local ItemService = {}
 
@@ -389,6 +391,45 @@ local function buildUniversalKey(): Tool
 	return tool
 end
 
+-- Builds the handheld Shield: a small round buckler (the Handle) in spectral blue with a silver
+-- rim and a glowing white boss in the middle.
+local function buildShield(): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = ShieldService.ITEM_ID
+	tool.ToolTip = "Click to become immune to knockbacks, cages and Gravity"
+	tool.TextureId = GameConfig.ShieldIcon
+	tool.CanBeDropped = false
+	tool.Grip = CFrame.new(0, 0, 0.2) * CFrame.Angles(0, math.rad(90), 0)
+
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Shape = Enum.PartType.Cylinder
+	handle.Size = Vector3.new(0.25, 1.6, 1.6)
+	handle.Color = Color3.fromRGB(80, 200, 255)
+	handle.Material = Enum.Material.SmoothPlastic
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	local rim = Instance.new("Part")
+	rim.Shape = Enum.PartType.Cylinder
+	rim.Size = Vector3.new(0.2, 1.8, 1.8)
+	rim.Color = Color3.fromRGB(210, 240, 255)
+	rim.Material = Enum.Material.Metal
+	rim.CFrame = handle.CFrame
+	addWelded(tool, handle, rim)
+
+	local boss = Instance.new("Part")
+	boss.Shape = Enum.PartType.Ball
+	boss.Size = Vector3.new(0.5, 0.5, 0.5)
+	boss.Color = Color3.fromRGB(230, 250, 255)
+	boss.Material = Enum.Material.Neon
+	boss.CFrame = handle.CFrame * CFrame.new(0.15, 0, 0)
+	addWelded(tool, handle, boss)
+
+	return tool
+end
+
 -- The PolterPuller 4000's colours: purple tank and nozzle, glowing green suction parts.
 local VACUUM_PURPLE = Color3.fromRGB(110, 60, 200)
 local VACUUM_GREEN = Color3.fromRGB(120, 255, 130)
@@ -634,6 +675,7 @@ function ItemService.start()
 	ITEM_TOOLS[GravityService.ITEM_ID] = { template = buildGravity(), handler = GravityService }
 	ITEM_TOOLS[UniversalKeyService.ITEM_ID] = { template = buildUniversalKey(), handler = UniversalKeyService }
 	ITEM_TOOLS[CaptureService.ITEM_ID] = { template = buildPolterPuller(), handler = CaptureService }
+	ITEM_TOOLS[ShieldService.ITEM_ID] = { template = buildShield(), handler = ShieldService }
 
 	-- Tool.Activated fires on the server too, so each copy of an item is wired up here.
 	local function onToolAdded(item: Instance)

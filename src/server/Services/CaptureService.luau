@@ -23,6 +23,7 @@ local DataService = require(script.Parent.DataService)
 local GhostService = require(script.Parent.GhostService)
 local PlotService = require(script.Parent.PlotService)
 local RagdollService = require(script.Parent.RagdollService)
+local ShieldService = require(script.Parent.ShieldService)
 local StealService = require(script.Parent.StealService)
 
 local CaptureService = {}
@@ -242,6 +243,7 @@ function CaptureService.tryCapture(capturer: Player, owner: Player, slot: number
 	local name = GhostService.displayName(def, entry.mutation)
 	local seconds = CaptureService.secondsFor(def.rarity)
 	entry.capturing = true
+	ShieldService.stop(capturer) -- capturing counts as stealing: no shield while doing it
 	entry.model:SetAttribute("Capturing", true)
 	StealService.markRobbed(owner, 1)
 	Notify.send(owner, `{capturer.DisplayName} is capturing your {name}! Hit them with your bat!`, "error", {

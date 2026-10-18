@@ -240,7 +240,10 @@ function GravityService.tryUse(player: Player, tool: Tool)
 				local otherRoot = other ~= player
 					and other.Character
 					and other.Character:FindFirstChild("HumanoidRootPart") :: BasePart?
-				if otherRoot and not caught[other] then
+				-- Shielded players aren't pulled (client GravityClient) or caught.
+				local shieldUntil = other:GetAttribute("ShieldUntil")
+				local shielded = shieldUntil and workspace:GetServerTimeNow() < shieldUntil
+				if otherRoot and not caught[other] and not shielded then
 					local offset = otherRoot.Position - root.Position
 					local flat = Vector3.new(offset.X, 0, offset.Z).Magnitude
 					if flat <= GameConfig.GravityCatchRadius then

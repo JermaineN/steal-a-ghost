@@ -3,7 +3,8 @@
 -- dragged toward them every frame, and you're slowed to GravityVictimWalkSpeed so you can't walk
 -- out of it: everyone caught reaches the middle. It happens on your own device because each
 -- player's device moves their own character. The pull stops just short of the centre so you
--- don't jitter on top of them. Caged players stay put (the cage pins them).
+-- don't jitter on top of them. Caged players stay put (the cage pins them), and shielded
+-- players (the Shield item's "ShieldUntil") aren't pulled or slowed.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -32,11 +33,13 @@ function GravityClient.start()
 		local character = player.Character
 		local root = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
 		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-		if not character or not root or not humanoid or player:GetAttribute("Caged") then
+		local now = workspace:GetServerTimeNow()
+		local shieldUntil = player:GetAttribute("ShieldUntil")
+		local shielded = shieldUntil and now < shieldUntil
+		if not character or not root or not humanoid or player:GetAttribute("Caged") or shielded then
 			release()
 			return
 		end
-		local now = workspace:GetServerTimeNow()
 		local radius = GameConfig.GravityRadius
 		local inside = false
 		for _, other in Players:GetPlayers() do

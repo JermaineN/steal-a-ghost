@@ -249,6 +249,13 @@ return {
 	CaptureVacuumSound = { soundId = 9120360676, volume = 0.5, startAt = 2 }, -- "Vacuum Cleaner 1" (Pro Sound Effects)
 	CapturePopSound = { soundId = 9119669074, volume = 0.9 }, -- "Suction Pop 5" (Pro Sound Effects)
 
+	-- Shield (Shop item): click for ShieldSeconds of immunity to crowd control (bat/landmine
+	-- knockback, cages, Gravity's pull). Ends straight away if you pick up (or capture) a ghost.
+	-- Cooldown starts on use.
+	ShieldSeconds = 7,
+	ShieldCooldownSeconds = 25,
+	ShieldIcon = "rbxassetid://108221968843411", -- source: assets/shield-icon.png
+
 	-- Base upgrades (the Upgrades signpost at each base's entrance). Kept through rebirths.
 	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.
 	StartingGraves = 6,
