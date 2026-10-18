@@ -1,7 +1,7 @@
 -- The hotbar along the bottom of the screen, replacing Roblox's built-in one. Built like the
 -- Inventory cards (dark gradient, rounded, outlined in the item's colour, a number badge):
 --   Slot 1:     the Bat (everyone always has it).
---   Slots 2-4:  the items you've equipped from the Inventory (GameConfig.MaxEquippedItems).
+--   Slots 2+:   the items you've equipped from the Inventory (GameConfig.MaxEquippedItems).
 --               Empty ones show a dashed "+" that opens the Inventory.
 --   After that: any other tools in your Backpack (the Cage and Landmine, for allow-listed players).
 -- Number keys (or clicking a slot) select it; selecting the selected slot again puts it away.
@@ -396,7 +396,10 @@ function Hotbar.start()
 				slot.cooldown.Visible = active
 				slot.cooldownText.Visible = active
 				if active then
-					local total = COOLDOWN_LENGTHS[toolName :: string] or left
+					-- Items whose cooldown varies (the PolterPuller) put its length on the tool.
+					local total = (tool :: Tool):GetAttribute("CooldownTotal")
+						or COOLDOWN_LENGTHS[toolName :: string]
+						or left
 					slot.cooldown.Size = UDim2.fromScale(1, math.clamp(left / total, 0, 1))
 					slot.cooldownText.Text = tostring(math.ceil(left))
 				end

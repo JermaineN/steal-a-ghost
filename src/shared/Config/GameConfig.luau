@@ -109,7 +109,7 @@ return {
 	StealHoldSeconds = 1.5, -- how long the thief holds E to grab a ghost
 	-- Walk speeds in studs per second (Roblox's default is 16).
 	WalkSpeed = 24.5, -- increased from the default
-	CarryWalkSpeed = 14.3, -- decreased from the default, while carrying a stolen ghost (no jumping or items)
+	CarryWalkSpeed = 15.3, -- decreased from the default, while carrying a stolen ghost (no jumping or items)
 	StealCooldownSeconds = 3, -- after a failed steal
 	-- Wanted: this many successful steals in a row (without being stopped) make a thief WANTED,
 	-- with a bounty of BountyShare of the price of every ghost they stole in the streak. Whoever
@@ -145,7 +145,7 @@ return {
 	CageRange = 12, -- studs from the swinger (centre to centre) that count as a hit
 	CageHitArcDegrees = 180, -- cone centred on where you face (180 = everything in front of you)
 	CageSeconds = 7, -- how long a caged player stays stuck
-	CageCooldownSeconds = 12, -- after caging someone, before the cage can be used again (misses are free)
+	CageCooldownSeconds = 15, -- after caging someone, before the cage can be used again (misses are free)
 
 	-- Landmine (only for the players listed below): click to place one at your feet. Only its
 	-- owner can see it. Anyone else who walks near it sets it off and everyone in the blast (except
@@ -188,7 +188,7 @@ return {
 	RebirthSound = { soundId = 134821092416328, volume = 0.7 },
 
 	-- Hotbar: how many Inventory items can be equipped at once (they go in the slots after the bat).
-	MaxEquippedItems = 3,
+	MaxEquippedItems = 2,
 
 	-- Smoke Bomb (Shop item): click to vanish in a smoke cloud. You're invisible for
 	-- SmokeBombSeconds, or until you're knocked over, caged or die, then you reappear in another
@@ -228,12 +228,33 @@ return {
 	UniversalKeyPickSound = { soundId = 9114152830, volume = 0.6 }, -- "Door Shake 4" (Pro Sound Effects)
 	UniversalKeyUnlockSound = { soundId = 9116723292, volume = 0.9 }, -- "Metal Latches 8" (Pro Sound Effects)
 
+	-- PolterPuller 4000 (Shop item): while you hold it, other players' ghosts show "Capture" instead
+	-- of "Steal". Capturing takes CaptureSeconds[rarity] (you must stay within CaptureRange of the
+	-- ghost and keep holding it); the ghost then goes straight into your base and counts as a
+	-- steal. The same rules as stealing apply to start (inside their base, unlocked, a free
+	-- grave). Cooldown: CaptureCooldownMultiplier x the capture time, success or not.
+	CaptureSeconds = {
+		Common = 3,
+		Uncommon = 4,
+		Rare = 5,
+		Epic = 6,
+		Legendary = 9,
+		Mythic = 16,
+		Divine = 16,
+		Secret = 16,
+	},
+	CaptureCooldownMultiplier = 6,
+	CaptureRange = 15, -- studs from the capturer to the ghost
+	PolterPullerIcon = "rbxassetid://110348892274923", -- source: assets/polterpuller-icon.png
+	CaptureVacuumSound = { soundId = 9120360676, volume = 0.5, startAt = 2 }, -- "Vacuum Cleaner 1" (Pro Sound Effects)
+	CapturePopSound = { soundId = 9119669074, volume = 0.9 }, -- "Suction Pop 5" (Pro Sound Effects)
+
 	-- Base upgrades (the Upgrades signpost at each base's entrance). Kept through rebirths.
 	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.
 	StartingGraves = 6,
-	GraveUpgradeCosts = { 5000, 25000, 100000, 500000 }, -- graves 7, 8, 9, 10
+	GraveUpgradeCosts = { 5000, 25000, 500000, 2500000 }, -- graves 7, 8, 9, 10
 	-- Longer Lock: each upgrade adds LockUpgradeSeconds to LockDurationSeconds.
-	LockUpgradeCosts = { 10000, 50000, 250000 },
+	LockUpgradeCosts = { 10000, 50000, 2500000 },
 	LockUpgradeSeconds = 15,
 
 	-- Base lock

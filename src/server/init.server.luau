@@ -29,6 +29,7 @@ local OfflineService = require(Services.OfflineService)
 local SmokeBombService = require(Services.SmokeBombService)
 local GravityService = require(Services.GravityService)
 local UniversalKeyService = require(Services.UniversalKeyService)
+local CaptureService = require(Services.CaptureService)
 
 local map = MapBuilder.build()
 PlotService.start(map.plots)
@@ -53,6 +54,7 @@ UpgradeService.start(map.plots)
 SmokeBombService.start()
 GravityService.start()
 UniversalKeyService.start()
+CaptureService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).
 local function applyWalkSpeed(character: Model)
@@ -85,8 +87,9 @@ for _, player in Players:GetPlayers() do
 end
 
 Players.PlayerRemoving:Connect(function(player)
-	-- Order matters: cancel any steals first, then clear the base, then save.
+	-- Order matters: settle any steals and captures first, then clear the base, then save.
 	StealService.playerRemoving(player)
+	CaptureService.playerRemoving(player)
 	GhostService.playerRemoving(player)
 	PlotService.playerRemoving(player)
 	DataService.playerRemoving(player)

@@ -7,7 +7,7 @@
 --   (LandmineService).
 -- - Inventory items that are tools (ItemConfig `tool = true`, e.g. the Smoke Bomb): given while
 --   equipped in the Inventory (syncItemTools), named by item id, each run by its own service
---   (SmokeBombService, GravityService, UniversalKeyService; see ITEM_TOOLS).
+--   (SmokeBombService, GravityService, UniversalKeyService, CaptureService; see ITEM_TOOLS).
 -- Either way, a thief who gets hit drops the stolen ghost, which flies home.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
@@ -18,6 +18,7 @@ local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local CageService = require(script.Parent.CageService)
+local CaptureService = require(script.Parent.CaptureService)
 local DataService = require(script.Parent.DataService)
 local LandmineService = require(script.Parent.LandmineService)
 local RagdollService = require(script.Parent.RagdollService)
@@ -388,6 +389,148 @@ local function buildUniversalKey(): Tool
 	return tool
 end
 
+-- The PolterPuller 4000's colours: purple tank and nozzle, glowing green suction parts.
+local VACUUM_PURPLE = Color3.fromRGB(110, 60, 200)
+local VACUUM_GREEN = Color3.fromRGB(120, 255, 130)
+local VACUUM_METAL = Color3.fromRGB(200, 200, 215)
+
+-- Builds the PolterPuller's nozzle, the part held in the hands: a metal grip (the Handle) with a
+-- wide purple suction head and a glowing green mouth. "Mouth" is where the suction beam starts;
+-- "HoseEnd" is where the hose from the back tank plugs in.
+local function buildPolterPuller(): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = CaptureService.ITEM_ID
+	tool.ToolTip = "Hold it near someone's ghost and press Capture"
+	tool.TextureId = GameConfig.PolterPullerIcon
+	tool.CanBeDropped = false
+	tool.Grip = CFrame.new(0, -0.1, 0.4)
+
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.45, 0.45, 2)
+	handle.Color = VACUUM_METAL
+	handle.Material = Enum.Material.Metal
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	-- The suction head: a short wide cylinder at the front, pointing forward (a cylinder's round
+	-- faces point along its X axis, so turn it to face along -Z).
+	local head = Instance.new("Part")
+	head.Shape = Enum.PartType.Cylinder
+	head.Size = Vector3.new(0.8, 1.3, 1.3)
+	head.Color = VACUUM_PURPLE
+	head.Material = Enum.Material.SmoothPlastic
+	head.CFrame = handle.CFrame * CFrame.new(0, 0, -1.2) * CFrame.Angles(0, math.rad(90), 0)
+	addWelded(tool, handle, head)
+	local mouthGlow = Instance.new("Part")
+	mouthGlow.Shape = Enum.PartType.Cylinder
+	mouthGlow.Size = Vector3.new(0.1, 1.05, 1.05)
+	mouthGlow.Color = VACUUM_GREEN
+	mouthGlow.Material = Enum.Material.Neon
+	mouthGlow.CFrame = handle.CFrame * CFrame.new(0, 0, -1.61) * CFrame.Angles(0, math.rad(90), 0)
+	addWelded(tool, handle, mouthGlow)
+	local light = Instance.new("PointLight")
+	light.Color = VACUUM_GREEN
+	light.Range = 6
+	light.Brightness = 1.5
+	light.Parent = mouthGlow
+
+	local mouth = Instance.new("Attachment")
+	mouth.Name = "Mouth"
+	mouth.Position = Vector3.new(0, 0, -1.7)
+	mouth.Parent = handle
+	local hoseEnd = Instance.new("Attachment")
+	hoseEnd.Name = "HoseEnd"
+	hoseEnd.Position = Vector3.new(0, 0, 1)
+	hoseEnd.Parent = handle
+
+	return tool
+end
+
+-- The PolterPuller's tank, worn on the back while the nozzle is held: a purple capsule with
+-- metal bands and a glowing green window, and a hose from its base to the nozzle.
+local function wearVacuumPack(character: Model, tool: Tool)
+	local torso = (character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")) :: BasePart?
+	local hoseEnd = tool:FindFirstChild("Handle") and tool.Handle:FindFirstChild("HoseEnd")
+	if not torso or not hoseEnd or character:FindFirstChild("PolterPack") then
+		return
+	end
+	local pack = Instance.new("Model")
+	pack.Name = "PolterPack"
+	-- Behind the torso (its back is +Z), standing upright.
+	local back = torso.CFrame * CFrame.new(0, 0.1, 1)
+	local function piece(props: { [string]: any }, offset: CFrame): Part
+		local part = Instance.new("Part")
+		part.CanCollide = false
+		part.CanQuery = false
+		part.CanTouch = false
+		part.Massless = true
+		part.CastShadow = false
+		for key, value in props do
+			(part :: any)[key] = value
+		end
+		part.CFrame = back * offset
+		local weld = Instance.new("WeldConstraint")
+		weld.Part0 = torso
+		weld.Part1 = part
+		weld.Parent = part
+		part.Parent = pack
+		return part
+	end
+	local upright = CFrame.Angles(0, 0, math.rad(90)) -- a cylinder lies along X; stand it up
+	local tank = piece({
+		Name = "Tank",
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(2.3, 1.4, 1.4),
+		Color = VACUUM_PURPLE,
+		Material = Enum.Material.SmoothPlastic,
+	}, upright)
+	for _, y in { -0.75, 0.75 } do
+		piece({
+			Name = "Band",
+			Shape = Enum.PartType.Cylinder,
+			Size = Vector3.new(0.18, 1.48, 1.48),
+			Color = VACUUM_METAL,
+			Material = Enum.Material.Metal,
+		}, CFrame.new(0, y, 0) * upright)
+	end
+	piece({
+		Name = "Window",
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.9, 1.44, 1.44),
+		Color = VACUUM_GREEN,
+		Material = Enum.Material.Neon,
+		Transparency = 0.25,
+	}, upright)
+	piece({
+		Name = "Cap",
+		Shape = Enum.PartType.Ball,
+		Size = Vector3.new(1.3, 1.3, 1.3),
+		Color = VACUUM_PURPLE,
+		Material = Enum.Material.SmoothPlastic,
+	}, CFrame.new(0, 1.15, 0))
+
+	-- The hose: a dark beam from the bottom of the tank to the nozzle, sagging a little.
+	local hoseStart = Instance.new("Attachment")
+	hoseStart.Name = "HoseStart"
+	hoseStart.Position = Vector3.new(-1.2, 0, 0) -- the tank's bottom end (it's turned on its side)
+	hoseStart.Parent = tank
+	local hose = Instance.new("Beam")
+	hose.Attachment0 = hoseStart
+	hose.Attachment1 = hoseEnd
+	hose.Color = ColorSequence.new(Color3.fromRGB(70, 60, 85))
+	hose.Width0 = 0.4
+	hose.Width1 = 0.4
+	hose.FaceCamera = true
+	hose.Segments = 14
+	hose.CurveSize0 = 1.5
+	hose.CurveSize1 = -1.5
+	hose.Parent = tank
+
+	pack.Parent = character
+end
+
 -- Builds the handheld landmine: a squat olive disc (the Handle) with a red light on top.
 local function buildLandmine(): Tool
 	local tool = Instance.new("Tool")
@@ -490,6 +633,7 @@ function ItemService.start()
 	ITEM_TOOLS[SmokeBombService.ITEM_ID] = { template = buildSmokeBomb(), handler = SmokeBombService }
 	ITEM_TOOLS[GravityService.ITEM_ID] = { template = buildGravity(), handler = GravityService }
 	ITEM_TOOLS[UniversalKeyService.ITEM_ID] = { template = buildUniversalKey(), handler = UniversalKeyService }
+	ITEM_TOOLS[CaptureService.ITEM_ID] = { template = buildPolterPuller(), handler = CaptureService }
 
 	-- Tool.Activated fires on the server too, so each copy of an item is wired up here.
 	local function onToolAdded(item: Instance)
@@ -505,6 +649,25 @@ function ItemService.start()
 					itemTool.handler.tryUse(player, item)
 				end
 			end)
+			-- The PolterPuller's tank goes on your back while you hold the nozzle.
+			if item.Name == CaptureService.ITEM_ID then
+				item.Equipped:Connect(function()
+					local character = item.Parent
+					if character and character:IsA("Model") then
+						wearVacuumPack(character, item :: Tool)
+					end
+				end)
+				local function takeOff()
+					for _, player in Players:GetPlayers() do
+						local pack = player.Character and player.Character:FindFirstChild("PolterPack")
+						if pack and not player.Character:FindFirstChild(CaptureService.ITEM_ID) then
+							pack:Destroy()
+						end
+					end
+				end
+				item.Unequipped:Connect(takeOff)
+				item.Destroying:Connect(takeOff)
+			end
 		elseif ITEMS[item.Name] or item.Name == "Landmine" then
 			item:SetAttribute("Wired", true)
 			item.Activated:Connect(function()
