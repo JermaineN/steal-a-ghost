@@ -72,7 +72,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 60 | Seven new ghosts: Spirit, Lost Soul, Ghoul, Ghast, Yokai, Onryo, Oni | #88 |
 | 61 | Rebirth speed, softer Divine ghost, speed upgrade tuning, cheaper cosmetics, WEARING ribbon | #89 |
 | 62 | Icons for game passes and gem packs on the Creator Hub | #90 |
-| 63 | EARLY TESTER title (Divine) for the five early testers | #PR |
+| 63 | EARLY TESTER title (Divine) for the five early testers | #91 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1662,7 +1662,7 @@ picture was put into the page's file box from Roblox's own copy and saved with S
 Currency tab shows the four pile pictures. **Not tested:** how the pictures look once moderation
 finishes (check the purchase pop-up in the live game).
 
-## 63. EARLY TESTER title for the early testers (#PR)
+## 63. EARLY TESTER title for the early testers (#91)
 
 A new Divine title, **EARLY TESTER**, in the Divine rarity's colours (heavenly white and blue,
 sliding, with the shine glint). It belongs to the five players who tested the game before launch:
