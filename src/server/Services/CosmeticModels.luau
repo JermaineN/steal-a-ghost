@@ -1,9 +1,12 @@
--- How each cosmetic (CosmeticConfig) looks, all built in code. CosmeticService decides when to
--- put them on and take them off.
+-- How each cosmetic (CosmeticConfig) looks, built in code (except pet meshes made in Studio, see
+-- MESH_PETS). CosmeticService decides when to put them on and take them off.
 --   aura       particle emitters on attachments in the character's root part
 --   pet        a small unanchored model; CosmeticService makes it follow its owner
 --   tombstone  a colour and material painted over the base's tombstones
 --   flowers    a little model placed beside each grave
+local CollectionService = game:GetService("CollectionService")
+local ServerStorage = game:GetService("ServerStorage")
+
 local Parts = require(script.Parent.Parent.Util.Parts)
 
 local CosmeticModels = {}
@@ -199,8 +202,85 @@ local PETS = {
 	end,
 }
 
+-- Pets with a mesh made in Studio. Like the ghosts' ServerStorage.GhostMeshes, these can't live
+-- in git, so they're saved with the place in ServerStorage.CosmeticMeshes, named by cosmetic
+-- id. Each is a Model with a "Body" part; a wing is a part with a "Hinge" attachment where it
+-- joins the body and a "Side" attribute (-1 left, 1 right), which the client flaps (client
+-- PetAnimation). If the mesh is missing, the pet is built from parts instead (PETS above).
+CosmeticModels.WING_TAG = "FlappingWing"
+
+local MESH_PETS = {
+	-- A jack-o'-lantern with bat wings. The face is carved deep into the mesh and painted glowing
+	-- yellow inside; a warm light just behind it (the body's "Glow" attachment) makes it shine.
+	pet_pumpkin = {
+		height = 1.6, -- the body's height in studs
+		decorate = function(_model: Model, body: BasePart)
+			local light = Instance.new("PointLight")
+			light.Color = Color3.fromRGB(255, 150, 40)
+			light.Range = 7
+			light.Brightness = 1.5
+			light.Parent = body:FindFirstChild("Glow") or body
+		end,
+	},
+}
+
+local function meshPet(cosmeticId: string): Model?
+	local settings = MESH_PETS[cosmeticId]
+	local folder = ServerStorage:FindFirstChild("CosmeticMeshes")
+	local template = settings and folder and folder:FindFirstChild(cosmeticId)
+	local templateBody = template and template:FindFirstChild("Body")
+	if not (template and template:IsA("Model") and templateBody and templateBody:IsA("BasePart")) then
+		return nil
+	end
+	local model = template:Clone()
+	model.Name = "Pet"
+	local body = model:FindFirstChild("Body") :: BasePart
+	model.PrimaryPart = body
+	model:ScaleTo(model:GetScale() * settings.height / body.Size.Y)
+	model:PivotTo(CFrame.new())
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.Anchored = false
+			part.CanCollide = false
+			part.CanQuery = false
+			part.CanTouch = false
+			part.Massless = true
+		end
+	end
+	settings.decorate(model, body)
+
+	-- Wings hang off the body on a Weld (not a WeldConstraint), so the client can swing them
+	-- around the hinge by changing the weld's C0.
+	for _, wing in model:GetChildren() do
+		local hinge = wing:FindFirstChild("Hinge")
+		if wing:IsA("BasePart") and hinge and hinge:IsA("Attachment") then
+			local weld = Instance.new("Weld")
+			weld.Name = "WingWeld"
+			weld.Part0 = body
+			weld.Part1 = wing
+			weld.C0 = body.CFrame:ToObjectSpace(hinge.WorldCFrame)
+			weld.C1 = hinge.CFrame
+			weld.Parent = wing
+			CollectionService:AddTag(wing, CosmeticModels.WING_TAG)
+		end
+	end
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") and part ~= body and not part:FindFirstChild("WingWeld") then
+			local weld = Instance.new("WeldConstraint")
+			weld.Part0 = body
+			weld.Part1 = part
+			weld.Parent = part
+		end
+	end
+	return model
+end
+
 -- Builds a pet's model (not parented yet), its PrimaryPart the body. Nil if there's no such pet.
 function CosmeticModels.pet(cosmeticId: string): Model?
+	local fromMesh = meshPet(cosmeticId)
+	if fromMesh then
+		return fromMesh
+	end
 	local build = PETS[cosmeticId]
 	if not build then
 		return nil

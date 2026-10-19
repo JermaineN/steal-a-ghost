@@ -56,6 +56,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 44 | Cosmetics: titles, auras, pets, tombstones and flowers (Shop and Inventory tabs) | #73 |
 | 45 | Spin Wheel spins for gems in the Shop's Boosters tab | #74 |
 | 46 | Gold Tombstones look like shiny cartoon gold | #75 |
+| 47 | Mini Pumpkin pet: generated jack-o'-lantern with flapping bat wings | #76 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1249,3 +1250,29 @@ stone). `CosmeticService.paintTombstones` paints the stones and trim, puts the e
 off (plain stones back, nothing left over) and put it back on; no errors. **Not tested:** the
 twinkles (Studio screenshots don't show particles), what other players see (2-player test), and
 how it looks on a base with all its graves unlocked.
+
+## 47. Mini Pumpkin pet: a jack-o'-lantern with bat wings
+
+The Mini Pumpkin pet used to be a ball with neon dots. Now it's a model generated in Studio: a
+cartoon jack-o'-lantern with a curly stem, a face carved deep into it and painted glowing yellow
+inside, and two purple bat wings. A warm light behind the face makes it shine in the dark map,
+the wings flap, and the pet slowly floats up and down beside its owner.
+
+**How it works:** the model is in `ServerStorage.CosmeticMeshes.pet_pumpkin` (saved with the
+place, not git; the untouched original is in `ServerStorage.CosmeticMeshBackups`): a `Body`
+mesh with a `Glow` attachment, and `WingLeft` / `WingRight` meshes, each with a `Hinge`
+attachment and a `Side` attribute. `CosmeticModels` (`MESH_PETS`) clones and scales it, adds
+the light, and joins each wing with a Weld tagged `FlappingWing`. The new client script
+`PetAnimation` flaps the wings by turning those welds, and floats your own pet by moving the
+attachment it follows (your device moves your pet, so everyone sees it float). If the model is
+missing, the old code-built pumpkin is used.
+
+The face isn't cut all the way through: Studio's solid modelling can cut real holes, but the cut
+meshes showed up as grey boxes in a playtest, so the generated face is used instead.
+
+**Tested (solo, Studio):** wore the pet; screenshots from the front and back in the dark map
+(face glowing, wings in place); wings flapping; it stays 3.4 studs away while walking; it floats
+0.6 studs up and down, seen the same on the server; it disappears while Invisible and comes back
+after; no errors. **Not tested:** what other players see (2-player test).
+
+**Remember:** save and publish the place, or the new model is lost.
