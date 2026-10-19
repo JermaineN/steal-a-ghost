@@ -214,7 +214,12 @@ return {
 		Rebirth = "rbxassetid://117203030563415",
 		Index = "rbxassetid://95666104073571",
 		Inventory = "rbxassetid://129386900876231",
+		Codes = "rbxassetid://94144655444721",
 	},
+
+	-- Codes (side menu → Codes; the codes themselves are in the server-only Server.Config.CodeConfig).
+	CodeMaxLength = 30, -- longer text is ignored without looking it up
+	CodeCooldownSeconds = 2, -- a player can try one code every this many seconds
 
 	-- Rebirth (side menu → Rebirth): trade in all your cash and ghosts once you have enough cash,
 	-- for a permanent income boost and a gem reward. Gems, the Index and your items stay.
