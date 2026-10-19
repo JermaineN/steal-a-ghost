@@ -8,6 +8,9 @@
 -- attributes): Wear shows that title above your head (one at a time, the "Title" attribute),
 -- Take off removes it. Rebirth titles (TitleConfig `rebirths`) show even before you own them:
 -- locked, with a bar for how close you are (rebirths done plus your cash toward the next one).
+-- Milestone titles (TitleConfig `milestone`) also show while locked, with a bar for the stat
+-- ("Stat_<name>" attributes).
+-- Every card is coloured by its rarity, rarest first.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -17,7 +20,6 @@ local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
 local TitleConfig = require(ReplicatedStorage.Shared.Config.TitleConfig)
 local Rebirth = require(ReplicatedStorage.Shared.Rebirth)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
-local TitleText = require(ReplicatedStorage.Shared.TitleText)
 local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local Hud = require(script.Parent.Hud)
 local Window = require(script.Parent.Window)
@@ -132,14 +134,14 @@ local function refresh()
 	end
 	local showTitles = currentTab == "Titles"
 	local wearing = player:GetAttribute("Title")
-	for order, title in TitleConfig.Titles do
+	for order, title in ItemConfig.sortByRarity(TitleConfig.Titles) do
 		local entry = titleCards[title.id]
 		local isOwned = player:GetAttribute("Title_" .. title.id) == true
 		local isWorn = wearing == title.id
-		local locked = not isOwned and title.rebirths ~= nil
+		local locked = not isOwned and (title.rebirths ~= nil or title.milestone ~= nil)
 		entry.card.Visible = showTitles and (isOwned or locked)
-		-- Owned titles first, then the locked ones.
-		entry.card.LayoutOrder = #ItemConfig.Items + order + (if locked then 100 else 0)
+		-- Rarest first (Secret down to Common), owned and locked mixed together.
+		entry.card.LayoutOrder = #ItemConfig.Items + order
 		entry.ribbon.Visible = isWorn
 		entry.stroke.Thickness = if isWorn then 4 else 2.5
 		entry.stroke.Color = if locked then LOCKED_GREY else title.color
@@ -148,11 +150,20 @@ local function refresh()
 		entry.bar.Visible = locked
 		entry.wearLabel.Text = if isWorn then "Take off" else "Wear"
 		Window.paintButton(entry.wear, if isWorn then LOCKED_GREY else title.color)
+		if title.milestone then
+			local goal = title.milestone.goal
+			local have = player:GetAttribute("Stat_" .. title.milestone.stat) or 0
+			entry.heading.Text = TitleConfig.milestoneText(title)
+			if locked then
+				entry.barFill.Size = UDim2.fromScale(math.clamp(have / goal, 0, 1), 1)
+				entry.barText.Text = `{math.min(have, goal)}/{goal}`
+			end
+		end
 		if title.rebirths then
 			local plural = if title.rebirths == 1 then "" else "s"
 			entry.heading.Text = if locked then `Locked: {title.rebirths} rebirth{plural}` else `Rebirth title`
 		end
-		if locked then
+		if locked and title.rebirths then
 			entry.barFill.Size = UDim2.fromScale(rebirthProgress(title.rebirths), 1)
 			entry.barText.Text = `{math.min(stat("Rebirths"), title.rebirths)}/{title.rebirths} rebirths`
 		end
@@ -328,27 +339,21 @@ local function buildTitleCard(title, order: number, parent: Instance)
 	})
 	local stroke = new("UIStroke", { Color = title.color, Thickness = 2.5, Parent = card })
 
-	local holder = new("Frame", {
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 40),
-		Size = UDim2.new(1, -14, 0, 40),
-		BackgroundTransparency = 1,
-		Parent = card,
-	})
-	TitleText.create(holder, title, 2.5)
+	local picture = Window.titlePicture(card, title)
+	picture.Rarity.ZIndex = 4 -- the rarity word stays bright on a locked title
 
-	-- Darkens a locked title's word.
+	-- Darkens a locked title's picture.
 	local dim = new("Frame", {
 		Name = "Dim",
-		Position = UDim2.fromOffset(4, 34),
-		Size = UDim2.new(1, -8, 0, 52),
+		Position = UDim2.fromScale(0, 0),
+		Size = UDim2.fromScale(1, 1),
 		BackgroundColor3 = Window.PANEL_DARK,
 		BackgroundTransparency = 0.45,
 		ZIndex = 3,
 		Visible = false,
-		Parent = card,
+		Parent = picture,
 	})
-	new("UICorner", { CornerRadius = UDim.new(0.2, 0), Parent = dim })
+	new("UICorner", { CornerRadius = UDim.new(0.18, 0), Parent = dim })
 
 	local heading = Window.text({
 		Position = UDim2.fromOffset(8, 110),
@@ -378,7 +383,7 @@ local function buildTitleCard(title, order: number, parent: Instance)
 		Remotes.EquipTitle:FireServer(if isWorn then "" else title.id)
 	end)
 
-	-- In the Wear button's place while a rebirth title is locked: how close you are.
+	-- In the Wear button's place while a rebirth or milestone title is locked: how close you are.
 	local bar = new("Frame", {
 		Name = "Progress",
 		AnchorPoint = Vector2.new(0.5, 0),
@@ -549,6 +554,7 @@ function InventoryPanel.start()
 		if
 			string.match(attribute, "^Item_")
 			or string.match(attribute, "^Title")
+			or string.match(attribute, "^Stat_")
 			or attribute == "Equipped"
 			or attribute == "Pass_extra_slot"
 			or string.match(attribute, "^Cosmetic_")

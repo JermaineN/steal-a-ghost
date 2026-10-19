@@ -20,7 +20,6 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local StoreConfig = require(ReplicatedStorage.Shared.Config.StoreConfig)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local TitleConfig = require(ReplicatedStorage.Shared.Config.TitleConfig)
-local TitleText = require(ReplicatedStorage.Shared.TitleText)
 local Window = require(script.Parent.Window)
 
 local ShopPanel = {}
@@ -284,14 +283,7 @@ local function buildCosmeticCard(cosmetic, order: number, parent: Instance)
 	card.Name = cosmetic.id
 	if cosmetic.kind == "title" then
 		-- A title shows itself, animated, where the picture would be.
-		local holder = new("Frame", {
-			AnchorPoint = Vector2.new(0.5, 0),
-			Position = UDim2.new(0.5, 0, 0, 38),
-			Size = UDim2.new(1, -14, 0, 40),
-			BackgroundTransparency = 1,
-			Parent = card,
-		})
-		TitleText.create(holder, TitleConfig.byId[cosmetic.titleId], 2.5)
+		Window.titlePicture(card, TitleConfig.byId[cosmetic.titleId])
 	else
 		local picture = Window.iconPicture(card, cosmetic.color, cosmetic.icon, cosmetic.image)
 		Window.rarityLabel(picture, cosmetic)

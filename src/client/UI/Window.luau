@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local TitleText = require(ReplicatedStorage.Shared.TitleText)
 
 local Window = {}
 
@@ -337,6 +338,31 @@ function Window.rarityLabel(picture: GuiObject, item): TextLabel
 		CollectionService:AddTag(gradient, "AnimatedGradient") -- slides (client GradientAnimator)
 	end
 	return label
+end
+
+-- A title's "picture" on a card (Shop, Inventory): the title itself, animated, in a box tinted its
+-- rarity's colour, with the rarity word on its top edge like an item's.
+function Window.titlePicture(card: GuiObject, title): Frame
+	local frame = new("Frame", {
+		Name = "Picture",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 10),
+		Size = UDim2.new(1, -20, 0, 96),
+		BackgroundColor3 = title.color:Lerp(PANEL_DARK, 0.45),
+		Parent = card,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0.18, 0), Parent = frame })
+	new("UIStroke", { Color = title.color, Thickness = 2, Parent = frame })
+	local holder = new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.55),
+		Size = UDim2.new(1, -8, 0, 40),
+		BackgroundTransparency = 1,
+		Parent = frame,
+	})
+	TitleText.create(holder, title, 2.5)
+	Window.rarityLabel(frame, title)
+	return frame
 end
 
 return Window
