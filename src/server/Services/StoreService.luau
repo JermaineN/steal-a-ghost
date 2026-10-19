@@ -47,7 +47,12 @@ local function buyBooster(player: Player, boosterId: unknown)
 		Notify.send(player, `Not enough gems for {booster.name} ({Format.cash(booster.price)} gems).`, "error")
 		return
 	end
-	if booster.id == "money" then
+	if booster.spins then
+		DataService.addSpins(player, booster.spins)
+		Notify.send(player, `+{booster.spins} {if booster.spins == 1 then "spin" else "spins"}!`, "success", {
+			note = "Open the Spin Wheel to use them",
+		})
+	elseif booster.id == "money" then
 		SpinService.addMoneyBoost(player, booster.seconds)
 		Notify.send(player, `2x Money for {minutesText(booster.seconds)}!`, "success")
 	elseif booster.id == "speed" then
