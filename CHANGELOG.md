@@ -68,7 +68,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 56 | Title rarities and milestone titles | #84 |
 | 57 | Flat colours for Legendary-and-below titles | #85 |
 | 58 | Codes: redeem codes for gems, cash or spins (side menu → Codes) | #86 |
-| 59 | Spin "Get more", 2x Money badge, VIP and Fast Flight buffs | #PR |
+| 59 | Spin "Get more", 2x Money badge, VIP and Fast Flight buffs | #87 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
