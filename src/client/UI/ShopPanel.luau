@@ -232,7 +232,8 @@ local function boosterEnds(booster): number?
 	local untilTime = if booster.id == "money"
 		then player:GetAttribute("MoneyBoostUntil")
 		elseif booster.id == "speed" then player:GetAttribute("SpeedBoostUntil")
-		else ReplicatedStorage:GetAttribute("LuckBoostUntil")
+		elseif booster.id == "luck" then ReplicatedStorage:GetAttribute("LuckBoostUntil")
+		else nil -- spins aren't timed
 	if untilTime and untilTime > workspace:GetServerTimeNow() then
 		return untilTime
 	end

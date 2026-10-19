@@ -54,6 +54,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 42 | Nuke (the Spin Wheel's Mythic prize) | #70 |
 | 43 | Shop tabs: Items, Boosters, Currency (Robux gems), Gamepasses | #72 |
 | 44 | Cosmetics: titles, auras, pets, tombstones and flowers (Shop and Inventory tabs) | #73 |
+| 45 | Spin Wheel spins for gems in the Shop's Boosters tab | #74 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1214,3 +1215,18 @@ vanish during the Smoke Bomb and come back. Gave myself the two Robux ones on th
 and the gold sparkles show. Both Shop and Inventory tabs look right. **Not tested:** real game pass
 purchases (need IDs), cosmetics coming back after rejoining (saving only works live), what other
 players see (2-player test) and the base resetting when its owner leaves.
+
+## 45. Spins for gems (Boosters tab)
+
+The Shop's Boosters tab now sells Spin Wheel spins: **1 Spin for 60 gems, 2 Spins for 110, 3
+Spins for 150**. They're added straight away (the Spin! button's count goes up) with a message
+pointing to the Spin Wheel.
+
+**How it works:** three rows in `StoreConfig.Boosters` with `spins` instead of `seconds`;
+`StoreService` gives them with `DataService.addSpins`. The Shop's cards don't show an "ACTIVE"
+timer for them.
+
+**Tested (solo, Studio):** bought each pack from the client: spins went 1 → 2 → 4 → 7 → 8 and the
+right gems were taken (60, 110, 150), no errors; the four cards' text reads right. **Not
+tested:** a screenshot of the Shop window (the capture didn't show it), and bought spins being
+kept after rejoining (saving only works live).
