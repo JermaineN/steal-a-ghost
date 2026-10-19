@@ -849,18 +849,28 @@ The Mega Mallet now costs 2,000 gems (was 2,500). Not playtested (a one-number c
 
 ## 30. Tennis Racket
 
-A new Shop item (200 gems, bought once): swings and hits exactly like the bat (same range, arc,
-swing animation and speed, no cooldown, same height) but knocks people **eleven times further
-back**, and after getting up they can't be knocked over again for 1.9 s (1.9x the bat's 1 s), with a tennis
-"thwock" (Pro Sound Effects' "Tennis Ball Hits CU Impacts 3", only the racket hit: 0.7 s from 1.27 s in). Thieves it hits
-drop their ghost, like the bat. Orange racket model with white strings; icon from
-`scripts/draw-racket-icon.ps1`. Config: `RacketIcon`,
-`RacketPushMultiplier`, `RacketHitSound` (GameConfig); `racketHits` and `buildRacket` in ItemService.
+A new Shop item (200 gems, bought once).
 
-**2-player test** (with the first version, 2x push and 2x height): bought it (−200 gems); the
-racket hit played the tennis sound and launched Player2 with (10, 120, 0); a bat hit for
-comparison was "bonk" and (5, 60, 0). The user then asked for normal height and 3x distance:
-then the user found the hit sound silent (the clip's hit is at 1.33 s, after the old 0.7 s
-cut-off; now it starts at 1.27 s, measured loud at once) and asked for 11x the bat's distance and 1.9x its
-immunity after getting up: now (55, 60, 0) and 1.9 s (`RacketImmunityMultiplier`; RagdollService.knock
-takes an optional `immunitySeconds`). **Not retested** in a 2-player test after these changes.
+- **Swings and hits exactly like the bat:** same range, arc, swing animation and speed, no
+  cooldown, same launch height. Thieves it hits drop their ghost.
+- **Knocks people 11 times further back** than the bat: push (55, 60, 0) vs the bat's (5, 60, 0).
+- **Longer protection:** after getting up from a racket hit, a player can't be knocked over again
+  for 1.9 s (1.9x the bat's 1 s).
+- **Tennis "thwock" on hit:** Pro Sound Effects' "Tennis Ball Hits CU Impacts 3", only the racket
+  hit (0.7 s from 1.27 s into the clip; the rest is footsteps and bounces).
+- Orange racket model with white strings; icon from `scripts/draw-racket-icon.ps1`.
+
+**How it works:** the racket is an Inventory tool (`tennis_racket`) that goes through the bat's
+`swing` / `ITEMS` path with its own `racketHits`. Config: `RacketPushMultiplier`,
+`RacketImmunityMultiplier`, `RacketIcon`, `RacketHitSound` (GameConfig). `RagdollService.knock`
+takes an optional `immunitySeconds`; `playBonk` plays a sound from `startAt` for `length`.
+
+**Tested:**
+- 2-player, first version (2x push and height): bought for 200 gems; the racket hit made the
+  tennis sound and launched Player2 (10, 120, 0); a bat hit gave (5, 60, 0).
+- The user found the hit sound silent: the clip's racket hit is at 1.33 s and was being cut off
+  at 0.7 s. Fixed by starting at 1.27 s; a server-made copy measured loud on the client (peak
+  181; the bat's bonk is about 238).
+- The user tested the 3x-distance version themselves.
+
+**Not tested:** the final 11x push and 1.9 s immunity in a 2-player test.
