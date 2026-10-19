@@ -15,6 +15,14 @@ local Theme = require(ReplicatedStorage.Shared.Theme)
 
 -- Roblox's built-in four-pointed sparkle, for star-shaped particles.
 local SPARKLE_TEXTURE = "rbxasset://textures/particles/sparkles_main.dds"
+-- The Spectre King's rainbow stars (Mythic text is shiny red, but the stars stay rainbow).
+local RAINBOW = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 90, 110)),
+	ColorSequenceKeypoint.new(0.25, Color3.fromRGB(255, 200, 80)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 255, 150)),
+	ColorSequenceKeypoint.new(0.75, Color3.fromRGB(110, 170, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 120, 255)),
+})
 
 local GhostModels = {}
 
@@ -346,10 +354,10 @@ function GhostModels.spectre_king(model: Model, body: BasePart, def): number?
 	twinkles.ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface -- inside his solid body they'd be hidden
 	twinkles.Parent = mesh
 
-	-- A few slow, larger stars that drift upward, shifting through the Mythic rainbow.
+	-- A few slow, larger stars that drift upward, shifting through the rainbow.
 	local rainbowStars = Instance.new("ParticleEmitter")
 	rainbowStars.Texture = SPARKLE_TEXTURE
-	rainbowStars.Color = Theme.RarityGradients.Mythic
+	rainbowStars.Color = RAINBOW
 	rainbowStars.LightEmission = 1
 	rainbowStars.Size = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, 0),
@@ -371,7 +379,7 @@ end
 
 -- Extra particles every ghost of the top rarities gets, on top of its own look (so a new Divine
 -- or Secret ghost has them without any extra work). Divine: gold and white sparkles rising like
--- a blessing. Secret: dark smoke with silver and blood-red stars flickering in it.
+-- a blessing. Secret: dark smoke with black and white stars flickering in it.
 function GhostModels.addRarityAura(body: BasePart, rarity: string, size: number)
 	if rarity == "Divine" then
 		local sparkles = Instance.new("ParticleEmitter")
