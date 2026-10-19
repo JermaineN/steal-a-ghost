@@ -51,6 +51,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 39 | Phones: smaller HUD and buttons, Haunted Hour pill at the top | #67 |
 | 40 | Phones: base texts 20% smaller | #68 |
 | 41 | Mythic text shiny red; Secret and THE GOAT shiny dark grey, looping | #69 |
+| 42 | Nuke (the Spin Wheel's Mythic prize) | — |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1111,3 +1112,28 @@ The big spawn banner hands a looping gradient to GradientAnimator instead of its
 them; THE GOAT above the head showed the new colours; measured the shine moving one way
 (0.1 of the width every half second, wrapping round) on the title and the banner. Not tested:
 a Secret ghost's label on the walkway (no Secret ghost spawned; same gradient code path).
+
+## 42. Nuke: the Spin Wheel's Mythic prize
+
+The Spin Wheel's Mythic slice now gives the **Nuke** (not sold in the Shop): a remote control
+with a big red button, equipped from the Inventory like other items. Pressing it tells everyone
+"X HAS LAUNCHED A NUKE!" with a 5-second countdown, beeps, an air-raid siren and a red screen
+pulse. Then everyone is frozen while a cutscene shows the nuke falling onto the middle of the
+map from a low camera that follows it down. When it hits, the screen flashes, the cutscene ends
+and every player (the launcher too) is launched up and away: 1.5x the Mega Mallet's push and
+lift, the same 3.5 s ragdoll. Thieves drop their ghost. Cooldown 200 s; one nuke at a time per
+server. Anyone who had won the old "mythic_placeholder" item gets a Nuke instead.
+
+**How it works:** `NukeService` (server) checks the use, sends `NukeLaunched` (name, cutsceneAt,
+explodeAt, target) to everyone, anchors every free character for the cutscene (no items work
+meanwhile, `NukeService.isFrozen()`), then unanchors and launches them with
+`RagdollService.knock`. `NukeClient` plays the countdown, sounds, cutscene camera, nuke model
+and explosion (fireball, shockwave ring, mushroom cloud, camera shake) from those times.
+Tuning and sounds are the `Nuke*` values in `GameConfig`; the remote is built in `ItemService`
+(`buildNukeRemote`); icon `assets/nuke-icon.png` (`scripts/draw-nuke-icon.ps1`). Shielded,
+caged or already-ragdolled players aren't launched (same rule as every other knock).
+
+**Tested (solo):** won it from the wheel, equipped it, saw the remote in hand and on the wheel's
+Mythic slice; you played the warning, sounds and cutscene and confirmed they work. Not tested:
+other players being launched and thieves dropping ghosts (needs a 2-player test). The falling
+whistle sound is from an unknown uploader (Grummgus); the others are Pro Sound Effects.

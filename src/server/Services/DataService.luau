@@ -31,8 +31,21 @@ local RETIRED_ITEMS = {
 	item_6 = { price = 500000, currency = "cash" },
 }
 
--- Refunds and removes retired items; also drops any unknown item from the hotbar.
+-- Items whose id changed: old id = new id. Saves still holding the old id are moved over on join.
+local RENAMED_ITEMS = {
+	mythic_placeholder = "nuke", -- the Spin Wheel's Mythic prize, before it became the Nuke
+}
+
+-- Refunds and removes retired items, moves renamed ones to their new id, and drops any unknown
+-- item from the hotbar.
 local function clearRetiredItems(data): (number, number)
+	for oldId, newId in RENAMED_ITEMS do
+		local count = data.items[oldId]
+		if count then
+			data.items[newId] = (data.items[newId] or 0) + count
+			data.items[oldId] = nil
+		end
+	end
 	local gems, cash = 0, 0
 	for itemId, count in data.items do
 		local retired = RETIRED_ITEMS[itemId]

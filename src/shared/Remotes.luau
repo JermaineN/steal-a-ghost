@@ -29,6 +29,7 @@ local EVENT_NAMES = {
 	"Spin", -- client -> server: use one Spin Wheel spin (no arguments; the server picks the prize)
 	"SpinResult", -- server -> the spinner only: the wheel landed on this prize (index in GameConfig.SpinPrizes)
 	"OfflineEarnings", -- server -> a rejoining player: their ghosts earned this while away (amount, secondsAway)
+	"NukeLaunched", -- server -> all clients: a nuke is coming (launcher's display name, cutsceneAt, explodeAt server times, ground target Vector3)
 }
 
 local folder
