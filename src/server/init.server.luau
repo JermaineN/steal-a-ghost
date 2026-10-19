@@ -36,6 +36,7 @@ local NukeService = require(Services.NukeService)
 local TitleService = require(Services.TitleService)
 local SpinService = require(Services.SpinService)
 local StoreService = require(Services.StoreService)
+local CosmeticService = require(Services.CosmeticService)
 
 local map = MapBuilder.build()
 PlotService.start(map.plots)
@@ -67,6 +68,7 @@ NukeService.start()
 TitleService.start()
 SpinService.start()
 StoreService.start()
+CosmeticService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed plus their Speed upgrade (StealService
 -- slows thieves down; UpgradeService applies a newly bought level straight away).
@@ -94,6 +96,7 @@ local function onPlayerAdded(player: Player)
 		DailyRewardService.playerLoaded(player)
 		LeaderboardService.playerLoaded(player)
 		StoreService.playerLoaded(player) -- game passes, before titles (VIP)
+		CosmeticService.playerLoaded(player) -- before titles too (bought titles)
 		TitleService.playerLoaded(player)
 		SpinService.playerLoaded(player)
 	end
@@ -109,6 +112,7 @@ Players.PlayerRemoving:Connect(function(player)
 	StealService.playerRemoving(player)
 	CaptureService.playerRemoving(player)
 	GhostService.playerRemoving(player)
+	CosmeticService.playerRemoving(player) -- before the base is handed back
 	PlotService.playerRemoving(player)
 	SpinService.playerRemoving(player) -- pays a prize still spinning
 	DataService.playerRemoving(player)

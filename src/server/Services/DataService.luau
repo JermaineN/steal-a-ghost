@@ -97,6 +97,8 @@ local function newData()
 		moneyBoostLeft = 0, -- seconds of Spin Wheel income boost left (only counts down while playing)
 		boosts = {}, -- [boosterId] = seconds left of a Shop booster that's yours (StoreConfig; the money booster uses moneyBoostLeft)
 		receipts = {}, -- ids of the latest Robux purchases already paid out (StoreService), so none is paid twice
+		cosmetics = {}, -- [cosmeticId] = true for cosmetics bought with gems (CosmeticConfig; Robux ones come from game passes)
+		worn = {}, -- the cosmetic worn of each kind: { aura = id, pet = id, tombstone = id, flowers = id }
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
 		upgrades = {}, -- upgrade levels: { graves = n, lock = n, speed = n, carry = n } (see Shared.Upgrades); all but graves reset on rebirth
@@ -256,6 +258,10 @@ function DataService.playerAdded(player: Player): boolean
 	-- Equipped items (the hotbar), as "smoke_bomb,gravity" (attributes can't hold lists).
 	player:SetAttribute("Equipped", table.concat(data.equipped, ","))
 	player:SetAttribute("Spins", data.spins)
+	-- Cosmetics bought with gems, as "Cosmetic_<id>" = true (CosmeticService adds Robux ones).
+	for cosmeticId in data.cosmetics do
+		player:SetAttribute("Cosmetic_" .. cosmeticId, true)
+	end
 	return true
 end
 
@@ -451,6 +457,28 @@ function DataService.setBoostLeft(player: Player, boosterId: string, seconds: nu
 	local profile = profiles[player]
 	if profile then
 		profile.data.boosts[boosterId] = if seconds > 0 then seconds else nil
+	end
+end
+
+-- Cosmetics bought with gems (CosmeticConfig).
+function DataService.addCosmetic(player: Player, cosmeticId: string)
+	local profile = profiles[player]
+	if profile then
+		profile.data.cosmetics[cosmeticId] = true
+		player:SetAttribute("Cosmetic_" .. cosmeticId, true)
+	end
+end
+
+-- The cosmetic worn of each kind ({ aura = id, ... }).
+function DataService.getWorn(player: Player): { [string]: string }
+	local profile = profiles[player]
+	return if profile then profile.data.worn else {}
+end
+
+function DataService.setWorn(player: Player, kind: string, cosmeticId: string?)
+	local profile = profiles[player]
+	if profile then
+		profile.data.worn[kind] = cosmeticId
 	end
 end
 

@@ -1,6 +1,8 @@
 -- The Shop window (side menu → Shop), in the Shop button's green, with four tabs:
 --   Items       one card per item in ItemConfig (gems or cash); ShopBuy remote → ShopService
 --   Boosters    timed boosts for gems (StoreConfig.Boosters); BuyBooster remote → StoreService
+--   Cosmetics   titles, auras, pets and base decor (CosmeticConfig), for gems (BuyCosmetic remote →
+--               CosmeticService) or Robux (game passes); worn from the Inventory
 --   Currency    gem packs for Robux (StoreConfig.GemPacks, Developer Products)
 --   Gamepasses  permanent perks for Robux (StoreConfig.Passes)
 -- The window only asks: the server checks every price. Robux purchases open Roblox's own
@@ -13,9 +15,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Format = require(ReplicatedStorage.Shared.Format)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
+local CosmeticConfig = require(ReplicatedStorage.Shared.Config.CosmeticConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local StoreConfig = require(ReplicatedStorage.Shared.Config.StoreConfig)
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local TitleConfig = require(ReplicatedStorage.Shared.Config.TitleConfig)
+local TitleText = require(ReplicatedStorage.Shared.TitleText)
 local Window = require(script.Parent.Window)
 
 local ShopPanel = {}
@@ -24,7 +29,7 @@ local SHOP_GREEN = Color3.fromRGB(70, 220, 90)
 local LOCKED_GREY = Color3.fromRGB(90, 84, 104)
 local WHITE = Color3.new(1, 1, 1)
 local PALE = Color3.fromRGB(205, 190, 230)
-local TABS = { "Items", "Boosters", "Currency", "Gamepasses" }
+local TABS = { "Items", "Boosters", "Cosmetics", "Currency", "Gamepasses" }
 local TAB_HEIGHT = 40
 local CARD_SIZE = Vector2.new(150, 224)
 local new = Window.new
@@ -83,40 +88,6 @@ local function cardShell(name: string, description: string, color: Color3, order
 		Parent = card,
 	})
 	return card
-end
-
--- A card's picture for things that aren't items: an image, or a big emoji until there is one.
-local function iconPicture(card: Frame, color: Color3, icon: string?, image: string?): Frame
-	local frame = new("Frame", {
-		Position = UDim2.fromOffset(27, 10),
-		Size = UDim2.fromOffset(96, 96),
-		BackgroundColor3 = color:Lerp(Window.PANEL_DARK, 0.45),
-		Parent = card,
-	})
-	new("UICorner", { CornerRadius = UDim.new(0.18, 0), Parent = frame })
-	new("UIStroke", { Color = color, Thickness = 2, Parent = frame })
-	if image then
-		new("ImageLabel", {
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.fromScale(0.8, 0.8),
-			BackgroundTransparency = 1,
-			Image = image,
-			ScaleType = Enum.ScaleType.Fit,
-			Parent = frame,
-		})
-	else
-		new("TextLabel", {
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			Position = UDim2.fromScale(0.5, 0.5),
-			Size = UDim2.fromScale(0.75, 0.75),
-			BackgroundTransparency = 1,
-			TextScaled = true,
-			Text = icon or "?",
-			Parent = frame,
-		})
-	end
-	return frame
 end
 
 -- A small banner across the top edge of a picture ("ACTIVE 12:34", "+20% BONUS"), like an item's
@@ -271,7 +242,7 @@ end
 local function buildBoosterCard(booster, order: number, parent: Instance)
 	local card = cardShell(booster.name, booster.description, booster.color, order, parent)
 	card.Name = booster.id
-	local picture = iconPicture(card, booster.color, booster.icon)
+	local picture = Window.iconPicture(card, booster.color, booster.icon)
 	local banner = pictureBanner(picture, booster.color)
 	priceRow(card, "gems", booster.price)
 
@@ -304,13 +275,83 @@ local function buildBoosterCard(booster, order: number, parent: Instance)
 end
 
 ---------------------------------------------------------------------------
+-- Cosmetics
+---------------------------------------------------------------------------
+
+local function buildCosmeticCard(cosmetic, order: number, parent: Instance)
+	local card = cardShell(cosmetic.name, cosmetic.description, cosmetic.color, order, parent)
+	card.Name = cosmetic.id
+	if cosmetic.kind == "title" then
+		-- A title shows itself, animated, where the picture would be.
+		local holder = new("Frame", {
+			AnchorPoint = Vector2.new(0.5, 0),
+			Position = UDim2.new(0.5, 0, 0, 38),
+			Size = UDim2.new(1, -14, 0, 40),
+			BackgroundTransparency = 1,
+			Parent = card,
+		})
+		TitleText.create(holder, TitleConfig.byId[cosmetic.titleId], 2.5)
+	else
+		local picture = Window.iconPicture(card, cosmetic.color, cosmetic.icon)
+		Window.rarityLabel(picture, cosmetic)
+	end
+	local robux = cosmetic.currency == "robux"
+	local price = priceRow(card, if robux then "robux" else "gems", cosmetic.price)
+	if robux then
+		showRobuxPrice(price, cosmetic.passId, Enum.InfoType.GamePass)
+	end
+
+	local buy, buyLabel = buyButton(card)
+	local waiting = false
+	local function refresh()
+		local owned = CosmeticConfig.owns(player, cosmetic.id)
+		if owned then
+			buyLabel.Text = "Owned"
+			Window.paintButton(buy, LOCKED_GREY)
+		elseif robux then
+			buyLabel.Text = if cosmetic.passId == 0 then "Soon" else "Buy"
+			Window.paintButton(buy, if cosmetic.passId == 0 then LOCKED_GREY else SHOP_GREEN)
+		else
+			local affordable = balance("gems") >= cosmetic.price
+			if not waiting then
+				buyLabel.Text = if affordable then "Buy" else "Can't afford"
+			end
+			Window.paintButton(buy, if affordable then SHOP_GREEN else LOCKED_GREY)
+		end
+	end
+	table.insert(refreshers, refresh)
+	buy.Activated:Connect(function()
+		if waiting or CosmeticConfig.owns(player, cosmetic.id) then
+			return
+		end
+		if robux then
+			if cosmetic.passId ~= 0 then
+				MarketplaceService:PromptGamePassPurchase(player, cosmetic.passId)
+			end
+			return
+		end
+		if balance("gems") < cosmetic.price then
+			return
+		end
+		waiting = true
+		buyLabel.Text = "..."
+		Remotes.BuyCosmetic:FireServer(cosmetic.id)
+		task.delay(0.6, function()
+			waiting = false
+			refresh()
+		end)
+	end)
+	refresh()
+end
+
+---------------------------------------------------------------------------
 -- Currency (Robux gem packs)
 ---------------------------------------------------------------------------
 
 local function buildGemPackCard(pack, order: number, parent: Instance)
 	local card = cardShell(`{Format.cash(pack.gems)} Gems`, "", Theme.GemBlue, order, parent)
 	card.Name = pack.id
-	local picture = iconPicture(card, Theme.GemBlue, nil, GameConfig.GemIcon)
+	local picture = Window.iconPicture(card, Theme.GemBlue, nil, GameConfig.GemIcon)
 	pictureBanner(picture, Theme.GemBlue).Text = if pack.bonus then string.upper(pack.bonus) else ""
 	showRobuxPrice(priceRow(card, "robux"), pack.productId, Enum.InfoType.Product)
 
@@ -332,7 +373,7 @@ end
 local function buildPassCard(pass, order: number, parent: Instance)
 	local card = cardShell(pass.name, pass.description, pass.color, order, parent)
 	card.Name = pass.id
-	iconPicture(card, pass.color, pass.icon)
+	Window.iconPicture(card, pass.color, pass.icon)
 	showRobuxPrice(priceRow(card, "robux"), pass.passId, Enum.InfoType.GamePass)
 
 	local buy, buyLabel = buyButton(card)
@@ -377,8 +418,8 @@ function ShopPanel.start()
 	for index, name in TABS do
 		local button, label = Window.button({
 			Name = name .. "Tab",
-			Position = UDim2.fromOffset(20 + (index - 1) * 130, Window.HEADER_HEIGHT),
-			Size = UDim2.fromOffset(120, TAB_HEIGHT),
+			Position = UDim2.fromOffset(20 + (index - 1) * 104, Window.HEADER_HEIGHT),
+			Size = UDim2.fromOffset(98, TAB_HEIGHT),
 			Parent = panel.window,
 		}, LOCKED_GREY)
 		label.Text = name
@@ -413,6 +454,9 @@ function ShopPanel.start()
 	for order, booster in StoreConfig.Boosters do
 		buildBoosterCard(booster, order, grids.Boosters)
 	end
+	for order, cosmetic in CosmeticConfig.Cosmetics do
+		buildCosmeticCard(cosmetic, order, grids.Cosmetics)
+	end
 	for order, pack in StoreConfig.GemPacks do
 		buildGemPackCard(pack, order, grids.Currency)
 	end
@@ -422,7 +466,7 @@ function ShopPanel.start()
 	refreshAll()
 
 	-- Buttons grey out and come back as your gems and cash change, booster timers tick, and
-	-- passes say "Owned" once bought.
+	-- passes and cosmetics say "Owned" once bought.
 	task.spawn(function()
 		local leaderstats = player:WaitForChild("leaderstats")
 		for _, name in { "Cash", "Gems" } do
@@ -435,7 +479,7 @@ function ShopPanel.start()
 		refreshAll()
 	end)
 	player.AttributeChanged:Connect(function(attribute)
-		if panel.isOpen() and string.match(attribute, "^Pass_") then
+		if panel.isOpen() and (string.match(attribute, "^Pass_") or string.match(attribute, "^Cosmetic_")) then
 			refreshAll()
 		end
 	end)
