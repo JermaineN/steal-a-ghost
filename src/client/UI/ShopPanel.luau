@@ -51,7 +51,8 @@ local function buildCard(item, order: number, parent: Instance)
 	})
 	new("UIStroke", { Color = item.color, Thickness = 2.5, Parent = card })
 
-	Window.itemPicture(card, item, UDim2.fromOffset(96, 96), UDim2.fromOffset(27, 10))
+	local picture = Window.itemPicture(card, item, UDim2.fromOffset(96, 96), UDim2.fromOffset(27, 10))
+	Window.rarityLabel(picture, item)
 	Window.text({
 		Position = UDim2.fromOffset(8, 110),
 		Size = UDim2.new(1, -16, 0, 22),

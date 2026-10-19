@@ -2,8 +2,12 @@
 -- gradient, an outline in the menu button's accent colour, the menu icon and title in the top
 -- left, a red X in the top right, and a little pop when it opens. Used by the Shop and
 -- Inventory windows. Put the window's content inside `window` below the header (y = 70).
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+
+local Theme = require(ReplicatedStorage.Shared.Theme)
 
 local Window = {}
 
@@ -277,6 +281,27 @@ function Window.itemPicture(parent: GuiObject, item, size: UDim2, position: UDim
 		}, 2.5)
 	end
 	return frame
+end
+
+-- The item's rarity word across the top edge of its picture, in the rarity's colour (Legendary
+-- and rarer shimmer, like the ghosts' rarity words).
+function Window.rarityLabel(picture: GuiObject, item): TextLabel
+	local gradientColors = Theme.RarityGradients[item.rarity]
+	local label = Window.text({
+		Name = "Rarity",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0),
+		Size = UDim2.new(1.3, 0, 0, 18),
+		TextColor3 = if gradientColors then WHITE else item.color,
+		Text = string.upper(item.rarity),
+		ZIndex = 2,
+		Parent = picture,
+	}, 2)
+	if gradientColors then
+		local gradient = new("UIGradient", { Color = gradientColors, Parent = label })
+		CollectionService:AddTag(gradient, "AnimatedGradient") -- slides (client GradientAnimator)
+	end
+	return label
 end
 
 return Window
