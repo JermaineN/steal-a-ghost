@@ -28,7 +28,8 @@ CosmeticConfig.Cosmetics = {
 	{ id = "aura_purple",     kind = "aura",      name = "Purple Flames",   description = "Spooky flames around you",  rarity = "Epic",      currency = "gems",  price = 750,  icon = "🔥" },
 	{ id = "aura_golden",     kind = "aura",      name = "Golden Sparkles", description = "Glitter wherever you go",   rarity = "Legendary", currency = "robux", passId = 0,   icon = "✨" },
 	{ id = "pet_pumpkin",     kind = "pet",       name = "Mini Pumpkin",    description = "Follows you around", rarity = "Legendary", currency = "gems", price = 1000, icon = "🎃" },
-	{ id = "pet_bat",         kind = "pet",       name = "Bat Buddy",       description = "A little bat friend",       rarity = "Mythic",    currency = "robux", passId = 0,   icon = "🦇" },
+	-- Looks like a ghost you've found, picked with "Equip as pet" in the Index (Wisp until then).
+	{ id = "pet_ghost",       kind = "pet",       name = "Ghost Buddy",     description = "Any ghost you've found",    rarity = "Mythic",    currency = "robux", passId = 0,   icon = "👻" },
 	{ id = "tomb_gold",       kind = "tombstone", name = "Gold Tombstones", description = "Gold graves at your base", rarity = "Legendary", currency = "gems", price = 1500, icon = "🏆" },
 	{ id = "flowers_lily",    kind = "flowers",   name = "Ghost Lilies",    description = "Glowing flowers at your base", rarity = "Rare", currency = "gems", price = 400,  icon = "🌸" },
 }
