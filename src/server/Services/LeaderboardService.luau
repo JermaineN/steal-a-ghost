@@ -187,7 +187,8 @@ local function buildBoard(parent: Instance, stat: Stat, cframe: CFrame): Board
 	}, 1.5)
 
 	model.Parent = parent
-	local ok, store = pcall(DataStoreService.GetOrderedDataStore, DataStoreService, "Leaderboard_" .. stat.key)
+	local ok, store =
+		pcall(DataStoreService.GetOrderedDataStore, DataStoreService, GameConfig.LeaderboardStorePrefix .. stat.key)
 	return { stat = stat, store = if ok then store else nil, rows = rows, footer = footer }
 end
 
