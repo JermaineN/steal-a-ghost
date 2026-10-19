@@ -146,7 +146,7 @@ function StoreService.start()
 		end
 		givePass(player, pass)
 		Notify.send(player, `You got {pass.name}! Thank you!`, "success")
-		TitleService.passBought(player)
+		TitleService.unlockBought(player)
 	end)
 	task.spawn(function()
 		while true do

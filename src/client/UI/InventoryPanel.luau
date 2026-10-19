@@ -2,13 +2,16 @@
 -- item you own (bought in the Shop), with how many you have, and an Equip button that puts it
 -- in the hotbar (max Upgrades.maxEquipped; equipped cards get an "EQUIPPED" ribbon). The
 -- server marks owned items with "Item_<itemId>" = count and the equipped ones with "Equipped".
--- Two tabs under the header: Items, and Titles (TitleConfig, owned ones are "Title_<id>"
+-- Three tabs under the header: Items, Cosmetics (CosmeticConfig auras, pets and base decor you
+-- own, "Cosmetic_<id>"; Wear puts one of each kind on, the "Wear_<kind>" attribute), and Titles
+-- (TitleConfig, owned ones are "Title_<id>"
 -- attributes): Wear shows that title above your head (one at a time, the "Title" attribute),
 -- Take off removes it. Rebirth titles (TitleConfig `rebirths`) show even before you own them:
 -- locked, with a bar for how close you are (rebirths done plus your cash toward the next one).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local CosmeticConfig = require(ReplicatedStorage.Shared.Config.CosmeticConfig)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
 local TitleConfig = require(ReplicatedStorage.Shared.Config.TitleConfig)
@@ -51,11 +54,19 @@ type TitleCard = {
 	barText: TextLabel,
 }
 local titleCards: { [string]: TitleCard } = {}
+type CosmeticCard = {
+	card: Frame,
+	stroke: UIStroke,
+	ribbon: Frame,
+	wear: TextButton,
+	wearLabel: TextLabel,
+}
+local cosmeticCards: { [string]: CosmeticCard } = {}
 local emptyLabel: TextLabel
 local slotsLabel: TextLabel
 
 local TAB_HEIGHT = 36
-local TABS = { "Items", "Titles" }
+local TABS = { "Items", "Cosmetics", "Titles" }
 local currentTab = "Items"
 local tabButtons: { [string]: TextButton } = {}
 
@@ -105,13 +116,28 @@ local function refresh()
 		entry.equip.Visible = item.tool == true -- only tools go in the hotbar
 		any = any or (showItems and count > 0)
 	end
+	local showCosmetics = currentTab == "Cosmetics"
+	for _, cosmetic in CosmeticConfig.Cosmetics do
+		local entry = cosmeticCards[cosmetic.id]
+		if entry then
+			local isOwned = CosmeticConfig.owns(player, cosmetic.id)
+			local isWorn = player:GetAttribute("Wear_" .. cosmetic.kind) == cosmetic.id
+			entry.card.Visible = showCosmetics and isOwned
+			entry.ribbon.Visible = isWorn
+			entry.stroke.Thickness = if isWorn then 4 else 2.5
+			entry.wearLabel.Text = if isWorn then "Take off" else "Wear"
+			Window.paintButton(entry.wear, if isWorn then LOCKED_GREY else cosmetic.color)
+			any = any or (showCosmetics and isOwned)
+		end
+	end
+	local showTitles = currentTab == "Titles"
 	local wearing = player:GetAttribute("Title")
 	for order, title in TitleConfig.Titles do
 		local entry = titleCards[title.id]
 		local isOwned = player:GetAttribute("Title_" .. title.id) == true
 		local isWorn = wearing == title.id
 		local locked = not isOwned and title.rebirths ~= nil
-		entry.card.Visible = not showItems and (isOwned or locked)
+		entry.card.Visible = showTitles and (isOwned or locked)
 		-- Owned titles first, then the locked ones.
 		entry.card.LayoutOrder = #ItemConfig.Items + order + (if locked then 100 else 0)
 		entry.ribbon.Visible = isWorn
@@ -130,10 +156,10 @@ local function refresh()
 			entry.barFill.Size = UDim2.fromScale(rebirthProgress(title.rebirths), 1)
 			entry.barText.Text = `{math.min(stat("Rebirths"), title.rebirths)}/{title.rebirths} rebirths`
 		end
-		any = any or (not showItems and (isOwned or locked))
+		any = any or (showTitles and (isOwned or locked))
 	end
 	emptyLabel.Visible = not any
-	emptyLabel.Text = if showItems then "Nothing here yet. Visit the Shop!" else "No titles yet."
+	emptyLabel.Text = if showTitles then "No titles yet." else "Nothing here yet. Visit the Shop!"
 	slotsLabel.Visible = showItems
 	for name, button in tabButtons do
 		Window.paintButton(button, if name == currentTab then INVENTORY_ORANGE else LOCKED_GREY)
@@ -393,6 +419,59 @@ local function buildTitleCard(title, order: number, parent: Instance)
 	}
 end
 
+-- A cosmetic's card (auras, pets, base decor; bought titles are in the Titles tab).
+local function buildCosmeticCard(cosmetic, order: number, parent: Instance)
+	local card = new("Frame", {
+		Name = cosmetic.id,
+		LayoutOrder = order,
+		BackgroundColor3 = WHITE,
+		Visible = false,
+		Parent = parent,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0.1, 0), Parent = card })
+	new("UIGradient", {
+		Rotation = 90,
+		Color = ColorSequence.new(cosmetic.color:Lerp(Window.PANEL_DARK, 0.6), Window.PANEL_DARK),
+		Parent = card,
+	})
+	local stroke = new("UIStroke", { Color = cosmetic.color, Thickness = 2.5, Parent = card })
+	local picture = Window.iconPicture(card, cosmetic.color, cosmetic.icon)
+	Window.rarityLabel(picture, cosmetic)
+	Window.text({
+		Position = UDim2.fromOffset(8, 110),
+		Size = UDim2.new(1, -16, 0, 22),
+		TextColor3 = WHITE,
+		Text = cosmetic.name,
+		Parent = card,
+	})
+	Window.text({
+		Position = UDim2.fromOffset(8, 133),
+		Size = UDim2.new(1, -16, 0, 16),
+		TextColor3 = Color3.fromRGB(205, 190, 230),
+		Text = CosmeticConfig.kindName[cosmetic.kind],
+		Parent = card,
+	})
+	local ribbon = ribbonOn(card, "WEARING", cosmetic.color)
+	local wear, wearLabel = Window.button({
+		Name = "Wear",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 160),
+		Size = UDim2.new(1, -24, 0, 34),
+		Parent = card,
+	}, cosmetic.color)
+	wear.Activated:Connect(function()
+		local isWorn = player:GetAttribute("Wear_" .. cosmetic.kind) == cosmetic.id
+		Remotes.WearCosmetic:FireServer(cosmetic.kind, if isWorn then "" else cosmetic.id)
+	end)
+	cosmeticCards[cosmetic.id] = {
+		card = card,
+		stroke = stroke,
+		ribbon = ribbon,
+		wear = wear,
+		wearLabel = wearLabel,
+	}
+end
+
 function InventoryPanel.isOpen(): boolean
 	return panel ~= nil and panel.isOpen()
 end
@@ -447,8 +526,13 @@ function InventoryPanel.start()
 	for order, item in ItemConfig.Items do
 		buildCard(item, order, grid)
 	end
+	for order, cosmetic in CosmeticConfig.Cosmetics do
+		if cosmetic.kind ~= "title" then
+			buildCosmeticCard(cosmetic, #ItemConfig.Items + order, grid)
+		end
+	end
 	for order, title in TitleConfig.Titles do
-		buildTitleCard(title, #ItemConfig.Items + order, grid)
+		buildTitleCard(title, #ItemConfig.Items + #CosmeticConfig.Cosmetics + order, grid)
 	end
 	emptyLabel = Window.text({
 		AnchorPoint = Vector2.new(0.5, 0.5),
@@ -466,6 +550,8 @@ function InventoryPanel.start()
 			or string.match(attribute, "^Title")
 			or attribute == "Equipped"
 			or attribute == "Pass_extra_slot"
+			or string.match(attribute, "^Cosmetic_")
+			or string.match(attribute, "^Wear_")
 		then
 			refresh()
 		end

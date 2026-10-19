@@ -283,6 +283,41 @@ function Window.itemPicture(parent: GuiObject, item, size: UDim2, position: UDim
 	return frame
 end
 
+-- A card's picture for things that aren't items (boosters, passes, cosmetics): an image, or a
+-- big emoji until there is one, on a rounded square in `color`.
+function Window.iconPicture(parent: GuiObject, color: Color3, icon: string?, image: string?): Frame
+	local frame = new("Frame", {
+		Position = UDim2.fromOffset(27, 10),
+		Size = UDim2.fromOffset(96, 96),
+		BackgroundColor3 = color:Lerp(PANEL_DARK, 0.45),
+		Parent = parent,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0.18, 0), Parent = frame })
+	new("UIStroke", { Color = color, Thickness = 2, Parent = frame })
+	if image then
+		new("ImageLabel", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromScale(0.8, 0.8),
+			BackgroundTransparency = 1,
+			Image = image,
+			ScaleType = Enum.ScaleType.Fit,
+			Parent = frame,
+		})
+	else
+		new("TextLabel", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromScale(0.75, 0.75),
+			BackgroundTransparency = 1,
+			TextScaled = true,
+			Text = icon or "?",
+			Parent = frame,
+		})
+	end
+	return frame
+end
+
 -- The item's rarity word across the top edge of its picture, in the rarity's colour (Legendary
 -- and rarer shimmer, like the ghosts' rarity words).
 function Window.rarityLabel(picture: GuiObject, item): TextLabel

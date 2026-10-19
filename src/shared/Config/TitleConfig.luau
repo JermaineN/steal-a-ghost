@@ -10,6 +10,7 @@
 --   rebirths       earned by reaching this many rebirths (TitleService). These titles show in
 --                  the Inventory even before you own them, locked, with a progress bar.
 --   gamePass       owned with this game pass (a StoreConfig.Passes id)
+--   cosmetic       owned by buying this cosmetic in the Shop (a CosmeticConfig id)
 local Theme = require(script.Parent.Parent.Theme)
 
 local TitleConfig = {}
@@ -59,6 +60,28 @@ TitleConfig.Titles = {
 		gradient = gradient(Color3.fromRGB(255, 170, 30), Color3.fromRGB(255, 240, 130), Color3.fromRGB(255, 170, 30)),
 		shine = true,
 		gamePass = "vip",
+	},
+	-- Bought in the Shop's Cosmetics tab (CosmeticConfig).
+	{
+		id = "phantom",
+		text = "PHANTOM",
+		color = Color3.fromRGB(150, 230, 255),
+		-- Pale ghostly blue fading to white and back.
+		gradient = gradient(
+			Color3.fromRGB(120, 210, 255),
+			Color3.fromRGB(235, 250, 255),
+			Color3.fromRGB(120, 210, 255)
+		),
+		cosmetic = "title_phantom",
+	},
+	{
+		id = "nightmare",
+		text = "NIGHTMARE",
+		color = Color3.fromRGB(220, 30, 50),
+		-- Blood red into near-black, shiny.
+		gradient = gradient(Color3.fromRGB(230, 30, 45), Color3.fromRGB(70, 0, 10), Color3.fromRGB(230, 30, 45)),
+		shine = true,
+		cosmetic = "title_nightmare",
 	},
 	-- Rebirth titles: the first two in one plain colour, the last in shiny silver (like Eerie).
 	{

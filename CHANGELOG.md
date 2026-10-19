@@ -53,6 +53,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 41 | Mythic text shiny red; Secret and THE GOAT shiny dark grey, looping | #69 |
 | 42 | Nuke (the Spin Wheel's Mythic prize) | #70 |
 | 43 | Shop tabs: Items, Boosters, Currency (Robux gems), Gamepasses | #72 |
+| 44 | Cosmetics: titles, auras, pets, tombstones and flowers (Shop and Inventory tabs) | (not merged yet) |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1176,3 +1177,40 @@ server: the hotbar got a third item slot, a bought Wisp flew home at ~2x speed, 
 real Robux purchases (need the IDs; then try them in Studio, where purchases are free test
 purchases), the VIP title unlocking on purchase, boosters carrying over a rejoin (saving only
 works in the live game), and Server Luck's announcement to other players (2-player test).
+
+## 44. Cosmetics: titles, auras, pets, tombstones, flowers
+
+A new **Cosmetics** tab in the Shop (between Boosters and Currency) and in the Inventory (between
+Items and Titles). Everyone sees them; they don't change the game.
+
+| Cosmetic | Kind | Price |
+|---|---|---|
+| PHANTOM title (pale ghostly blue) | Title | 500 gems |
+| NIGHTMARE title (blood red, shiny) | Title | Robux |
+| Purple Flames | Aura (flames around your feet) | 750 gems |
+| Golden Sparkles | Aura (gold glitter around you) | Robux |
+| Mini Pumpkin | Pet (glowing jack-o'-lantern that floats beside you) | 1,000 gems |
+| Bat Buddy | Pet (purple bat with red eyes) | Robux |
+| Gold Tombstones | Your base's tombstones turn gold | 1,500 gems |
+| Ghost Lilies | Glowing flowers beside your graves | 400 gems |
+
+Buying one puts it on straight away; the Inventory's Cosmetics tab has Wear / Take off (one of
+each kind at a time). Bought titles go in the Titles tab like the others. The aura and pet hide
+while you're invisible (Smoke Bomb); your base goes back to normal when you leave.
+
+**Before the Robux ones work:** make a **game pass** for each (Creator Hub → Monetization →
+Passes) and paste its ID into `passId` in `src/shared/Config/CosmeticConfig.luau`. Until then
+they say "Coming soon".
+
+**How it works:** `CosmeticConfig` lists them (one row each, so more is easy), `CosmeticModels`
+builds the looks in code, `CosmeticService` handles buying (`BuyCosmetic`), wearing
+(`WearCosmetic`), saving (`cosmetics`, `worn`) and putting them on characters and bases. The two
+titles are `TitleConfig` rows with `cosmetic = <id>`. Card pictures are emoji for now.
+
+**Tested (solo, Studio):** bought all five gem cosmetics (right gems taken; the Robux one and a
+made-up id refused), saw each one (flames, pumpkin, gold tombstones, lilies, PHANTOM title), took
+them off and put them back, a not-owned or wrong-kind cosmetic is refused, the aura and pet
+vanish during the Smoke Bomb and come back. Gave myself the two Robux ones on the server: the bat
+and the gold sparkles show. Both Shop and Inventory tabs look right. **Not tested:** real game pass
+purchases (need IDs), cosmetics coming back after rejoining (saving only works live), what other
+players see (2-player test) and the base resetting when its owner leaves.
