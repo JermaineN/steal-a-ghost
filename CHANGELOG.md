@@ -69,7 +69,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 57 | Flat colours for Legendary-and-below titles | #85 |
 | 58 | Codes: redeem codes for gems, cash or spins (side menu → Codes) | #86 |
 | 59 | Spin "Get more", 2x Money badge, VIP and Fast Flight buffs | #87 |
-| 60 | Seven new ghosts: Spirit, Lost Soul, Ghoul, Ghast, Yokai, Onryo, Oni | — |
+| 60 | Seven new ghosts: Spirit, Lost Soul, Ghoul, Ghast, Yokai, Onryo, Oni | #88 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
