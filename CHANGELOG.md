@@ -874,3 +874,29 @@ takes an optional `immunitySeconds`; `playBonk` plays a sound from `startAt` for
 - The user tested the 3x-distance version themselves.
 
 **Not tested:** the final 11x push and 1.9 s immunity in a 2-player test.
+
+## 31. Speed upgrades, and upgrades reset on rebirth
+
+Two new cards in the Upgrades window (now titled just **Upgrades**, four cards in a row):
+
+| Upgrade | Per level | Max (5 levels) | Costs |
+|---|---|---|---|
+| **Speed** | +20% walk speed | x2 (24.5 → 49) | $3K · $15K · $60K · $250K · $1M |
+| **Carry Speed** | +6% speed while carrying a stolen ghost | x1.3 (15.3 → 19.9) | $5K · $25K · $100K · $400K · $1.5M |
+
+- A bought level applies straight away (and on every respawn).
+- **All upgrades now reset on rebirth**, including More Graves and Longer Lock (they used to be
+  kept). The Rebirth window's "You lose" line now says so.
+
+**How it works:** `Upgrades.walkSpeed(player)` / `Upgrades.carrySpeed(player)` (Shared) read the
+`Upgrade_speed` / `Upgrade_carry` attributes; everything that sets or restores walk speed
+(`init.server.luau` on spawn, StealService, CageService, GravityService) uses them.
+UpgradeService re-applies the speed when either level changes (skipped while caged or in your
+own Gravity well; those restore it when they end). `DataService.applyRebirth` clears
+`upgrades`. Config: `SpeedUpgradeCosts`, `SpeedUpgradeBonus`, `CarrySpeedUpgradeCosts`,
+`CarrySpeedUpgradeBonus` (GameConfig).
+
+**Tested (solo, with test cash):** buying Speed went 24.5 → 29.4 → … → 49 and stopped at
+level 5; Carry Speed maxed at level 5 (19.89 by the formula); the window showed all four cards;
+after a rebirth every level was 0 and speed was back to 24.5, also after respawning. No errors.
+**Not tested:** the carry speed while actually stealing (needs a 2-player test).

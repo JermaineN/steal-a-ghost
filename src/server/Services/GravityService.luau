@@ -12,6 +12,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local DataService = require(script.Parent.DataService)
 local RagdollService = require(script.Parent.RagdollService)
@@ -259,7 +260,7 @@ function GravityService.tryUse(player: Player, tool: Tool)
 		player:SetAttribute("GravityUntil", nil)
 		-- A cage holds them still and gives back normal speed itself when it opens (CageService).
 		if humanoid.Parent and not player:GetAttribute("Carrying") and not player:GetAttribute("Caged") then
-			humanoid.WalkSpeed = GameConfig.WalkSpeed
+			humanoid.WalkSpeed = Upgrades.walkSpeed(player)
 		end
 		fadeOut()
 	end)

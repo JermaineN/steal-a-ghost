@@ -10,6 +10,7 @@ local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local BountyService = require(script.Parent.BountyService)
 local DataService = require(script.Parent.DataService)
@@ -24,7 +25,6 @@ type Carry = {
 	model: Model,
 	welds: { WeldConstraint },
 	humanoid: Humanoid,
-	originalSpeed: number,
 	originalJumpPower: number,
 	originalJumpHeight: number,
 	diedConnection: RBXScriptConnection,
@@ -109,7 +109,7 @@ local function endCarry(thief: Player): Carry?
 	carry.diedConnection:Disconnect()
 	carry.toolConnection:Disconnect()
 	if carry.humanoid.Parent then
-		carry.humanoid.WalkSpeed = carry.originalSpeed
+		carry.humanoid.WalkSpeed = Upgrades.walkSpeed(thief)
 		carry.humanoid.JumpPower = carry.originalJumpPower
 		carry.humanoid.JumpHeight = carry.originalJumpHeight
 	end
@@ -225,7 +225,6 @@ function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
 		model = entry.model,
 		welds = attach(entry.model, root),
 		humanoid = humanoid,
-		originalSpeed = humanoid.WalkSpeed,
 		originalJumpPower = humanoid.JumpPower,
 		originalJumpHeight = humanoid.JumpHeight,
 		diedConnection = humanoid.Died:Connect(function()
@@ -242,7 +241,7 @@ function StealService.tryStartSteal(thief: Player, owner: Player, slot: number)
 	}
 	carries[thief] = carry
 	setRobbed(owner, 1)
-	humanoid.WalkSpeed = GameConfig.CarryWalkSpeed
+	humanoid.WalkSpeed = Upgrades.carrySpeed(thief)
 	-- Jump strength 0 = no jumping (whichever of the two settings the character uses).
 	humanoid.JumpPower = 0
 	humanoid.JumpHeight = 0

@@ -1,5 +1,5 @@
 -- The Upgrades window, opened from the Upgrades signpost at your base's entrance (the server
--- sends OpenUpgrades). Built like the other windows, in gold: one card per base upgrade (see
+-- sends OpenUpgrades). Built like the other windows, in gold: one card per upgrade (see
 -- Shared.Upgrades) with pips for its level, what it does now and next, and a Buy button with the
 -- price. The server checks every purchase (UpgradeService); levels arrive as "Upgrade_<id>"
 -- attributes.
@@ -27,7 +27,7 @@ local panel: Window.Window
 local refreshers: { () -> () } = {}
 
 local function level(kindId: string): number
-	return player:GetAttribute("Upgrade_" .. kindId) or 0
+	return Upgrades.level(player, kindId)
 end
 
 local function cash(): number
@@ -169,10 +169,10 @@ end
 function UpgradePanel.start()
 	panel = Window.create({
 		name = "Upgrades",
-		title = "Base Upgrades",
+		title = "Upgrades",
 		icon = GameConfig.MenuIcons.Shop,
 		accent = GOLD,
-		width = 2 * CARD_WIDTH + 80,
+		width = #Upgrades.Kinds * (CARD_WIDTH + 20) + 40,
 		height = Window.HEADER_HEIGHT + CARD_HEIGHT + 30,
 		onOpen = refreshAll,
 	})
