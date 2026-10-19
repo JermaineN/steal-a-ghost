@@ -288,9 +288,9 @@ return {
 	-- Upgrades (the Upgrades signpost at each base's entrance). All reset to 0 on rebirth.
 	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.
 	StartingGraves = 6,
-	GraveUpgradeCosts = { 10000, 50000, 1000000, 5000000 }, -- graves 7, 8, 9, 10
+	GraveUpgradeCosts = { 10000, 250000, 1000000, 5000000 }, -- graves 7, 8, 9, 10
 	-- Longer Lock: each upgrade adds LockUpgradeSeconds to LockDurationSeconds.
-	LockUpgradeCosts = { 20000, 100000, 5000000 },
+	LockUpgradeCosts = { 100000, 1000000, 5000000 },
 	LockUpgradeSeconds = 15,
 	-- Speed: each upgrade adds SpeedUpgradeBonus × WalkSpeed (5 levels = x2 speed).
 	SpeedUpgradeCosts = { 6000, 30000, 120000, 500000, 2000000 },

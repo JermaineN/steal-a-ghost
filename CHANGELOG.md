@@ -903,12 +903,12 @@ after a rebirth every level was 0 and speed was back to 24.5, also after respawn
 
 ## 32. Upgrade prices doubled
 
-Every upgrade costs twice as much:
+Every upgrade costs twice as much, then More Graves level 2 and the first two Longer Lock levels were raised further:
 
 | Upgrade | Costs |
 |---|---|
-| More Graves | $10K · $50K · $1M · $5M |
-| Longer Lock | $20K · $100K · $5M |
+| More Graves | $10K · $250K · $1M · $5M |
+| Longer Lock | $100K · $1M · $5M |
 | Speed | $6K · $30K · $120K · $500K · $2M |
 | Carry Speed | $10K · $50K · $200K · $800K · $3M |
 
