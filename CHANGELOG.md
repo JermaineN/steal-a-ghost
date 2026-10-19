@@ -61,6 +61,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 49 | Game passes created and on sale (VIP, 2x Money, Auto Collect, cosmetics…) | #78 |
 | 50 | Pictures for all eight game passes | #79 |
 | 51 | Flashier Golden Sparkles with a chime loop, Smoke Bomb hides effects, rarity sorting | #80 |
+| 52 | The Secret ghost is now the Grim Reaper | #81 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1378,3 +1379,23 @@ first; everything else keeps its config order.
 looping sound; with the Smoke Bomb, the aura, its sound and the pet are gone while invisible and
 come back after; the Shop and Inventory list Mythic → Legendary → Epic → Rare.
 **Not tested:** whether the sound volume feels right to other players (needs a 2-player test).
+
+## 52. The Secret ghost is now the Grim Reaper
+
+`secret_1` (id unchanged, so saves are safe) is renamed **Grim Reaper** and gets a real look
+instead of the placeholder ball: a menacing cartoon reaper in an all-black hood with a grinning
+skull and glowing eyes, skeletal hands, a scythe and a lantern on a strap, its robe trailing
+into wispy tendrils. `GhostModels.secret_1` makes him solid, about as tall as the Spectre King
+(height scale 1.28), floating just above the ground, with a cold pale glow and pale "lost soul"
+wisps rising off him; the Secret rarity aura adds its smoke and stars on top.
+
+The mesh is AI-generated in Studio (picked from three candidates) and lives in
+`ServerStorage.GhostMeshes.secret_1`, so it's **only in the place file: save and publish**.
+A first version built in Blender from a script (`scripts/blender/grim_reaper.py`, run with
+`E:\Apps\Blender\blender.exe -b --python scripts/blender/grim_reaper.py -- assets/grim_reaper`)
+was too plain next to the other ghosts; it's kept as `ServerStorage.GhostMeshBackups.secret_1_blender`.
+
+**Tested:** in a Studio playtest (with boosted spawns), the Grim Reaper spawns on the walkway
+with his name, Secret label, price and income, faces the way he's travelling like the other
+ghosts, and has his glow, particles and the Secret aura; size checked next to the King.
+**Not tested:** buying him and how he looks on a grave in a base.
