@@ -33,11 +33,11 @@ local function expiryTime(row): number?
 	return DateTime.fromUniversalTime(tonumber(year), tonumber(month), tonumber(day), 23, 59, 59).UnixTimestamp
 end
 
--- "+100 gems, +$5.00K and +1 spin!"
-local function rewardText(row): string
+-- "+100 gems, +$5.00K and +1 spin!" (`gems` is what was actually given, with any VIP bonus)
+local function rewardText(row, gems: number?): string
 	local parts = {}
-	if row.gems then
-		table.insert(parts, `+{row.gems} gems`)
+	if gems then
+		table.insert(parts, `+{gems} gems`)
 	end
 	if row.cash then
 		table.insert(parts, "+$" .. Format.cash(row.cash))
@@ -85,16 +85,14 @@ local function redeem(player: Player, text: any)
 	end
 
 	DataService.markCodeRedeemed(player, code)
-	if row.gems then
-		DataService.addGems(player, row.gems)
-	end
+	local gems = if row.gems then DataService.earnGems(player, row.gems) else nil
 	if row.cash then
 		DataService.addCash(player, row.cash)
 	end
 	if row.spins then
 		DataService.addSpins(player, row.spins)
 	end
-	reply(player, true, rewardText(row))
+	reply(player, true, rewardText(row, gems))
 end
 
 function CodeService.start()

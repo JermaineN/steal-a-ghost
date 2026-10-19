@@ -20,10 +20,8 @@ local function claim(player: Player, ghostId: string): number
 	if not def or not DataService.canClaimIndex(player, ghostId) then
 		return 0
 	end
-	local gems = GhostConfig.Rarities[def.rarity].indexGems
 	DataService.markIndexClaimed(player, ghostId)
-	DataService.addGems(player, gems)
-	return gems
+	return DataService.earnGems(player, GhostConfig.Rarities[def.rarity].indexGems)
 end
 
 -- Claims one ghost's reward for one mutation. Returns the gems given (0 if it can't be claimed).
@@ -37,8 +35,7 @@ local function claimMutation(player: Player, ghostId: string, mutationId: string
 		return 0
 	end
 	DataService.markIndexMutationClaimed(player, ghostId, mutationId)
-	DataService.addGems(player, mutation.indexGems)
-	return mutation.indexGems
+	return DataService.earnGems(player, mutation.indexGems)
 end
 
 -- Claims all of one ghost's mutation rewards.

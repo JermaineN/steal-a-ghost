@@ -68,6 +68,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 56 | Title rarities and milestone titles | #84 |
 | 57 | Flat colours for Legendary-and-below titles | #85 |
 | 58 | Codes: redeem codes for gems, cash or spins (side menu → Codes) | #86 |
+| 59 | Spin "Get more", 2x Money badge, VIP and Fast Flight buffs | #87 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1549,3 +1550,35 @@ two codes in a row got "Slow down!" for the second. Checked the expiry date math
 ServerScriptService, and the side menu clear of the gems counter. No errors. **Not tested:** an
 expired code through the window (no expired code exists), and saving which codes were used (only
 in the live game; DataStores are off in Studio).
+
+## 59. Spin "Get more", 2x Money badge, VIP and Fast Flight buffs
+
+**Spin Wheel "Get more":** with no spins left, the Spin Wheel's button now says **Get more** (gold)
+instead of the countdown (the countdown is still in the line above the wheel). Clicking it closes
+the wheel and opens the Shop on the Boosters tab, scrolled to the 1/2/3 Spins cards
+(`ShopPanel.openTab(tab, cardName)`).
+
+**2x Money badge:** owners of the 2x Money game pass see a gold, tilted **x2** right beside their
+cash number (bottom left). It follows the number as it grows, and the floating "+$X" starts past it.
+
+**VIP pass:** +15% income (was +10%), **+15% on gems earned by playing** (Index rewards, daily
+reward, rebirth, codes, Spin Wheel gem prizes, tutorial; not Robux gem packs), and **2 spins every
+10 minutes online** instead of 1. The Shop card says "Title, +15% cash & gems, 2 spins/10 min".
+Tuned in GameConfig (`VipIncomeBonus`, `VipGemBonus`, `VipOnlineSpins`). Earned gems now go
+through `DataService.earnGems`, which adds the bonus and returns the real amount, so messages
+like "Day 1 reward: +12 gems!" show what you actually got.
+
+**Fast Flight pass:** bought ghosts fly home **3x** as fast (was 2x) and leave a white **wind
+trail** (a faint streak plus two thin lines off the sides) while flying. The trail comes off
+just before the ghost lands on its grave. When someone outbids you, the ghost is rebuilt for the
+new buyer, so it flies at their speed: fast with a trail if they own Fast Flight, normal and
+without one if not. Outbidding back works the same way.
+
+**Tested** in Studio playtests: with no spins the button said "Get more" and clicking it opened
+the Shop on Boosters with the spin cards in view. With `Pass_double_money` set the x2 badge
+appeared beside the cash, and hid when removed. With `Pass_vip` set, the online spin timer gave
+2 spins and the daily reward of 10 gems gave 12; the VIP card text fits. With `Pass_fast_flight`
+set, a bought Wisp flew with all three trails, landed in about 3.5 s, and had no trail after
+landing (screenshot taken mid-flight). No errors. **Not tested:** the outbid switching (needs a
+2-player test: buy with the pass, get outbid by a player without it, then outbid back), and
+the +15% income in play (it's a config number in the existing VIP income code).

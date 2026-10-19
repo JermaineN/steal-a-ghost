@@ -13,6 +13,7 @@ local DailyReward = require(ReplicatedStorage.Shared.DailyReward)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local StoreConfig = require(ReplicatedStorage.Shared.Config.StoreConfig)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local DataService = require(script.Parent.DataService)
 
@@ -68,15 +69,17 @@ function SpinService.addMoneyBoost(player: Player, seconds: number)
 	DataService.setMoneyBoostLeft(player, untilTime - now())
 end
 
-local function payOut(player: Player, index: number)
+-- Pays the prize and returns its name for the message (gems include any VIP bonus).
+local function payOut(player: Player, index: number): string
 	local prize = GameConfig.SpinPrizes[index]
 	if prize.kind == "gems" then
-		DataService.addGems(player, prize.amount)
+		return DataService.earnGems(player, prize.amount) .. " gems"
 	elseif prize.kind == "boost" then
 		SpinService.addMoneyBoost(player, prize.seconds)
 	else
 		DataService.addItem(player, prize.itemId, 1)
 	end
+	return SpinService.prizeName(prize)
 end
 
 local function trySpin(player: Player)
@@ -92,8 +95,7 @@ local function trySpin(player: Player)
 			return
 		end
 		pending[player] = nil
-		payOut(player, index)
-		Notify.send(player, "You won " .. SpinService.prizeName(GameConfig.SpinPrizes[index]) .. "!", "success")
+		Notify.send(player, "You won " .. payOut(player, index) .. "!", "success")
 	end)
 end
 
@@ -117,8 +119,15 @@ local function tick()
 		local nextAt = player:GetAttribute("NextSpinAt")
 		if nextAt and time >= nextAt then
 			player:SetAttribute("NextSpinAt", nextAt + GameConfig.SpinOnlineSeconds)
-			DataService.addSpins(player, 1)
-			Notify.send(player, `You earned a spin for playing {minutesText(GameConfig.SpinOnlineSeconds)}!`, "success")
+			-- VIP pass owners get more each time.
+			local count = if StoreConfig.ownsPass(player, "vip") then GameConfig.VipOnlineSpins else 1
+			DataService.addSpins(player, count)
+			local spinsText = if count == 1 then "a spin" else `{count} spins`
+			Notify.send(
+				player,
+				`You earned {spinsText} for playing {minutesText(GameConfig.SpinOnlineSeconds)}!`,
+				"success"
+			)
 		end
 		checkDaily(player)
 

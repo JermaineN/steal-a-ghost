@@ -8,6 +8,7 @@ local TweenService = game:GetService("TweenService")
 local Format = require(ReplicatedStorage.Shared.Format)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local StoreConfig = require(ReplicatedStorage.Shared.Config.StoreConfig)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local Mobile = require(script.Parent.Mobile)
 
@@ -97,6 +98,19 @@ local function buildCashDisplay(gui: ScreenGui)
 	})
 	outline(cashLabel, 4)
 
+	-- "x2" sticker just right of the cash number while you own the 2x Money pass.
+	local passBadge = text({
+		Name = "PassBadge",
+		AnchorPoint = Vector2.new(0, 0.5),
+		Size = UDim2.fromOffset(56, 40),
+		TextColor3 = BOOST_GOLD,
+		Text = "x" .. GameConfig.PassMoneyMultiplier,
+		Rotation = -10,
+		Visible = false,
+		Parent = display,
+	})
+	outline(passBadge, 3.5)
+
 	local incomeLabel = text({
 		Name = "Income",
 		Position = UDim2.fromOffset(2, 66),
@@ -137,18 +151,30 @@ local function buildCashDisplay(gui: ScreenGui)
 	-- Used to "pop" the row when gems come in.
 	local gemsPop = new("UIScale", { Parent = gemsRow })
 
-	return display, pop, cashLabel, incomeLabel, gemsRow, gemsLabel, gemsPop
+	-- Keeps the badge beside the number as it grows, and shows it only with the pass.
+	-- (TextBounds is in on-screen pixels, so undo the display's phone scale.)
+	local function updateBadge()
+		passBadge.Visible = StoreConfig.ownsPass(player, "double_money")
+		passBadge.Position = UDim2.fromOffset(cashLabel.TextBounds.X / Mobile.scale + 10, 32)
+	end
+	cashLabel:GetPropertyChangedSignal("TextBounds"):Connect(updateBadge)
+	player:GetAttributeChangedSignal("Pass_double_money"):Connect(updateBadge)
+	updateBadge()
+
+	return display, pop, cashLabel, incomeLabel, gemsRow, gemsLabel, gemsPop, passBadge
 end
 
 -- A "+$X" / "-$X" that floats up off the cash number and fades away.
-local function floatAmount(display: Frame, cashLabel: TextLabel, amount: number)
+local function floatAmount(display: Frame, cashLabel: TextLabel, passBadge: TextLabel, amount: number)
 	local gain = amount > 0
-	-- Starts just to the right of the cash number (clear of the gems above it) and drifts upward.
+	-- Starts just to the right of the cash number (and the "x2" badge, if shown), clear of the
+	-- gems above it, and drifts upward.
+	local badgeWidth = if passBadge.Visible then passBadge.Size.X.Offset + 4 else 0
 	local label = text({
 		AnchorPoint = Vector2.new(0, 0.5),
 		-- TextBounds and AbsoluteSize are on-screen pixels, so undo the display's phone scale.
 		Position = UDim2.fromOffset(
-			cashLabel.TextBounds.X / Mobile.scale + 14,
+			cashLabel.TextBounds.X / Mobile.scale + 14 + badgeWidth,
 			cashLabel.AbsoluteSize.Y / Mobile.scale / 2
 		),
 		Size = UDim2.fromOffset(200, 34),
@@ -372,7 +398,7 @@ function Hud.start()
 		Parent = player:WaitForChild("PlayerGui"),
 	})
 
-	local display, pop, cashLabel, incomeLabel, gemsRow, gemsLabel, gemsPop = buildCashDisplay(gui)
+	local display, pop, cashLabel, incomeLabel, gemsRow, gemsLabel, gemsPop, passBadge = buildCashDisplay(gui)
 	buildToasts(gui)
 
 	-- "Income: +$150/s", plus the friend boost in its own colour while friends are here.
@@ -449,7 +475,7 @@ function Hud.start()
 			-- Ignore the steady income ticks; only call out purchases, sales and other big changes.
 			local income = player:GetAttribute("IncomePerSecond") or 0
 			if math.abs(change) > income * 1.5 then
-				floatAmount(display, cashLabel, change)
+				floatAmount(display, cashLabel, passBadge, change)
 				-- A quick pop of the number.
 				pop.Scale = 1.12 * Mobile.scale
 				TweenService:Create(pop, TweenInfo.new(0.35, Enum.EasingStyle.Back), { Scale = Mobile.scale }):Play()

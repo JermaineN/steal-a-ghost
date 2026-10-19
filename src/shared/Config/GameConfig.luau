@@ -243,9 +243,12 @@ return {
 	LuckBoostMinRarity = "Epic",
 	SpeedBoostBonus = 0.3, -- Speed Boost: +30% walk speed (on top of the Speed upgrade)
 	PassMoneyMultiplier = 2, -- 2x Money pass: income × this, forever
-	VipIncomeBonus = 0.1, -- VIP pass: +10% income (added like the friend boost)
+	VipIncomeBonus = 0.15, -- VIP pass: +15% income (added like the friend boost)
+	VipGemBonus = 0.15, -- VIP pass: +15% on earned gems (not Robux gem packs)
+	VipOnlineSpins = 2, -- VIP pass: spins per SpinOnlineSeconds online (everyone else gets 1)
 	PassExtraSlots = 1, -- Extra Hotbar Slot pass: this many more equipped items
-	FastFlightMultiplier = 2, -- Fast Flight pass: bought ghosts fly home this many times as fast
+	FastFlightMultiplier = 3, -- Fast Flight pass: bought ghosts fly home this many times as fast
+	FastFlightTrailSeconds = 0.6, -- how long the wind trail behind a Fast Flight ghost lingers
 
 	-- Smoke Bomb (Shop item): click to vanish in a smoke cloud. You're invisible for
 	-- SmokeBombSeconds, or until you're knocked over, caged or die, then you reappear in another

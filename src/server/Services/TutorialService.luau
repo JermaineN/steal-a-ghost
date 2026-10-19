@@ -26,8 +26,8 @@ local function complete(player: Player)
 	end
 	DataService.setTutorialDone(player)
 	player:SetAttribute("TutorialDone", true)
-	DataService.addGems(player, GameConfig.TutorialGems)
-	Notify.send(player, `Tutorial complete! +{GameConfig.TutorialGems} gems`, "success")
+	local gems = DataService.earnGems(player, GameConfig.TutorialGems)
+	Notify.send(player, `Tutorial complete! +{gems} gems`, "success")
 end
 
 function TutorialService.start()
