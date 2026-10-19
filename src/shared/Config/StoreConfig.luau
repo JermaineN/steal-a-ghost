@@ -29,13 +29,14 @@ StoreConfig.Boosters = {
 	{ id = "spins_3", name = "3 Spins",      description = "Three spins of the Spin Wheel",  price = 150, spins = 3,         icon = "🎡", color = Color3.fromRGB(170, 90, 255) },
 }
 
--- Gem packs, bought with Robux (Developer Products). `bonus` is just the label on the card.
+-- Gem packs, bought with Robux (Developer Products). `bonus` is just the label on the card;
+-- `image` is the card picture (scripts/draw-gem-pack-icons.ps1, assets/pack-<id>.png).
 -- stylua: ignore
 StoreConfig.GemPacks = {
-	{ id = "gems_500",  gems = 500,  productId = 3720051141 },
-	{ id = "gems_1200", gems = 1200, productId = 3720051199, bonus = "+20% bonus" },
-	{ id = "gems_3000", gems = 3000, productId = 3720051271, bonus = "+50% bonus" },
-	{ id = "gems_8000", gems = 8000, productId = 3720051338, bonus = "BEST VALUE" },
+	{ id = "gems_500",  gems = 500,  productId = 3720051141, image = "rbxassetid://106097001519451" },
+	{ id = "gems_1200", gems = 1200, productId = 3720051199, image = "rbxassetid://94192856764747",  bonus = "+20% bonus" },
+	{ id = "gems_3000", gems = 3000, productId = 3720051271, image = "rbxassetid://134655089255052", bonus = "+50% bonus" },
+	{ id = "gems_8000", gems = 8000, productId = 3720051338, image = "rbxassetid://78918652852682",  bonus = "BEST VALUE" },
 }
 
 -- Game passes, bought once with Robux. Owning one sets the "Pass_<id>" player attribute.

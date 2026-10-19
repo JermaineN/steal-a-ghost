@@ -1636,3 +1636,26 @@ rebirths and max Speed (+60%); the WEARING ribbon shows over the rarity on THE G
 Seraph compared before/after on the walkway at night (its robe no longer washes out white). No
 errors. **Not tested:** a real rebirth (faked by setting Rebirths), the new cosmetic prices in
 the Shop (config numbers), and the Robux prices (not changed yet).
+
+## 62. Icons for the game passes and gem packs on the Creator Hub
+
+All twelve Robux items on the Creator Hub showed Roblox's default picture (a grey ticket for the
+eight game passes, a grey cube for the four gem packs). They now have the sticker-style pictures:
+the passes use the `assets/pass-<id>-hub.png` pictures from #50, and the gem packs have new ones,
+a bigger pile of gems for a bigger pack (one gem for 500, up to five for 8,000).
+These are the pictures players see in Roblox's purchase pop-up and on the game's Store page.
+Roblox checks every new picture first (moderation), so for a little while they can still show
+as a placeholder.
+
+The Shop's Currency cards in the game also use the new pile pictures instead of the plain gem
+(`image` on each `StoreConfig.GemPacks` row; ShopPanel falls back to `GameConfig.GemIcon`).
+`scripts/draw-gem-pack-icons.ps1` draws `assets/pack-<id>.png` (the card picture, transparent)
+and `assets/pack-<id>-hub.png` (512x512 on a blue glow, for the Creator Hub).
+
+How the Creator Hub pictures were set (for next time): the pictures were uploaded with Studio's
+`upload_image`, then on each pass's / product's Basic Settings page in the browser, the
+picture was put into the page's file box from Roblox's own copy and saved with Save Changes.
+
+**Tested:** Roblox's APIs show a new picture id on all twelve items; in a Studio playtest the
+Currency tab shows the four pile pictures. **Not tested:** how the pictures look once moderation
+finishes (check the purchase pop-up in the live game).
