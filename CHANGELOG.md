@@ -51,7 +51,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 39 | Phones: smaller HUD and buttons, Haunted Hour pill at the top | #67 |
 | 40 | Phones: base texts 20% smaller | #68 |
 | 41 | Mythic text shiny red; Secret and THE GOAT shiny dark grey, looping | #69 |
-| 42 | Nuke (the Spin Wheel's Mythic prize) | — |
+| 42 | Nuke (the Spin Wheel's Mythic prize) | #70 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1113,7 +1113,7 @@ them; THE GOAT above the head showed the new colours; measured the shine moving 
 (0.1 of the width every half second, wrapping round) on the title and the banner. Not tested:
 a Secret ghost's label on the walkway (no Secret ghost spawned; same gradient code path).
 
-## 42. Nuke: the Spin Wheel's Mythic prize
+## 42. Nuke: the Spin Wheel's Mythic prize (#70)
 
 The Spin Wheel's Mythic slice now gives the **Nuke** (not sold in the Shop): a remote control
 with a big red button, equipped from the Inventory like other items. Pressing it tells everyone
