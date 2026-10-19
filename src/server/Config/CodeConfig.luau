@@ -15,7 +15,7 @@
 -- that's already out: players who used it could use the new name again. Add a new row instead.
 return {
 	{ code = "SPOOKY", gems = 100 },
-	-- Examples:
+	{ code = "HALLOWEEN", gems = 500, cash = 10000, expires = "2026-11-01" },
+	-- Ready for later:
 	-- { code = "1KLIKES", gems = 250, spins = 1 },
-	-- { code = "HALLOWEEN", gems = 500, cash = 10000, expires = "2026-11-01" },
 }
