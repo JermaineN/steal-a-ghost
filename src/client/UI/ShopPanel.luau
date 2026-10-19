@@ -344,7 +344,7 @@ end
 local function buildGemPackCard(pack, order: number, parent: Instance)
 	local card = cardShell(`{Format.cash(pack.gems)} Gems`, "", Theme.GemBlue, order, parent)
 	card.Name = pack.id
-	local picture = Window.iconPicture(card, Theme.GemBlue, nil, GameConfig.GemIcon)
+	local picture = Window.iconPicture(card, Theme.GemBlue, nil, pack.image or GameConfig.GemIcon)
 	pictureBanner(picture, Theme.GemBlue).Text = if pack.bonus then string.upper(pack.bonus) else ""
 	showRobuxPrice(priceRow(card, "robux"), pack.productId, Enum.InfoType.Product)
 
