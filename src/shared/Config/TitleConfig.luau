@@ -4,8 +4,11 @@
 --   text           what it says (shown in capitals)
 --   rarity         a GhostConfig.Rarities name (Common ... Secret): sets its card's colour, like
 --                  the items' (`color` is filled in from it)
---   gradient       its colours (white text tinted by this gradient, sliding back and forth)
---   shine          true = a white glint sweeps across it now and then (looks reflective)
+--   gradient       its colours (white text tinted by this gradient, sliding back and forth).
+--                  Leave it out for one flat colour, the rarity's, with no animation (`flat`
+--                  is set below): the look for Legendary and below (Phantom is the exception).
+--   shine          true = a white glint sweeps across it now and then (looks reflective).
+--                  Mythic and rarer only.
 --   allowedUserIds players who always have it (special titles). Titles can also be earned in
 --                  game and saved (DataService.grantTitle).
 --   rebirths       earned by reaching this many rebirths (TitleService). These titles show in
@@ -73,7 +76,7 @@ TitleConfig.Titles = {
 		id = "phantom",
 		rarity = "Legendary",
 		text = "PHANTOM",
-		-- Pale ghostly blue fading to white and back.
+		-- Pale ghostly blue fading to white and back (the one Legendary title with a gradient).
 		gradient = gradient(
 			Color3.fromRGB(120, 210, 255),
 			Color3.fromRGB(235, 250, 255),
@@ -91,121 +94,84 @@ TitleConfig.Titles = {
 		cosmetic = "title_nightmare",
 	},
 	-- Milestone titles, Common up to Legendary: earned by doing something enough times (see
-	-- `milestone` above). Common ones are one plain colour, rarer ones get gradients, Legendary
-	-- ones shine.
+	-- `milestone` above).
 	{
 		id = "ghost_hunter",
 		rarity = "Common",
 		text = "GHOST HUNTER",
-		gradient = gradient(Color3.fromRGB(255, 140, 40), Color3.fromRGB(255, 140, 40)),
 		milestone = { stat = "ghostsBought", goal = 20 },
 	},
 	{
 		id = "pickpocket",
 		rarity = "Common",
 		text = "PICKPOCKET",
-		gradient = gradient(Color3.fromRGB(235, 228, 205), Color3.fromRGB(235, 228, 205)),
 		milestone = { stat = "steals", goal = 3 },
 	},
 	{
 		id = "collector",
 		rarity = "Uncommon",
 		text = "COLLECTOR",
-		gradient = gradient(Color3.fromRGB(140, 230, 90), Color3.fromRGB(140, 230, 90)),
 		milestone = { stat = "found", goal = 5 },
 	},
 	{
 		id = "ghost_hoarder",
 		rarity = "Uncommon",
 		text = "GHOST HOARDER",
-		-- Sickly green into a dull purple and back.
-		gradient = gradient(
-			Color3.fromRGB(120, 220, 100),
-			Color3.fromRGB(170, 110, 200),
-			Color3.fromRGB(120, 220, 100)
-		),
 		milestone = { stat = "ghostsBought", goal = 100 },
 	},
 	{
 		id = "oddball",
 		rarity = "Rare",
 		text = "ODDBALL",
-		-- Ghostly teal into a deep blue.
-		gradient = gradient(Color3.fromRGB(80, 230, 220), Color3.fromRGB(70, 120, 255), Color3.fromRGB(80, 230, 220)),
 		milestone = { stat = "mutations", goal = 5 },
 	},
 	{
 		id = "cat_burglar",
 		rarity = "Rare",
 		text = "CAT BURGLAR",
-		-- Shadowy grey into a sneaky blue.
-		gradient = gradient(Color3.fromRGB(150, 160, 185), Color3.fromRGB(90, 140, 255), Color3.fromRGB(150, 160, 185)),
 		milestone = { stat = "steals", goal = 25 },
 	},
 	{
 		id = "mutated",
 		rarity = "Epic",
 		text = "MUTATED",
-		-- Toxic green into purple.
-		gradient = gradient(Color3.fromRGB(130, 255, 80), Color3.fromRGB(170, 80, 255), Color3.fromRGB(130, 255, 80)),
 		milestone = { stat = "mutations", goal = 20 },
 	},
 	{
 		id = "master_thief",
 		rarity = "Epic",
 		text = "MASTER THIEF",
-		-- Purple and hot pink.
-		gradient = gradient(Color3.fromRGB(170, 80, 255), Color3.fromRGB(255, 100, 210), Color3.fromRGB(170, 80, 255)),
 		milestone = { stat = "steals", goal = 100 },
 	},
 	{
 		id = "shiny_hunter",
 		rarity = "Legendary",
 		text = "SHINY HUNTER",
-		-- Gold and white, shiny (like the Shiny mutation).
-		gradient = gradient(Color3.fromRGB(255, 200, 50), Color3.fromRGB(255, 250, 220), Color3.fromRGB(255, 200, 50)),
-		shine = true,
 		milestone = { stat = "shinies", goal = 5 },
 	},
 	{
 		id = "gravekeeper",
 		rarity = "Legendary",
 		text = "GRAVEKEEPER",
-		-- Pale wailing green into white, shiny.
-		gradient = gradient(
-			Color3.fromRGB(160, 255, 190),
-			Color3.fromRGB(250, 255, 250),
-			Color3.fromRGB(160, 255, 190)
-		),
-		shine = true,
 		milestone = { stat = "found", goal = #GhostConfig.Ghosts },
 	},
-	-- Rebirth titles: the first two in one plain colour, the last in shiny silver (like Eerie).
+	-- Rebirth titles.
 	{
 		id = "reborn",
 		rarity = "Rare",
 		text = "REBORN",
-		gradient = gradient(Color3.fromRGB(190, 140, 255), Color3.fromRGB(190, 140, 255)),
 		rebirths = 1,
 	},
 	{
 		id = "undying",
 		rarity = "Epic",
 		text = "UNDYING",
-		gradient = gradient(Color3.fromRGB(255, 130, 60), Color3.fromRGB(255, 130, 60)),
 		rebirths = 5,
 	},
 	{
 		id = "eternal",
 		rarity = "Legendary",
 		text = "ETERNAL",
-		gradient = gradient(
-			Color3.fromRGB(150, 150, 160),
-			Color3.fromRGB(235, 238, 245),
-			Color3.fromRGB(150, 150, 160),
-			Color3.fromRGB(235, 238, 245)
-		),
-		shine = true,
 		rebirths = 10,
 	},
 }
@@ -226,6 +192,11 @@ end
 TitleConfig.byId = {}
 for _, title in TitleConfig.Titles do
 	title.color = GhostConfig.Rarities[title.rarity].color
+	if not title.gradient then
+		title.flat = true
+		title.gradient = ColorSequence.new(title.color)
+		title.shine = nil
+	end
 	TitleConfig.byId[title.id] = title
 end
 

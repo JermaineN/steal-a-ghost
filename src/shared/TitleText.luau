@@ -33,7 +33,9 @@ function TitleText.create(parent: Instance, title, outlineThickness: number?): T
 	local colors = Instance.new("UIGradient")
 	colors.Color = title.gradient
 	colors.Parent = main
-	CollectionService:AddTag(colors, TitleText.ANIMATED_TAG)
+	if not title.flat then -- flat titles (Legendary and below) are one still colour
+		CollectionService:AddTag(colors, TitleText.ANIMATED_TAG)
+	end
 	main.Parent = parent
 
 	-- The glint: the same word in white on top, see-through except for a narrow slanted band
