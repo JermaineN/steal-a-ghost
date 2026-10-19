@@ -377,6 +377,10 @@ return {
 		137626560269194, -- Foggy Nights
 	},
 
+	-- Golden Sparkles aura: a soft chiming loop around the wearer, heard up to maxDistance studs
+	-- away. "Wind Chimes 2 (SFX)" (Pro Sound Effects), glass and ceramic clinks, 43 s.
+	GoldenAuraSound = { soundId = 9120749909, volume = 0.3, maxDistance = 40 },
+
 	-- Ghost Buddy pet (CosmeticConfig pet_ghost): a found ghost, this fraction of its normal size.
 	GhostPetScale = 0.5,
 	-- How quickly it catches up with you: its top speed is this × how many studs it is from its

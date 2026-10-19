@@ -44,6 +44,24 @@ function ItemConfig.rarityColor(rarity: string): Color3
 	return GhostConfig.Rarities[rarity].color
 end
 
+-- A copy of a list of rows with a `rarity` (Shop items, cosmetics), rarest first. Rows of the
+-- same rarity keep their order in the list.
+function ItemConfig.sortByRarity(list: { any }): { any }
+	local position = {}
+	local sorted = table.clone(list)
+	for index, row in sorted do
+		position[row] = index
+	end
+	table.sort(sorted, function(a, b)
+		local rankA, rankB = GhostConfig.Rarities[a.rarity].order, GhostConfig.Rarities[b.rarity].order
+		if rankA ~= rankB then
+			return rankA > rankB
+		end
+		return position[a] < position[b]
+	end)
+	return sorted
+end
+
 ItemConfig.byId = {}
 for _, item in ItemConfig.Items do
 	item.color = ItemConfig.rarityColor(item.rarity)
