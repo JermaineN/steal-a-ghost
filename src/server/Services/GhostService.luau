@@ -82,6 +82,53 @@ local function flyTo(model: Model, destination: Vector3, speed: number, onArrive
 	tween:Play()
 end
 
+-- The Fast Flight pass's wind trail: a faint wide streak behind the ghost plus two thin white
+-- lines off its sides, like wind rushing past. Lives on the flying model only, so a re-buy (which
+-- builds a new model for the new owner) drops it unless the new owner has the pass too.
+local function addWindTrail(model: Model)
+	local body = model.PrimaryPart
+	if not body then
+		return
+	end
+	local half = body.Size.X / 2
+	local function trail(name: string, offset: Vector3, height: number, width: number, transparency: number)
+		local top = Instance.new("Attachment")
+		top.Name = name .. "Top"
+		top.Position = offset + Vector3.new(0, height / 2, 0)
+		top.Parent = body
+		local bottom = Instance.new("Attachment")
+		bottom.Name = name .. "Bottom"
+		bottom.Position = offset - Vector3.new(0, height / 2, 0)
+		bottom.Parent = body
+		local streak = Instance.new("Trail")
+		streak.Name = name
+		streak.Attachment0 = top
+		streak.Attachment1 = bottom
+		streak.Lifetime = GameConfig.FastFlightTrailSeconds
+		streak.Color = ColorSequence.new(Color3.fromRGB(230, 245, 255), Color3.fromRGB(160, 210, 255))
+		streak.Transparency = NumberSequence.new(transparency, 1)
+		streak.WidthScale = NumberSequence.new(1, width)
+		streak.LightEmission = 0.6
+		streak.FaceCamera = true
+		streak.Parent = body
+	end
+	trail("WindTrail", Vector3.zero, half * 1.4, 0.2, 0.6)
+	trail("WindLineLeft", Vector3.new(-half * 1.1, half * 0.2, 0), 0.25, 0.1, 0.15)
+	trail("WindLineRight", Vector3.new(half * 1.1, -half * 0.2, 0), 0.25, 0.1, 0.15)
+end
+
+local function removeWindTrail(model: Model)
+	local body = model.PrimaryPart
+	if not body then
+		return
+	end
+	for _, child in body:GetChildren() do
+		if string.match(child.Name, "^Wind") then
+			child:Destroy()
+		end
+	end
+end
+
 -- "Shiny Boo", or just "Boo" without a mutation.
 function GhostService.displayName(def, mutationId: string?): string
 	local mutation = mutationId and MutationConfig.byId[mutationId]
@@ -415,10 +462,16 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, a
 	DataService.setGhost(owner, slot, ghostId, mutationId)
 
 	if arrival then
-		-- The Fast Flight pass brings the owner's ghosts home quicker.
-		local speed = GameConfig.GhostTravelSpeed
-			* (if StoreConfig.ownsPass(owner, "fast_flight") then GameConfig.FastFlightMultiplier else 1)
+		-- The Fast Flight pass brings the owner's ghosts home quicker, with a wind trail. A re-buy
+		-- places the ghost again for the new owner, so the speed and trail follow whoever owns it.
+		local fast = StoreConfig.ownsPass(owner, "fast_flight")
+		local speed = GameConfig.GhostTravelSpeed * (if fast then GameConfig.FastFlightMultiplier else 1)
+		if fast then
+			addWindTrail(model)
+		end
 		flyTo(model, arrivalPoint(plot), speed, function()
+			-- Off before it jumps onto its grave, or the trail would streak across the base.
+			removeWindTrail(model)
 			model:PivotTo(plot.slots[slot])
 			entry.arriving = false
 			model:SetAttribute("Arriving", false)

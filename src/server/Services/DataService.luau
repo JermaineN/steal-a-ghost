@@ -8,6 +8,7 @@ local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
+local StoreConfig = require(ReplicatedStorage.Shared.Config.StoreConfig)
 local Notify = require(script.Parent.Parent.Util.Notify)
 
 local DataService = {}
@@ -357,6 +358,17 @@ function DataService.addGems(player: Player, amount: number)
 	end
 	profile.data.gems += amount
 	profile.gemsValue.Value = profile.data.gems
+end
+
+-- Gems the player earned by playing (Index, daily reward, rebirth, codes, Spin Wheel, tutorial):
+-- VIP pass owners get GameConfig.VipGemBonus more. Returns the gems actually given, for messages.
+-- Bought gem packs use addGems, so they stay exact.
+function DataService.earnGems(player: Player, amount: number): number
+	if StoreConfig.ownsPass(player, "vip") then
+		amount = math.floor(amount * (1 + GameConfig.VipGemBonus) + 0.5)
+	end
+	DataService.addGems(player, amount)
+	return amount
 end
 
 -- Returns true if the player could afford it (and the gems were taken).
@@ -749,7 +761,7 @@ function DataService.applyRebirth(player: Player, gems: number, startingCash: nu
 	end
 	profile.data.rebirths += 1
 	profile.rebirthsValue.Value = profile.data.rebirths
-	DataService.addGems(player, gems)
+	DataService.earnGems(player, gems)
 end
 
 -- The mutation of the ghost saved in a slot, or nil.

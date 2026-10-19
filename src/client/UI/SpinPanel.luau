@@ -13,6 +13,7 @@ local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local Mobile = require(script.Parent.Mobile)
+local ShopPanel = require(script.Parent.ShopPanel)
 local Window = require(script.Parent.Window)
 
 local SpinPanel = {}
@@ -246,8 +247,9 @@ function SpinPanel.start()
 			spinLabel.Text = "SPIN!"
 			Window.paintButton(spinButton, GREEN)
 		else
-			spinLabel.Text = "Next spin " .. nextSpinClock()
-			Window.paintButton(spinButton, LOCKED_GREY)
+			-- Out of spins: the subtitle shows the wait, and the button sends you to buy more.
+			spinLabel.Text = "Get more"
+			Window.paintButton(spinButton, GOLD)
 		end
 	end
 
@@ -339,7 +341,11 @@ function SpinPanel.start()
 	end
 
 	spinButton.Activated:Connect(function()
-		if not spinning and spins() > 0 and (mode == "idle" or mode == "stopped") then
+		if not spinning and spins() == 0 then
+			-- "Get more": spins are sold on the Shop's Boosters tab.
+			panel.close()
+			ShopPanel.openTab("Boosters", "spins_1")
+		elseif not spinning and spins() > 0 and (mode == "idle" or mode == "stopped") then
 			spinning = true
 			refresh()
 			for _, content in contents do

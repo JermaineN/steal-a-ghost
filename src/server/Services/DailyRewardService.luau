@@ -33,9 +33,8 @@ local function claim(player: Player)
 	if not available then
 		return
 	end
-	local gems = DailyReward.gems(streakDay)
 	DataService.setDaily(player, today, streakDay)
-	DataService.addGems(player, gems)
+	local gems = DataService.earnGems(player, DailyReward.gems(streakDay))
 	refresh(player)
 	Notify.send(player, `Day {streakDay} reward: +{gems} gems! Come back tomorrow for more.`, "success")
 end

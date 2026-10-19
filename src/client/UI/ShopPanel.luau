@@ -396,6 +396,21 @@ end
 function ShopPanel.toggle()
 	panel.toggle()
 end
+-- Opens the Shop on one tab, scrolled to a card if `cardName` is given (e.g. the Spin Wheel's
+-- "Get more" opens Boosters at the spins).
+function ShopPanel.openTab(tab: string, cardName: string?)
+	currentTab = tab
+	panel.open()
+	local grid = grids[tab]
+	local card = cardName and grid:FindFirstChild(cardName)
+	local layout = grid:FindFirstChildOfClass("UIGridLayout")
+	if card and layout then
+		-- Scroll the card's row to the top (cards are laid out by LayoutOrder, starting at 1).
+		local columns = math.max(1, layout.AbsoluteCellCount.X)
+		local row = ((card :: GuiObject).LayoutOrder - 1) // columns
+		grid.CanvasPosition = Vector2.new(0, row * (CARD_SIZE.Y + layout.CellPadding.Y.Offset))
+	end
+end
 
 function ShopPanel.start()
 	panel = Window.create({
