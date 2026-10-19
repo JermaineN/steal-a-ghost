@@ -19,13 +19,20 @@ GhostConfig.Rarities = {
 -- stylua: ignore
 GhostConfig.Ghosts = {
 	{ id = "wisp",           name = "Wisp",           rarity = "Common",    price = 25,     income = 1,    spawnWeight = 40,  size = 2.5, color = Color3.fromRGB(230, 240, 255) },
+	{ id = "spirit",         name = "Spirit",         rarity = "Common",    price = 50,     income = 2,    spawnWeight = 35,  size = 2.7, color = Color3.fromRGB(200, 255, 245) },
 	{ id = "boo",            name = "Boo",            rarity = "Common",    price = 100,    income = 3,    spawnWeight = 30,  size = 3,   color = Color3.fromRGB(255, 255, 255) },
 	{ id = "sheet_ghost",    name = "Sheet Ghost",    rarity = "Uncommon",  price = 400,    income = 10,   spawnWeight = 18,  size = 3.2, color = Color3.fromRGB(245, 235, 220) },
+	{ id = "lost_soul",      name = "Lost Soul",      rarity = "Uncommon",  price = 900,    income = 20,   spawnWeight = 14,  size = 3.2, color = Color3.fromRGB(150, 200, 255) },
 	{ id = "poltergeist",    name = "Poltergeist",    rarity = "Rare",      price = 1500,   income = 30,   spawnWeight = 10,  size = 3.5, color = Color3.fromRGB(110, 230, 120) },
+	{ id = "ghoul",          name = "Ghoul",          rarity = "Rare",      price = 2500,   income = 50,   spawnWeight = 8,   size = 3.6, color = Color3.fromRGB(140, 170, 120) },
+	{ id = "ghast",          name = "Ghast",          rarity = "Rare",      price = 3500,   income = 70,   spawnWeight = 7,   size = 3.8, color = Color3.fromRGB(235, 235, 245) },
 	{ id = "banshee",        name = "Banshee",        rarity = "Epic",      price = 6000,   income = 100,  spawnWeight = 5,   size = 3.8, color = Color3.fromRGB(190, 140, 255) },
+	{ id = "yokai",          name = "Yokai",          rarity = "Epic",      price = 12000,  income = 200,  spawnWeight = 4,   size = 4,   color = Color3.fromRGB(255, 140, 70) },
 	{ id = "phantom_knight", name = "Phantom Knight", rarity = "Legendary", price = 25000,  income = 350,  spawnWeight = 2.5, size = 4.2, color = Color3.fromRGB(120, 255, 200) },
+	{ id = "onryo",          name = "Onryo",          rarity = "Legendary", price = 50000,  income = 650,  spawnWeight = 1.8, size = 4.4, color = Color3.fromRGB(240, 240, 250) },
 	{ id = "wraith",         name = "Wraith",         rarity = "Legendary", price = 100000, income = 1200, spawnWeight = 1.2, size = 4.6, color = Color3.fromRGB(70, 70, 100) },
 	{ id = "spectre_king",   name = "Spectre King",   rarity = "Mythic",    price = 500000, income = 5000, spawnWeight = 0.4, size = 5.2, color = Color3.fromRGB(255, 215, 90) },
+	{ id = "oni",            name = "Oni",            rarity = "Mythic",    price = 1000000, income = 9000, spawnWeight = 0.3, size = 5.2, color = Color3.fromRGB(230, 50, 50) },
 	-- divine_1 is the Seraph and secret_1 the Grim Reaper. Keep the ids even though the names
 	-- changed: players' saves store ghosts by id, so changing one would delete it from everyone
 	-- who owns it.
