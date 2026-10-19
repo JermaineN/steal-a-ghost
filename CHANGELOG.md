@@ -913,3 +913,12 @@ Every upgrade costs twice as much, then More Graves level 2 and the first two Lo
 | Carry Speed | $10K · $50K · $200K · $800K · $3M |
 
 Not playtested (only the numbers in `GameConfig` changed).
+
+## 33. More Graves is kept through rebirths
+
+Rebirthing now resets Longer Lock, Speed and Carry Speed but **keeps More Graves**. The Rebirth
+window's lose/keep lines say so. (`DataService.applyRebirth` clears every upgrade except
+`graves`.)
+**Tested (solo, test cash):** bought More Graves ×2, Longer Lock, Speed and Carry Speed, then
+rebirthed: graves stayed at 2, the other three went to 0 and walk speed went back to 24.5. The
+new Rebirth window lines fit.

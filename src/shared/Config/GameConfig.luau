@@ -285,7 +285,7 @@ return {
 	MegaMalletWindupSound = { soundId = 9043345004, volume = 0.9 }, -- same as GravityWarpSound (rising)
 	MegaMalletSlamSound = { soundId = 117211977307268, volume = 1 }, -- same as LandmineSound (boom)
 
-	-- Upgrades (the Upgrades signpost at each base's entrance). All reset to 0 on rebirth.
+	-- Upgrades (the Upgrades signpost at each base's entrance). All but More Graves reset to 0 on rebirth.
 	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.
 	StartingGraves = 6,
 	GraveUpgradeCosts = { 10000, 250000, 1000000, 5000000 }, -- graves 7, 8, 9, 10
