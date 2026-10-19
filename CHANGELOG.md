@@ -73,6 +73,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 61 | Rebirth speed, softer Divine ghost, speed upgrade tuning, cheaper cosmetics, WEARING ribbon | #89 |
 | 62 | Icons for game passes and gem packs on the Creator Hub | #90 |
 | 63 | EARLY TESTER title (Divine) for the five early testers | #91 |
+| 64 | HALLOWEEN code turned on (until Nov 1) | #PR |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1673,3 +1674,13 @@ else doesn't see it as owned. Winter_Unicorn79 keeps SUPERNOVA too.
 **Tested:** the config loads in Studio with the right text, rarity, gradient and the five ids.
 **Not tested:** wearing it in game (needs one of those accounts, or a temporary `-1` on the list
 in a 2-player test).
+
+## 64. HALLOWEEN code turned on (#PR)
+
+The `HALLOWEEN` code (it was written in `CodeConfig` but commented out) is now live: 500 gems and
+$10K, once per player, until the end of 2026-11-01 (UTC). `1KLIKES` stays commented out, ready for
+when the game reaches 1,000 likes.
+
+**Tested** in a Studio playtest: redeeming " halloween " paid out (+575 gems, the VIP pass's gem
+bonus included, and +$10K) and a second try said "Already used". **Not tested:** that the
+redemption is saved (only checkable in the live game).
