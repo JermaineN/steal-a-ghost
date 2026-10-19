@@ -66,6 +66,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 54 | Gem packs can be bought with Robux | #83 |
 | 55 | A "!" on the menu tab while something is waiting | #83 |
 | 56 | Title rarities and milestone titles | #84 |
+| 57 | Flat colours for Legendary-and-below titles | #85 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1492,3 +1493,16 @@ milestone titles with their goal and a 0/25-style bar, and buying a walkway ghos
 `ghostsBought` and `found` and (with the goal set to 1 for the test) unlocked GHOST HUNTER, which
 then showed as owned. No errors. **Not tested:** the steal, capture and Shiny counters (they
 need a 2-player test or a lucky Shiny), and saving the counters (only in the live game).
+
+## 57. Flat colours for Legendary-and-below titles
+
+Titles from Common up to Legendary are now one flat colour, their rarity's (the same colour as
+their card), with no gradient, glint or animation, so the shiny animated look is kept for Mythic
+and rarer titles. PHANTOM is the exception and keeps its pale-blue gradient. In TitleConfig, a
+title without a `gradient` gets `flat = true` and its rarity colour, and TitleText doesn't tag a
+flat title's gradient for the client's GradientAnimator.
+
+**Tested:** in a Studio playtest, every Legendary-and-below title except PHANTOM has one colour,
+no animation tag and no glint; PHANTOM, VIP, NIGHTMARE, THE GOAT and SUPERNOVA are unchanged; the
+Titles tab shows the flat colours. No errors. **Not tested:** the title above the head and in
+chat for a flat title (they use the same TitleText code).
