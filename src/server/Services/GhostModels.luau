@@ -377,6 +377,52 @@ function GhostModels.spectre_king(model: Model, body: BasePart, def): number?
 	return labelHeight
 end
 
+-- Grim Reaper (the Secret ghost): a menacing cartoon reaper in an all-black hood, a grinning
+-- skull with glowing eyes, skeletal hands, a scythe and a lantern on a strap, its robe trailing
+-- into wispy tendrils. Solid (not see-through), about as tall as the King, with a cold pale
+-- glow and lost souls drifting up around him (the Secret rarity aura adds its dark smoke and
+-- black and white stars on top).
+function GhostModels.secret_1(model: Model, body: BasePart, def): number?
+	local heightScale = 1.28
+	-- Like the King: lift him so his ragged hem floats just above the ground.
+	local lift = def.size * heightScale / 2 - 2.6
+	local soulColor = Color3.fromRGB(170, 245, 255)
+	local labelHeight, mesh = meshGhost(model, body, def, heightScale, soulColor, 0, lift)
+	if not mesh then
+		return nil
+	end
+	-- A robe shouldn't stretch like a flame; it floats, bobs and sways.
+	mesh:SetAttribute("Flicker", false)
+
+	local light = body:FindFirstChildOfClass("PointLight")
+	if light then
+		light.Brightness = 1.5
+		light.Range = def.size * 2.5
+	end
+
+	-- Lost souls: small pale glowing wisps that slowly rise off him and fade.
+	local souls = Instance.new("ParticleEmitter")
+	souls.Color = ColorSequence.new(Color3.new(1, 1, 1), soulColor)
+	souls.LightEmission = 1
+	souls.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.25, 0.5),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	souls.Transparency = NumberSequence.new(0.2, 0.9)
+	souls.Lifetime = NumberRange.new(2, 3)
+	souls.Rate = 4
+	souls.Speed = NumberRange.new(0.4, 0.8)
+	souls.SpreadAngle = Vector2.new(25, 25)
+	souls.EmissionDirection = Enum.NormalId.Top
+	souls.Acceleration = Vector3.new(0, 0.3, 0)
+	souls.Shape = Enum.ParticleEmitterShape.Box
+	souls.ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface
+	souls.Parent = mesh
+
+	return labelHeight
+end
+
 -- Extra particles every ghost of the top rarities gets, on top of its own look (so a new Divine
 -- or Secret ghost has them without any extra work). Divine: gold and white sparkles rising like
 -- a blessing. Secret: dark smoke with black and white stars flickering in it.
