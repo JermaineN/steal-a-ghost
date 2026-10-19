@@ -217,9 +217,94 @@ end
 -- Base decor
 ---------------------------------------------------------------------------
 
--- Tombstone styles: what the base's tombstones are painted.
+-- Cartoon gold: a darker gold outline peeking out behind the stone, white shine streaks on the
+-- front (upper left, like the game's icons) and a few twinkles. `slab` is the stone, `top` its
+-- rounded top (a cylinder lying front-to-back); the stone's front is its -Z side.
+local GOLD_OUTLINE = Color3.fromRGB(150, 80, 5)
+local function decorateGold(folder: Instance, slab: BasePart, top: BasePart?)
+	local function decor(props)
+		props.CanCollide = false
+		props.CanQuery = false
+		props.CanTouch = false
+		props.CastShadow = false
+		return Parts.make(folder, props)
+	end
+	-- Outline: slightly bigger dark-gold copies just behind the stone.
+	decor({
+		Name = "GoldOutline",
+		Size = slab.Size + Vector3.new(0.5, 0.25, -0.1),
+		CFrame = slab.CFrame * CFrame.new(0, -0.125, 0.1),
+		Color = GOLD_OUTLINE,
+		Material = Enum.Material.SmoothPlastic,
+	})
+	if top then
+		decor({
+			Name = "GoldOutline",
+			Shape = Enum.PartType.Cylinder,
+			Size = top.Size + Vector3.new(-0.1, 0.5, 0.5),
+			CFrame = top.CFrame * CFrame.new(-0.1, 0, 0),
+			Color = GOLD_OUTLINE,
+			Material = Enum.Material.SmoothPlastic,
+		})
+	end
+	-- Shine: glowing white streaks on the front, following the rounded top's curve on the
+	-- viewer's upper left (+X, since the front faces -Z).
+	local front = -slab.Size.Z / 2 - 0.01
+	for _, streak in
+		{
+			{ x = 0.95, y = 2.1, length = 1.2, width = 0.22, angle = 42 },
+			{ x = 1.4, y = 1.3, length = 0.35, width = 0.22, angle = 10 },
+		}
+	do
+		decor({
+			Name = "GoldShine",
+			Size = Vector3.new(streak.width, streak.length, 0.02),
+			CFrame = slab.CFrame * CFrame.new(streak.x, streak.y, front) * CFrame.Angles(0, 0, math.rad(streak.angle)),
+			Color = Color3.new(1, 1, 1),
+			Material = Enum.Material.Neon,
+			Transparency = 0.15,
+		})
+	end
+	-- Twinkles: a few star sparkles popping on and off over the stone.
+	local twinkle = Instance.new("ParticleEmitter")
+	twinkle.Name = "CosmeticDecor"
+	twinkle.Texture = SPARKLE_TEXTURE
+	twinkle.Color = ColorSequence.new(Color3.fromRGB(255, 250, 210))
+	twinkle.LightEmission = 1
+	twinkle.Size = sequence(0, 1, 0)
+	twinkle.Lifetime = NumberRange.new(0.5, 0.8)
+	twinkle.Rate = 2
+	twinkle.Speed = NumberRange.new(0)
+	twinkle.Rotation = NumberRange.new(0, 360)
+	twinkle.Parent = slab
+	-- A soft warm glow: a dim gold light just in front of the stone (much softer than the
+	-- collect pad, which is drawn fullbright).
+	local glowPoint = Instance.new("Attachment")
+	glowPoint.Name = "CosmeticDecor"
+	glowPoint.Position = Vector3.new(0, 0.3, -1.6)
+	local glow = Instance.new("PointLight")
+	glow.Color = Color3.fromRGB(255, 200, 80)
+	glow.Brightness = 0.8
+	glow.Range = 6
+	glow.Shadows = false
+	glow.Parent = glowPoint
+	glowPoint.Parent = slab
+end
+
+-- Tombstone styles: what the base's tombstones are painted. `trimColor` (the plinth and the
+-- grave's border; defaults to `color`), `reflectance` and `textColor` (the R.I.P. carving) are
+-- optional; `decorate` adds extra parts into the folder it's given and
+-- children named "CosmeticDecor" to the stone (CosmeticService removes both).
 CosmeticModels.Tombstones = {
-	tomb_gold = { color = Color3.fromRGB(255, 225, 110), material = Enum.Material.Foil },
+	tomb_gold = {
+		color = Color3.fromRGB(255, 220, 60),
+		trimColor = Color3.fromRGB(240, 175, 30), -- the plinth and the grave's border
+
+		material = Enum.Material.SmoothPlastic,
+		reflectance = 0.08,
+		textColor = Color3.fromRGB(130, 70, 5),
+		decorate = decorateGold,
+	},
 }
 
 local FLOWERS = {

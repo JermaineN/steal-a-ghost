@@ -103,20 +103,70 @@ end
 ---------------------------------------------------------------------------
 
 -- Paints the base's tombstones in a style, or back to normal (nil). Each stone remembers its
--- own colour and material the first time it's painted.
+-- own colour, material and carving colour the first time it's painted. A style's extra parts go
+-- in a "CosmeticTombstones" folder, which is cleared on every repaint.
 local function paintTombstones(plot, cosmeticId: string?)
 	local style = cosmeticId and CosmeticModels.Tombstones[cosmeticId]
+	local old = plot.model:FindFirstChild("CosmeticTombstones")
+	if old then
+		old:Destroy()
+	end
+	local slabs, tops = {}, {}
 	for _, part in plot.model:GetDescendants() do
-		if part:IsA("BasePart") and (part.Name == "Tombstone" or part.Name == "TombstoneTop") then
+		-- The stone itself, or its trim: the plinth under it and the grave's border ("Slot<n>"),
+		-- but not the soil inside the grave.
+		local isStone = part.Name == "Tombstone" or part.Name == "TombstoneTop"
+		local isTrim = part.Name == "TombstonePlinth" or string.match(part.Name, "^Slot%d+$") ~= nil
+		if part:IsA("BasePart") and (isStone or isTrim) then
 			if part:GetAttribute("OriginalColor") == nil then
 				part:SetAttribute("OriginalColor", part.Color)
 				part:SetAttribute("OriginalMaterial", part.Material.Name)
 			end
-			part.Color = if style then style.color else part:GetAttribute("OriginalColor")
+			local color = if style and isTrim then style.trimColor or style.color elseif style then style.color else nil
+			part.Color = color or part:GetAttribute("OriginalColor")
 			part.Material = if style
 				then style.material
 				else (Enum.Material :: any)[part:GetAttribute("OriginalMaterial")]
+			part.Reflectance = if style then style.reflectance or 0 else 0
+			for _, child in part:GetChildren() do
+				if child.Name == "CosmeticDecor" then
+					child:Destroy()
+				end
+			end
+			if part.Name == "Tombstone" then
+				table.insert(slabs, part)
+			elseif part.Name == "TombstoneTop" then
+				table.insert(tops, part)
+			end
 		end
+	end
+
+	local folder = Instance.new("Folder")
+	folder.Name = "CosmeticTombstones"
+	for _, slab in slabs do
+		-- The R.I.P. carving.
+		local carving = slab:FindFirstChildWhichIsA("SurfaceGui")
+		local text = carving and carving:FindFirstChildWhichIsA("TextLabel")
+		if text then
+			if text:GetAttribute("OriginalColor") == nil then
+				text:SetAttribute("OriginalColor", text.TextColor3)
+			end
+			text.TextColor3 = if style and style.textColor then style.textColor else text:GetAttribute("OriginalColor")
+		end
+		if style and style.decorate then
+			-- This stone's rounded top is the closest one.
+			local top, closest = nil, math.huge
+			for _, candidate in tops do
+				local distance = (candidate.Position - slab.Position).Magnitude
+				if distance < closest then
+					top, closest = candidate, distance
+				end
+			end
+			style.decorate(folder, slab, top)
+		end
+	end
+	if style and style.decorate then
+		folder.Parent = plot.model
 	end
 end
 

@@ -55,6 +55,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 43 | Shop tabs: Items, Boosters, Currency (Robux gems), Gamepasses | #72 |
 | 44 | Cosmetics: titles, auras, pets, tombstones and flowers (Shop and Inventory tabs) | #73 |
 | 45 | Spin Wheel spins for gems in the Shop's Boosters tab | #74 |
+| 46 | Gold Tombstones look like shiny cartoon gold | #75 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1230,3 +1231,21 @@ timer for them.
 right gems were taken (60, 110, 150), no errors; the four cards' text reads right. **Not
 tested:** a screenshot of the Shop window (the capture didn't show it), and bought spins being
 kept after rejoining (saving only works live).
+
+## 46. Shiny cartoon Gold Tombstones
+
+The Gold Tombstones cosmetic used to just paint the stones plain yellow. Now it looks like
+cartoon gold: bright gold stones with a darker gold outline, white shine streaks on the rounded
+top (upper left, like the game's icons), dark-brown R.I.P. lettering, a few twinkles, and a soft
+warm glow (dimmer than the collect pads). The plinth under each stone and the grave's border turn
+a slightly deeper gold; the soil stays as it is.
+
+**How it works:** the style in `CosmeticModels.Tombstones` now has `trimColor`, `reflectance`,
+`textColor` and a `decorate` function (outline, shine streaks, twinkles and a dim PointLight per
+stone). `CosmeticService.paintTombstones` paints the stones and trim, puts the extra parts in a
+`CosmeticTombstones` folder, and clears it all when the tombstones are taken off.
+
+**Tested (solo, Studio):** wore it and checked screenshots of the stones, trim and glow; took it
+off (plain stones back, nothing left over) and put it back on; no errors. **Not tested:** the
+twinkles (Studio screenshots don't show particles), what other players see (2-player test), and
+how it looks on a base with all its graves unlocked.
