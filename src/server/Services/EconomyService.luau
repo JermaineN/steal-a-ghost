@@ -88,7 +88,7 @@ local function isStandingOn(player: Player, pad: BasePart): boolean
 end
 
 -- Every income tick: each ghost in a base (not being carried off) adds to its pad, boosted by
--- the owner's rebirths and their friends in the server.
+-- the owner's rebirths, their friends in the server and a Spin Wheel money boost.
 local function incomeTick()
 	for _, player in Players:GetPlayers() do
 		if not DataService.isLoaded(player) then
@@ -98,12 +98,16 @@ local function incomeTick()
 		local rebirths = DataService.getRebirths(player)
 		-- Friends in the server add their bonus on top (FriendBoostService).
 		local friendBoost = 1 + (player:GetAttribute("FriendBoost") or 0)
+		-- A Spin Wheel money boost multiplies everything while it lasts (SpinService).
+		local spinBoost = if (player:GetAttribute("MoneyBoostUntil") or 0) > workspace:GetServerTimeNow()
+			then GameConfig.SpinBoostMultiplier
+			else 1
 		local income = 0
 		for slot = 1, if plot then #plot.slots else 0 do
 			local entry = GhostService.getEntry(player, slot)
 			if entry and GhostService.isInBase(entry) then
 				local baseIncome = GhostService.ghostIncome(GhostConfig.byId[entry.id], entry.mutation, rebirths)
-				local slotIncome = math.floor(baseIncome * friendBoost + 0.5)
+				local slotIncome = math.floor(baseIncome * friendBoost * spinBoost + 0.5)
 				income += slotIncome
 				DataService.addStored(player, slot, slotIncome * GameConfig.IncomeTickSeconds)
 			end

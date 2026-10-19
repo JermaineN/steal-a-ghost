@@ -979,3 +979,45 @@ follows the rarity automatically. `ItemConfig.ToolRarities` gives the Cage and L
 Inventory showed the Mythic Mega Mallet in red, and the hotbar slots were blue (racket), purple
 (shield) and red (landmine); no errors. On equipped Inventory cards the EQUIPPED ribbon covers
 the rarity word (the colour still shows). The Cage's colour wasn't seen (not on my account).
+
+## 37. Rebirth starting cash lowered to 1%
+
+After a rebirth you now restart with 1% of what that rebirth cost instead of 10% (rebirth 1:
+$500 instead of $5K, rebirth 2: $2.5K instead of $25K); never less than the normal $100.
+One number: `RebirthStartingCashShare = 0.01` (GameConfig). Not playtested (a config change;
+the Rebirth window's "You keep" line reads the same number).
+
+## 38. Spin Wheel
+
+A **Spin!** button (bottom right, above Daily reward) opens the Spin Wheel. You get one free
+spin each day (midnight UTC) and one for every 10 minutes you play in a row; the 10-minute timer
+starts over every time you join. Unused spins are saved. The button shows how many spins you
+have, or the time until the next one.
+
+Prizes (each slice shows its odds): 10 gems 35%, 20 gems 30%, 50 gems 15% (blue slices),
+x2 money for 10 mins 12%, x2 money for 30 mins 7% (green), and a Mythic item 1% (red, the
+Mythic rarity colour). The money boost doubles ghost income, shows as "x2 9:41" next to your
+income, only counts down while you're playing, and winning another adds its time.
+
+**The Mythic item is a placeholder:** `mythic_placeholder` in ItemConfig ("Mythic Item", no
+picture, not sold in the Shop, not usable). Give it a name, picture and what it does; keep its id.
+
+**How it works:** `SpinService` (server) picks the prize by weight, tells the spinner's device
+where to stop (`SpinResult`), and pays out when the wheel stops (or at once if they leave
+mid-spin). Data: `spins`, `spinDay`, `moneyBoostLeft`. Attributes: `Spins`, `NextSpinAt`,
+`MoneyBoostUntil`. Config: `SpinPrizes`, `SpinOnlineSeconds`, `SpinBoostMultiplier`,
+`SpinSeconds` (GameConfig). Window: `UI/SpinPanel`; pictures from `scripts/draw-spin-wheel.ps1`.
+
+**Tested (solo):** the free daily spin arrived on join; spinning landed on 10 gems and paid
++10 gems; setting the online timer to 2 seconds gave a spin and restarted it at 10:00; the
+boost doubled income (Boo: $3/s → $6/s) and the HUD showed its clock; the Mythic item showed
+in the Inventory in red without an Equip button. Not tested: winning a boost or the Mythic item
+from an actual spin (forced instead), the boost carrying over a rejoin, and the daily spin at
+midnight (saving only works in the live game).
+
+**Update: wheel motion.** While nobody is spinning, the wheel drifts slowly round. Pressing
+Spin speeds it straight up to full speed (no jump), then it slows down dramatically over about
+5 seconds (at least 3 more turns) and stops on the prize; after 3 seconds it starts drifting
+again. The whole spin now takes 6 seconds (`SpinSeconds`). The motion numbers are at the top of
+`UI/SpinPanel`. **Tested:** measured the speed 4 times a second: 18°/s drifting, up to ~900°/s,
+then down smoothly to 0; it stopped on 20 gems and 20 gems were paid.

@@ -101,6 +101,7 @@ local function refresh()
 		entry.stroke.Color = if isEquipped then INVENTORY_ORANGE else item.color
 		entry.equipLabel.Text = if isEquipped then "Unequip" elseif full then "Hotbar full" else "Equip"
 		Window.paintButton(entry.equip, if isEquipped or full then LOCKED_GREY else INVENTORY_ORANGE)
+		entry.equip.Visible = item.tool == true -- only tools go in the hotbar
 		any = any or (showItems and count > 0)
 	end
 	local wearing = player:GetAttribute("Title")

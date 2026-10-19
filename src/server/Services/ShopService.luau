@@ -13,7 +13,7 @@ local ShopService = {}
 
 local function tryBuy(player: Player, itemId: unknown)
 	local item = typeof(itemId) == "string" and ItemConfig.byId[itemId]
-	if not item or not DataService.isLoaded(player) then
+	if not item or item.shop == false or not DataService.isLoaded(player) then
 		return
 	end
 	-- Reusable items (once = true) can only be bought once.
@@ -38,7 +38,8 @@ end
 -- Equips (puts in the hotbar) or unequips an owned item. Max GameConfig.MaxEquippedItems.
 local function setEquipped(player: Player, itemId: unknown, equip: unknown)
 	local item = typeof(itemId) == "string" and ItemConfig.byId[itemId]
-	if not item or typeof(equip) ~= "boolean" or not DataService.isLoaded(player) then
+	-- Only tools go in the hotbar.
+	if not item or not item.tool or typeof(equip) ~= "boolean" or not DataService.isLoaded(player) then
 		return
 	end
 	local equipped = table.clone(DataService.getEquipped(player))

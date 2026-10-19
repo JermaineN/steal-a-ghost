@@ -33,6 +33,7 @@ local CaptureService = require(Services.CaptureService)
 local ShieldService = require(Services.ShieldService)
 local MalletService = require(Services.MalletService)
 local TitleService = require(Services.TitleService)
+local SpinService = require(Services.SpinService)
 
 local map = MapBuilder.build()
 PlotService.start(map.plots)
@@ -61,6 +62,7 @@ CaptureService.start()
 ShieldService.start()
 MalletService.start()
 TitleService.start()
+SpinService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed plus their Speed upgrade (StealService
 -- slows thieves down; UpgradeService applies a newly bought level straight away).
@@ -88,6 +90,7 @@ local function onPlayerAdded(player: Player)
 		DailyRewardService.playerLoaded(player)
 		LeaderboardService.playerLoaded(player)
 		TitleService.playerLoaded(player)
+		SpinService.playerLoaded(player)
 	end
 end
 
@@ -102,6 +105,7 @@ Players.PlayerRemoving:Connect(function(player)
 	CaptureService.playerRemoving(player)
 	GhostService.playerRemoving(player)
 	PlotService.playerRemoving(player)
+	SpinService.playerRemoving(player) -- pays a prize still spinning
 	DataService.playerRemoving(player)
 end)
 
