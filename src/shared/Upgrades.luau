@@ -62,11 +62,19 @@ function Upgrades.speedBoosted(player: Player): boolean
 	return (player:GetAttribute("SpeedBoostUntil") or 0) > workspace:GetServerTimeNow()
 end
 
+-- The permanent speed bonus from rebirths (0.06 = +6% after 3 rebirths), from leaderstats.
+function Upgrades.rebirthSpeedBonus(player: Player): number
+	local leaderstats = player:FindFirstChild("leaderstats")
+	local rebirths = leaderstats and leaderstats:FindFirstChild("Rebirths")
+	return (if rebirths then (rebirths :: any).Value else 0) * GameConfig.RebirthSpeedBonus
+end
+
 -- The player's normal walk speed and their speed while carrying a stolen ghost, with upgrades
--- (and the Speed Boost, which doesn't help while carrying).
+-- and rebirths (and the Speed Boost; neither of those last two helps while carrying).
 function Upgrades.walkSpeed(player: Player): number
 	local boost = if Upgrades.speedBoosted(player) then GameConfig.SpeedBoostBonus else 0
-	return GameConfig.WalkSpeed * (1 + Upgrades.speedBonus(Upgrades.level(player, "speed")) + boost)
+	local bonus = Upgrades.speedBonus(Upgrades.level(player, "speed")) + Upgrades.rebirthSpeedBonus(player)
+	return GameConfig.WalkSpeed * (1 + bonus + boost)
 end
 function Upgrades.carrySpeed(player: Player): number
 	return GameConfig.CarryWalkSpeed * (1 + Upgrades.carryBonus(Upgrades.level(player, "carry")))

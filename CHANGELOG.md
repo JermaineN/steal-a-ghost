@@ -70,6 +70,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 58 | Codes: redeem codes for gems, cash or spins (side menu → Codes) | #86 |
 | 59 | Spin "Get more", 2x Money badge, VIP and Fast Flight buffs | #87 |
 | 60 | Seven new ghosts: Spirit, Lost Soul, Ghoul, Ghast, Yokai, Onryo, Oni | #88 |
+| 61 | Rebirth speed, softer Divine ghost, speed upgrade tuning, cheaper cosmetics, WEARING ribbon | #PR |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1609,3 +1610,29 @@ Spectre King.
 (`GhostPreviews`) with their models, placed by the player and looked right in the map's lighting
 (screenshot), and the Lost Soul label showed $900 / +$20/s. No errors. **Not tested:** buying
 one off the walkway, the Ghoul/Oni walk animation while moving, and their Index pages.
+
+## 61. Rebirth speed, softer Divine ghost, speed upgrade tuning, cheaper cosmetics, WEARING ribbon
+
+- **Rebirth speed:** every rebirth now makes you 2% faster for good, and it stacks (5 rebirths =
+  +10%). It adds to the Speed upgrade and the Speed Boost, but not to carrying a stolen ghost.
+  The Rebirth window shows it: "Rebirths: 5 (income x…, +10% speed)". `GameConfig.RebirthSpeedBonus`,
+  `Upgrades.rebirthSpeedBonus` (reads leaderstats Rebirths); UpgradeService re-applies the speed
+  when Rebirths changes.
+- **Speed upgrade:** +10% per level, +50% at max (was +20% per level, +100%).
+- **Carry Speed upgrade:** halved to +3% per level, +15% at max (was +6%, +30%).
+- **Divine ghost (Seraph) less shiny:** a softer light, a deeper gold halo, a more solid robe, and
+  fewer, smaller, dimmer sparkles and feathers, so its shape and gold trim can be seen. (This
+  code went in with #88, which was merged from the same working copy; it's described here.)
+- **Titles / Cosmetics tabs:** the "WEARING" ribbon now sits on top of the rarity word instead of
+  behind it.
+- **Cosmetics half price (gems):** Ghost Lilies 200, PHANTOM title 250, Purple Flames 375, Mini
+  Pumpkin 500, Gold Tombstones 750. **Robux prices are set on the Creator Hub, not in code:**
+  suggested halved prices are VIP 149, 2x Money 125, Ghost Buddy 99, Auto Collect 89, Golden
+  Sparkles 75, Extra Hotbar Slot 65, NIGHTMARE 49, Fast Flight 49; gem packs 8,000 → 125,
+  3,000 → 49, 1,200 → 25, 500 → 13 (they have Managed pricing on, which can change prices).
+
+**Tested** in Studio playtests: walk speed 24.5 → 26.95 with 5 rebirths (+10%) → 39.2 with 5
+rebirths and max Speed (+60%); the WEARING ribbon shows over the rarity on THE GOAT's card; the
+Seraph compared before/after on the walkway at night (its robe no longer washes out white). No
+errors. **Not tested:** a real rebirth (faked by setting Rebirths), the new cosmetic prices in
+the Shop (config numbers), and the Robux prices (not changed yet).

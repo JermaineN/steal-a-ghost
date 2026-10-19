@@ -55,6 +55,14 @@ function UpgradeService.playerLoaded(player: Player)
 	player:GetAttributeChangedSignal("SpeedBoostUntil"):Connect(function()
 		applySpeed(player)
 	end)
+	-- Each rebirth makes you permanently faster (Upgrades.rebirthSpeedBonus).
+	local leaderstats = player:FindFirstChild("leaderstats")
+	local rebirths = leaderstats and leaderstats:FindFirstChild("Rebirths")
+	if rebirths then
+		(rebirths :: any).Changed:Connect(function()
+			applySpeed(player)
+		end)
+	end
 end
 
 local function buy(player: Player, kindId: unknown)

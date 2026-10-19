@@ -384,7 +384,7 @@ function RebirthPanel.start()
 			then "You haven't rebirthed yet"
 			else "Rebirths: " .. rebirths .. "   (income " .. Rebirth.formatMultiplier(
 				Rebirth.multiplier(rebirths)
-			) .. ")"
+			) .. `, +{math.round(rebirths * GameConfig.RebirthSpeedBonus * 100)}% speed)`
 		now.multiplier.Text = Rebirth.formatMultiplier(Rebirth.multiplier(rebirths))
 		now.rebirth.Text = if rebirths == 0 then "no rebirths" else "Rebirth " .. rebirths
 		nextCard.multiplier.Text = Rebirth.formatMultiplier(Rebirth.multiplier(rebirths + 1))
