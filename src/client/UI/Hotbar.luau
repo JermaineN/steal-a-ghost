@@ -43,9 +43,11 @@ local NUMBER_KEYS = {
 }
 local TOOL_COLORS = {
 	Bat = BAT_BROWN,
-	Cage = Color3.fromRGB(255, 140, 30),
-	Landmine = Color3.fromRGB(255, 70, 60),
 }
+-- The Cage and Landmine are coloured by their rarity, like the Shop items.
+for name, rarity in ItemConfig.ToolRarities do
+	TOOL_COLORS[name] = ItemConfig.rarityColor(rarity)
+end
 local TOOL_ICONS = {
 	Bat = GameConfig.BatIcon,
 	Cage = GameConfig.CageIcon,

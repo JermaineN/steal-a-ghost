@@ -961,3 +961,21 @@ The SUPERNOVA title is now only for Winter_Unicorn79 (UserId 701124691, looked u
 the creator no longer has it. If you were wearing it, you'll show no title until you pick
 another one in the Inventory. Not playtested (an allow-list change; the other account can't
 join a Studio test).
+
+## 36. Item rarities
+
+Every item now has a rarity, using the same colours as the ghosts: Tennis Racket **Rare**
+(blue), Smoke Bomb and Shield **Epic** (purple), Universal Key, Gravity and PolterPuller
+**Legendary** (gold), Mega Mallet, Cage and Landmine **Mythic** (red). Item cards in the Shop
+and Inventory and hotbar slots take their rarity's colour, and Shop/Inventory cards show the
+rarity word above the picture (Legendary and Mythic shimmer, like the ghosts' rarity words).
+
+**How it works:** each `ItemConfig` row has `rarity` instead of its own `color`; ItemConfig fills
+in `item.color` from `GhostConfig.Rarities`, so anything that colours an item by `item.color`
+follows the rarity automatically. `ItemConfig.ToolRarities` gives the Cage and Landmine theirs
+(the Bat has none and stays brown). `Window.rarityLabel(picture, item)` draws the word.
+
+**Tested (solo):** the Shop showed blue/purple/gold cards with RARE/EPIC/LEGENDARY words, the
+Inventory showed the Mythic Mega Mallet in red, and the hotbar slots were blue (racket), purple
+(shield) and red (landmine); no errors. On equipped Inventory cards the EQUIPPED ribbon covers
+the rarity word (the colour still shows). The Cage's colour wasn't seen (not on my account).

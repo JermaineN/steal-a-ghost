@@ -156,6 +156,7 @@ local function buildCard(item, order: number, parent: Instance)
 	new("UIStroke", { Color = item.color, Thickness = 2.5, Parent = card })
 
 	local picture = Window.itemPicture(card, item, UDim2.fromOffset(96, 96), UDim2.fromOffset(27, 10))
+	Window.rarityLabel(picture, item)
 	-- How many you own, in a pill on the picture's corner.
 	local countPill = new("Frame", {
 		AnchorPoint = Vector2.new(1, 1),
