@@ -297,7 +297,7 @@ function RebirthPanel.start()
 		Position = UDim2.fromOffset(18, 282),
 		Size = UDim2.new(1, -36, 0, 22),
 		TextColor3 = Theme.SpendRed,
-		Text = "You lose: your cash and every ghost in your base",
+		Text = "You lose: your cash, your base's ghosts and your upgrades",
 		Parent = window,
 	})
 	text({

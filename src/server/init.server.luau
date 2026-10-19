@@ -2,7 +2,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 
 local Services = script.Services
 local MapBuilder = require(Services.MapBuilder)
@@ -62,18 +62,21 @@ ShieldService.start()
 MalletService.start()
 TitleService.start()
 
--- Every new character walks at GameConfig.WalkSpeed (StealService slows thieves down).
-local function applyWalkSpeed(character: Model)
+-- Every new character walks at GameConfig.WalkSpeed plus their Speed upgrade (StealService
+-- slows thieves down; UpgradeService applies a newly bought level straight away).
+local function applyWalkSpeed(player: Player, character: Model)
 	local humanoid = character:WaitForChild("Humanoid", 10)
 	if humanoid and humanoid:IsA("Humanoid") then
-		humanoid.WalkSpeed = GameConfig.WalkSpeed
+		humanoid.WalkSpeed = Upgrades.walkSpeed(player)
 	end
 end
 
 local function onPlayerAdded(player: Player)
-	player.CharacterAdded:Connect(applyWalkSpeed)
+	player.CharacterAdded:Connect(function(character)
+		applyWalkSpeed(player, character)
+	end)
 	if player.Character then
-		task.spawn(applyWalkSpeed, player.Character)
+		task.spawn(applyWalkSpeed, player, player.Character)
 	end
 	PlotService.playerAdded(player)
 	LockService.playerAdded(player)

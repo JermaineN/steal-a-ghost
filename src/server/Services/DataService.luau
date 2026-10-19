@@ -81,7 +81,7 @@ local function newData()
 		daily = {}, -- daily reward: { day = the day they last claimed, streak = which streak day that was }
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
-		upgrades = {}, -- base upgrade levels: { graves = n, lock = n } (see Shared.Upgrades)
+		upgrades = {}, -- upgrade levels: { graves = n, lock = n, speed = n, carry = n } (see Shared.Upgrades); reset on rebirth
 		lastSeen = 0, -- os.time() of the last save (offline earnings measure the time since)
 	}
 end
@@ -516,6 +516,11 @@ function DataService.applyRebirth(player: Player, gems: number)
 	profile.data.stored = {}
 	profile.data.ghosts = {}
 	profile.data.mutations = {}
+	-- Upgrades start over too (UpgradeService gives the character its normal speed back).
+	for kindId in profile.data.upgrades do
+		player:SetAttribute("Upgrade_" .. kindId, 0)
+	end
+	profile.data.upgrades = {}
 	profile.data.rebirths += 1
 	profile.rebirthsValue.Value = profile.data.rebirths
 	DataService.addGems(player, gems)

@@ -5,6 +5,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local Parts = require(script.Parent.Parent.Util.Parts)
 
 local CageService = {}
@@ -112,7 +113,7 @@ function CageService.trap(player: Player, caster: Player): boolean
 	-- Caging ends a Gravity well (GravityService), which slows its user: don't hand that slow
 	-- speed back when the cage opens.
 	if player:GetAttribute("GravityUntil") then
-		savedSpeed = GameConfig.WalkSpeed
+		savedSpeed = Upgrades.walkSpeed(player)
 	end
 	humanoid.WalkSpeed = 0
 	humanoid.JumpPower = 0
