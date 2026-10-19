@@ -49,6 +49,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 37 | Rebirth starting cash lowered to 1% | #65 |
 | 38 | Spin Wheel: daily and online spins, gems, x2 money, a Mythic item | #65 |
 | 39 | Phones: smaller HUD and buttons, Haunted Hour pill at the top | #67 |
+| 40 | Phones: base texts 20% smaller | #68 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1073,3 +1074,18 @@ existing UIScale starts at that size and its pop/pulse/hover is multiplied by it
 measured 238×67 (was 340×96), the buttons 105 wide (was 150), title tags 168×29 (was 240×42),
 the buttons stacked without overlapping, and the pill sat at the very top. Not tested: a real
 phone or Studio's device emulator, and the floating "+$"/"+N gems" positions on a phone.
+
+## 40. Phones: base texts 20% smaller (#68)
+
+On phones and tablets, the floating text on the bases is 20% smaller: ghost names, mutations,
+rarities and incomes, and the collect pads' "COLLECT $X". The base signs ("Empty Base" / a
+player's base), "Step here to LOCK" and ghosts on the walkway keep their size. PC is unchanged.
+
+**How it works:** `UI/Mobile` shrinks the server-built `GhostLabel` and `StoredCash` billboards
+on this device only (not those under `workspace.WalkwayGhosts`): the billboard gets
+`GameConfig.MobileBaseTextScale` (0.8) of its size, and a UIScale inside shrinks its text to match.
+
+**Tested (solo, phone mode forced on for the test and switched back off):** bought a Wisp; its
+base label measured 152×68 (was 190×85) with the name at 80% width, the
+collect pads 96×44 (was 120×56), walkway labels stayed 190 wide, and the screenshot showed the
+lock text and base sign unchanged. Not tested on a real phone.

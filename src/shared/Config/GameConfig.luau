@@ -10,6 +10,10 @@ return {
 	-- On phones and tablets, the cash/income/gems display, the Invite, Daily reward and Spin
 	-- buttons, and the titles above heads are drawn at this size (0.7 = 30% smaller).
 	MobileHudScale = 0.7,
+	-- On phones and tablets, the floating text on the bases (ghost names, mutations, rarities,
+	-- incomes, "COLLECT $X") is drawn at this size (0.8 = 20% smaller). Base signs and the lock
+	-- text, and ghosts on the walkway, keep their size.
+	MobileBaseTextScale = 0.8,
 
 	-- Economy
 	StartingCash = 100,
