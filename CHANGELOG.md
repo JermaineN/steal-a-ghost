@@ -63,6 +63,8 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 51 | Flashier Golden Sparkles with a chime loop, Smoke Bomb hides effects, rarity sorting | #80 |
 | 52 | The Secret ghost is now the Grim Reaper | #81 |
 | 53 | The Divine ghost is now the Seraph | #82 |
+| 54 | Gem packs can be bought with Robux | |
+| 55 | A "!" on the menu tab while something is waiting | |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1422,3 +1424,34 @@ untouched `divine_1_alt_majestic`).
 **Tested:** in a Studio playtest, the Seraph built by the real GhostService (its Index preview
 copy) shows its eyes, glowing halo, falling motes and wings, and the wings beat on the client;
 no errors. **Not tested:** it spawning on the walkway, buying it, and how it looks on a grave.
+
+## 54. Gem packs can be bought with Robux
+
+The four gem packs in Shop → Currency were "Coming soon"; they now have Developer Products on
+the Creator Hub, and their IDs are in `StoreConfig.GemPacks`: 500 gems for 25 R$, 1,200 for 49,
+3,000 for 99 and 8,000 for 249 (the bonus labels still fit: about +22%, +52% and +60% more
+gems per Robux than the 500 pack). Prices are set on the Creator Hub, not in code. Managed
+Pricing is on (agreed on the Creator Hub), so Roblox shows cheaper regional prices in some
+countries and may run price tests; the products are marked "does not allow trading or gifting",
+so if trading is ever added, use the Price Levels API. The products have no picture yet (add
+`assets/gem-icon.png` on the Creator Hub if you want one in Roblox's purchase pop-up).
+StoreService already paid gem packs out (`ProcessReceipt`, once per purchase id, saved straight
+away), so no game code changed.
+
+**Tested:** in a Studio playtest, all four cards show their Robux price (your regional price,
+e.g. R$ 23 for the 25 R$ pack). **Not tested:** actually buying one (Studio purchases are free
+test purchases: open Shop → Currency, click a pack and confirm, and you should get the gems).
+
+## 55. A "!" on the menu tab while something is waiting
+
+The side menu's tab (the ☰ button on the left, M) now shows a red "!" in its top-right corner
+while anything inside is waiting: Index rewards to claim or a rebirth you can afford. It hides
+while the menu is open, since the Index and Rebirth buttons show their own badges then.
+(Daily reward and Spin! have their own buttons on screen, so they aren't counted.) `Sidebar`
+listens to the same `IndexPanel.claimableChanged` / `RebirthPanel.availableChanged` signals as
+those buttons.
+
+**Tested:** in a Studio playtest with a rebirth affordable, the "!" shows on the tab, hides when
+the menu opens and comes back when it closes; no errors. **Not tested:** the Index case on its
+own (it uses the same signal as the Index button's badge).
+

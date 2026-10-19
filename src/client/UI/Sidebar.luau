@@ -268,21 +268,20 @@ local function buildTab(parent: GuiObject): (TextButton, (boolean) -> ())
 	return tab, showOpen
 end
 
--- A red badge in a button's corner: the number of Index rewards waiting, or "!" on Rebirth
--- while you can afford one. `changed` fires with the new value; `show` turns it into the badge
--- text, or nil to hide it.
-local function addBadge(button: GuiObject, changed: BindableEvent, initial: any, show: (any) -> string?)
+-- A red circle badge in the top-right corner of `parent` (hidden until given text).
+local function makeBadge(parent: GuiObject, size: number): TextLabel
 	local badge = new("TextLabel", {
 		Name = "Badge",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(1, -6, 0, 6),
-		Size = UDim2.fromOffset(26, 26),
+		Size = UDim2.fromOffset(size, size),
 		BackgroundColor3 = Color3.fromRGB(230, 40, 60),
 		Font = FONT,
 		TextScaled = true,
 		TextColor3 = WHITE,
 		ZIndex = 3,
-		Parent = button,
+		Visible = false,
+		Parent = parent,
 	})
 	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = badge })
 	new("UIStroke", {
@@ -292,6 +291,14 @@ local function addBadge(button: GuiObject, changed: BindableEvent, initial: any,
 		Parent = badge,
 	})
 	new("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), Parent = badge })
+	return badge
+end
+
+-- A red badge in a button's corner: the number of Index rewards waiting, or "!" on Rebirth
+-- while you can afford one. `changed` fires with the new value; `show` turns it into the badge
+-- text, or nil to hide it.
+local function addBadge(button: GuiObject, changed: BindableEvent, initial: any, show: (any) -> string?)
+	local badge = makeBadge(button, 26)
 	local function update(value: any)
 		local badgeText = show(value)
 		badge.Visible = badgeText ~= nil
@@ -385,12 +392,34 @@ function Sidebar.start()
 	end
 
 	local open = false
+
+	-- A red "!" on the tab while something in the menu is waiting (Index rewards to claim, or a
+	-- rebirth you can afford), so players notice without opening it. Hidden while the menu is
+	-- open, since the buttons' own badges show then.
+	local tabBadge = makeBadge(tab, 22)
+	tabBadge.Text = "!"
+	local indexWaiting = IndexPanel.claimableCount()
+	local rebirthReady = RebirthPanel.canAfford()
+	local function updateTabBadge()
+		tabBadge.Visible = not open and (indexWaiting > 0 or rebirthReady)
+	end
+	IndexPanel.claimableChanged.Event:Connect(function(count: number)
+		indexWaiting = count
+		updateTabBadge()
+	end)
+	RebirthPanel.availableChanged.Event:Connect(function(available: boolean)
+		rebirthReady = available
+		updateTabBadge()
+	end)
+	updateTabBadge()
+
 	local generation = 0 -- so a quick re-press cancels the previous animation's leftovers
 	local function setOpen(shouldOpen: boolean)
 		open = shouldOpen
 		generation += 1
 		local thisGeneration = generation
 		showOpen(open)
+		updateTabBadge()
 		for index, holder in holders do
 			-- Opening: top button first. Closing: bottom button first.
 			local order = if open then index else #holders - index + 1
