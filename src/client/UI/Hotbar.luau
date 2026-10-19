@@ -388,6 +388,7 @@ function Hotbar.start()
 		universal_key = GameConfig.UniversalKeyCooldownSeconds,
 		shield = GameConfig.ShieldCooldownSeconds,
 		mega_mallet = GameConfig.MegaMalletCooldownSeconds,
+		nuke = GameConfig.NukeCooldownSeconds,
 	}
 	task.spawn(function()
 		while true do

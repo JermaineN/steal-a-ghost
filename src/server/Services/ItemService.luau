@@ -8,7 +8,8 @@
 -- - Inventory items that are tools (ItemConfig `tool = true`, e.g. the Smoke Bomb): given while
 --   equipped in the Inventory (syncItemTools), named by item id, each run by its own service
 --   (SmokeBombService, GravityService, UniversalKeyService, CaptureService, ShieldService,
---   MalletService; see ITEM_TOOLS).
+--   MalletService, NukeService; see ITEM_TOOLS).
+-- No item works during the nuke's cutscene (everyone is frozen).
 -- Either way, a thief who gets hit drops the stolen ghost, which flies home.
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
@@ -29,6 +30,7 @@ local StealService = require(script.Parent.StealService)
 local UniversalKeyService = require(script.Parent.UniversalKeyService)
 local ShieldService = require(script.Parent.ShieldService)
 local MalletService = require(script.Parent.MalletService)
+local NukeService = require(script.Parent.NukeService)
 
 local ItemService = {}
 
@@ -171,6 +173,7 @@ local function swing(tool: Tool)
 	-- Thieves carrying a ghost, caged and invisible (Smoke Bomb) players can't use items.
 	if
 		not swinger
+		or NukeService.isFrozen()
 		or swinger:GetAttribute("Invisible")
 		or RagdollService.isRagdolled(swinger)
 		or CageService.isCaged(swinger)
@@ -570,6 +573,71 @@ local function buildMegaMallet(): Tool
 	return tool
 end
 
+-- Builds the Nuke's remote control: a dark box (the Handle, held at its bottom end) with an
+-- antenna, a yellow-and-black hazard ring round a big red "Button" and a blinking light.
+local function buildNukeRemote(): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = NukeService.ITEM_ID
+	tool.ToolTip = "Press the button to launch a nuke on the whole map"
+	tool.TextureId = GameConfig.NukeIcon
+	tool.CanBeDropped = false
+	-- Held by its bottom end, tipped up towards the face like the bat.
+	tool.Grip = CFrame.new(0, 0, 0.55) * CFrame.Angles(math.rad(-60), 0, 0)
+
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.85, 0.4, 1.5)
+	handle.Color = Color3.fromRGB(62, 66, 78)
+	handle.Material = Enum.Material.SmoothPlastic
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	-- The top face (+Y) carries the controls; the far end (-Z) has the antenna.
+	local ring = Instance.new("Part")
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Size = Vector3.new(0.08, 0.7, 0.7)
+	ring.Color = Color3.fromRGB(255, 205, 40)
+	ring.Material = Enum.Material.SmoothPlastic
+	ring.CFrame = handle.CFrame * CFrame.new(0, 0.22, -0.25) * CFrame.Angles(0, 0, math.rad(90))
+	addWelded(tool, handle, ring)
+
+	local button = Instance.new("Part")
+	button.Name = "Button"
+	button.Shape = Enum.PartType.Cylinder
+	button.Size = Vector3.new(0.22, 0.48, 0.48)
+	button.Color = Color3.fromRGB(240, 40, 35)
+	button.Material = Enum.Material.SmoothPlastic
+	button.CFrame = handle.CFrame * CFrame.new(0, 0.3, -0.25) * CFrame.Angles(0, 0, math.rad(90))
+	addWelded(tool, handle, button)
+
+	local led = Instance.new("Part")
+	led.Shape = Enum.PartType.Ball
+	led.Size = Vector3.new(0.14, 0.14, 0.14)
+	led.Color = Color3.fromRGB(120, 255, 120)
+	led.Material = Enum.Material.Neon
+	led.CFrame = handle.CFrame * CFrame.new(0.25, 0.21, 0.4)
+	addWelded(tool, handle, led)
+
+	local antenna = Instance.new("Part")
+	antenna.Shape = Enum.PartType.Cylinder
+	antenna.Size = Vector3.new(1.2, 0.08, 0.08)
+	antenna.Color = Color3.fromRGB(150, 150, 160)
+	antenna.Material = Enum.Material.Metal
+	antenna.CFrame = handle.CFrame * CFrame.new(0.3, 0, -1.3) * CFrame.Angles(0, math.rad(90), 0)
+	addWelded(tool, handle, antenna)
+
+	local tip = Instance.new("Part")
+	tip.Shape = Enum.PartType.Ball
+	tip.Size = Vector3.new(0.2, 0.2, 0.2)
+	tip.Color = Color3.fromRGB(255, 60, 45)
+	tip.Material = Enum.Material.Neon
+	tip.CFrame = handle.CFrame * CFrame.new(0.3, 0, -1.9)
+	addWelded(tool, handle, tip)
+
+	return tool
+end
+
 -- The PolterPuller 4000's colours: purple tank and nozzle, glowing green suction parts.
 local VACUUM_PURPLE = Color3.fromRGB(110, 60, 200)
 local VACUUM_GREEN = Color3.fromRGB(120, 255, 130)
@@ -817,6 +885,7 @@ function ItemService.start()
 	ITEM_TOOLS[CaptureService.ITEM_ID] = { template = buildPolterPuller(), handler = CaptureService }
 	ITEM_TOOLS[ShieldService.ITEM_ID] = { template = buildShield(), handler = ShieldService }
 	ITEM_TOOLS[MalletService.ITEM_ID] = { template = buildMegaMallet(), handler = MalletService }
+	ITEM_TOOLS[NukeService.ITEM_ID] = { template = buildNukeRemote(), handler = NukeService }
 	-- The racket swings like the bat (no cooldown of its own).
 	ITEM_TOOLS.tennis_racket = {
 		template = buildRacket(),
@@ -840,7 +909,7 @@ function ItemService.start()
 			item:SetAttribute("Wired", true)
 			item.Activated:Connect(function()
 				local player = Players:GetPlayerFromCharacter(item.Parent)
-				if player then
+				if player and not NukeService.isFrozen() then
 					itemTool.handler.tryUse(player, item)
 				end
 			end)

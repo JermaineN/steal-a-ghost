@@ -28,9 +28,9 @@ ItemConfig.Items = {
 	{ id = "tennis_racket", name = "Tennis Racket", description = "A bat that knocks people further", price = 200, currency = "gems", rarity = "Rare", image = "rbxassetid://95075449356080", once = true, tool = true },
 	{ id = "shield",     name = "Shield",     description = "Shrug off knockbacks and cages", price = 300, currency = "gems", rarity = "Epic", image = "rbxassetid://108221968843411", once = true, tool = true },
 	{ id = "gravity",    name = "Gravity",    description = "Pull everyone toward you",  price = 700, currency = "gems", rarity = "Legendary", image = "rbxassetid://100121928705722", once = true, tool = true },
-	-- PLACEHOLDER: the Spin Wheel's Mythic prize (GameConfig.SpinPrizes). Not sold in the Shop
-	-- (shop = false) and not a tool yet. Give it a name, picture and what it does; keep the id.
-	{ id = "mythic_placeholder", name = "Mythic Item", description = "Won from the Spin Wheel", price = 0, currency = "gems", rarity = "Mythic", image = "", shop = false },
+	-- The Spin Wheel's Mythic prize (GameConfig.SpinPrizes); not sold in the Shop. It replaced the
+	-- old "mythic_placeholder" item (DataService renames it in saves).
+	{ id = "nuke",       name = "Nuke",       description = "Launch everyone off the map", price = 0, currency = "gems", rarity = "Mythic", image = "rbxassetid://81602201807177", once = true, shop = false, tool = true },
 }
 
 -- Rarities of the hotbar tools that aren't Shop items (the Bat has none and stays brown).

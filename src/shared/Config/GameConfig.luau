@@ -114,7 +114,7 @@ return {
 		{ kind = "gems",  amount = 10, weight = 35 },
 		{ kind = "boost", seconds = 10 * 60, weight = 12 },
 		{ kind = "gems",  amount = 20, weight = 30 },
-		{ kind = "item",  itemId = "mythic_placeholder", weight = 1 },
+		{ kind = "item",  itemId = "nuke", weight = 1 },
 		{ kind = "gems",  amount = 50, weight = 15 },
 		{ kind = "boost", seconds = 30 * 60, weight = 7 },
 	},
@@ -316,6 +316,25 @@ return {
 	MegaMalletWaveImage = "rbxassetid://105875569794102", -- source: assets/mallet-wave.png
 	MegaMalletWindupSound = { soundId = 9043345004, volume = 0.9 }, -- same as GravityWarpSound (rising)
 	MegaMalletSlamSound = { soundId = 117211977307268, volume = 1 }, -- same as LandmineSound (boom)
+
+	-- Nuke (the Spin Wheel's Mythic prize, not sold in the Shop): a remote control. Press its
+	-- button and everyone is warned ("X has launched a nuke!") with a countdown and sirens. Then
+	-- everyone is frozen while a cutscene shows the nuke falling onto the middle of the map, seen
+	-- from a low camera that follows it down. When it hits, the cutscene ends and every player
+	-- (the launcher too) is launched up and away from the blast. One nuke at a time per server.
+	NukeCountdownSeconds = 5, -- from pressing the button to the cutscene
+	NukeFallSeconds = 4, -- the cutscene: the nuke falling from NukeDropHeight to the ground
+	NukeDropHeight = 450, -- studs above the middle of the map where the nuke appears
+	NukeKnockbackSpeed = 75, -- sideways push away from the blast: 1.5x the Mega Mallet's
+	NukeKnockbackLift = 187.5, -- upward launch: 1.5x the Mega Mallet's
+	NukeRagdollSeconds = 3.5, -- floppy after landing: the same as the Mega Mallet
+	NukeCooldownSeconds = 200,
+	NukeIcon = "rbxassetid://81602201807177", -- source: assets/nuke-icon.png
+	NukeSirenSound = { soundId = 9113073742, volume = 0.6 }, -- "Air Raid Siren Old Fashioned 1" (Pro Sound Effects)
+	NukeBeepSound = { soundId = 9117060349, volume = 0.8 }, -- "Nasa Transmission Beep 2" (Pro Sound Effects), each countdown second
+	NukeFallSound = { soundId = 116150406781332, volume = 1 }, -- "Falling whistle sound effect" (Grummgus)
+	NukeBlastSound = { soundId = 9125484367, volume = 1 }, -- "Deep Hits Big Reverberant Booms" (Pro Sound Effects)
+	NukeBoomSound = { soundId = 117211977307268, volume = 1 }, -- same as LandmineSound, layered on the blast
 
 	-- Upgrades (the Upgrades signpost at each base's entrance). All but More Graves reset to 0 on rebirth.
 	-- More Graves: you start with StartingGraves of the base's 10 graves; each upgrade opens one more.
