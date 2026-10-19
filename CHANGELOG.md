@@ -52,6 +52,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 40 | Phones: base texts 20% smaller | #68 |
 | 41 | Mythic text shiny red; Secret and THE GOAT shiny dark grey, looping | #69 |
 | 42 | Nuke (the Spin Wheel's Mythic prize) | #70 |
+| 43 | Shop tabs: Items, Boosters, Currency (Robux gems), Gamepasses | #72 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1138,3 +1139,40 @@ caged or already-ragdolled players aren't launched (same rule as every other kno
 Mythic slice; you played the warning, sounds and cutscene and confirmed they work. Not tested:
 other players being launched and thieves dropping ghosts (needs a 2-player test). The falling
 whistle sound is from an unknown uploader (Grummgus); the others are Pro Sound Effects.
+
+## 43. Shop tabs: Items, Boosters, Currency, Gamepasses (#72)
+
+The Shop now has four tabs:
+- **Items**: the items, as before.
+- **Boosters** (gems, stack by adding time): 2x Money for 15 min (150 gems, the same boost as the
+  Spin Wheel's prize), Server Luck for 15 min (250 gems: Epic-and-rarer walkway ghosts are 2x as
+  likely *for everyone in the server*, everyone is told who started it; stacks with Haunted Hour),
+  Speed Boost for 10 min (75 gems, +30% walk speed). A running booster shows "ACTIVE mm:ss" on its
+  card. Money and Speed pause while you're offline; Server Luck ends with the server.
+- **Currency**: gem packs for Robux (500 / 1,200 / 3,000 / 8,000).
+- **Gamepasses** (Robux): 2x Money (double income forever), VIP (gold VIP title, put on when
+  bought, and +10% income), Extra Hotbar Slot (3 equipped items instead of 2), Fast Flight
+  (bought ghosts fly home 2x faster), Auto Collect (income goes straight to your cash).
+
+**Before the Robux tabs work:** make the products on the Creator Hub (your experience →
+Monetization → Developer Products for the 4 gem packs, Passes for the 5 passes), set their
+prices there, and paste each ID into `src/shared/Config/StoreConfig.luau` (`productId` /
+`passId`). While an ID is 0 the card says "Coming soon". Prices on the cards are read from Roblox.
+
+**How it works:** `StoreConfig` lists everything; `StoreService` sells boosters (`BuyBooster`
+remote), pays gem packs in `ProcessReceipt` (each purchase id is remembered in the save, so it's
+never paid twice, and the save happens straight away), checks owned passes on join and sets
+`Pass_<id>` player attributes (also straight after a purchase). Effects: `EconomyService`
+(2x Money, VIP, Auto Collect), `GhostService` (Server Luck, Fast Flight), `Upgrades.walkSpeed`
+(Speed Boost) and `Upgrades.maxEquipped` (Extra Hotbar Slot, used by the hotbar, Inventory and
+ShopService). The VIP title is a `TitleConfig` row with `gamePass = "vip"`. Tuning numbers are in
+`GameConfig` (`LuckBoost*`, `SpeedBoostBonus`, `PassMoneyMultiplier`, `VipIncomeBonus`,
+`PassExtraSlots`, `FastFlightMultiplier`). Card pictures are emoji for now (gem packs use the gem icon).
+
+**Tested (solo, Studio):** all four tabs and their cards; buying all three boosters (gems taken,
+timers start, speed 24.5 → 31.9, a made-up booster id is ignored); faking every pass on the
+server: the hotbar got a third item slot, a bought Wisp flew home at ~2x speed, income was $4/s
+($1 × 1.1 VIP × 2 booster × 2 pass) and went straight to cash without the pad. **Not tested:**
+real Robux purchases (need the IDs; then try them in Studio, where purchases are free test
+purchases), the VIP title unlocking on purchase, boosters carrying over a rejoin (saving only
+works in the live game), and Server Luck's announcement to other players (2-player test).

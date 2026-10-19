@@ -1,7 +1,8 @@
 -- The hotbar along the bottom of the screen, replacing Roblox's built-in one. Built like the
 -- Inventory cards (dark gradient, rounded, outlined in the item's colour, a number badge):
 --   Slot 1:     the Bat (everyone always has it).
---   Slots 2+:   the items you've equipped from the Inventory (GameConfig.MaxEquippedItems).
+--   Slots 2+:   the items you've equipped from the Inventory (GameConfig.MaxEquippedItems, +1 with the
+--               Extra Hotbar Slot pass).
 --               Empty ones show a dashed "+" that opens the Inventory.
 --   After that: any other tools in your Backpack (the Cage and Landmine, for allow-listed players).
 -- Number keys (or clicking a slot) select it; selecting the selected slot again puts it away.
@@ -16,6 +17,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local Hud = require(script.Parent.Hud)
 local InventoryPanel = require(script.Parent.InventoryPanel)
 local Window = require(script.Parent.Window)
@@ -87,7 +89,7 @@ end
 local function layout(): { Contents }
 	local slots: { Contents } = { { kind = "tool", name = "Bat" } }
 	local ids = equippedIds()
-	for index = 1, GameConfig.MaxEquippedItems do
+	for index = 1, Upgrades.maxEquipped(player) do
 		local id = ids[index]
 		table.insert(slots, if id then { kind = "item", id = id } else { kind = "empty" })
 	end
@@ -443,6 +445,7 @@ function Hotbar.start()
 
 	-- Refresh when items are equipped or tools come and go (each spawn brings a new Backpack).
 	player:GetAttributeChangedSignal("Equipped"):Connect(Hotbar.refresh)
+	player:GetAttributeChangedSignal("Pass_extra_slot"):Connect(Hotbar.refresh)
 	local function watch(container: Instance?)
 		if container then
 			container.ChildAdded:Connect(Hotbar.refresh)

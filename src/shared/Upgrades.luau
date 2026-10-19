@@ -2,6 +2,7 @@
 -- and everything that sets a player's walk speed) and the Upgrades window. Tuning numbers live
 -- in GameConfig.
 local GameConfig = require(script.Parent.Config.GameConfig)
+local StoreConfig = require(script.Parent.Config.StoreConfig)
 
 local Upgrades = {}
 
@@ -56,12 +57,25 @@ function Upgrades.carryBonus(level: number): number
 	return level * GameConfig.CarrySpeedUpgradeBonus
 end
 
--- The player's normal walk speed and their speed while carrying a stolen ghost, with upgrades.
+-- Is the Speed Boost (Shop booster) running? Its end time is the "SpeedBoostUntil" attribute.
+function Upgrades.speedBoosted(player: Player): boolean
+	return (player:GetAttribute("SpeedBoostUntil") or 0) > workspace:GetServerTimeNow()
+end
+
+-- The player's normal walk speed and their speed while carrying a stolen ghost, with upgrades
+-- (and the Speed Boost, which doesn't help while carrying).
 function Upgrades.walkSpeed(player: Player): number
-	return GameConfig.WalkSpeed * (1 + Upgrades.speedBonus(Upgrades.level(player, "speed")))
+	local boost = if Upgrades.speedBoosted(player) then GameConfig.SpeedBoostBonus else 0
+	return GameConfig.WalkSpeed * (1 + Upgrades.speedBonus(Upgrades.level(player, "speed")) + boost)
 end
 function Upgrades.carrySpeed(player: Player): number
 	return GameConfig.CarryWalkSpeed * (1 + Upgrades.carryBonus(Upgrades.level(player, "carry")))
+end
+
+-- How many items the player can equip in the hotbar (more with the Extra Hotbar Slot pass).
+function Upgrades.maxEquipped(player: Player): number
+	local extra = if StoreConfig.ownsPass(player, "extra_slot") then GameConfig.PassExtraSlots else 0
+	return GameConfig.MaxEquippedItems + extra
 end
 
 -- What a level means, for the window ("7 graves", "75s lock", "+40% speed").

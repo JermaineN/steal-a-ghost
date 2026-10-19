@@ -6,6 +6,7 @@ local TweenService = game:GetService("TweenService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
+local StoreConfig = require(ReplicatedStorage.Shared.Config.StoreConfig)
 local MutationConfig = require(ReplicatedStorage.Shared.Config.MutationConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local HauntedHour = require(ReplicatedStorage.Shared.HauntedHour)
@@ -173,13 +174,23 @@ end
 -- they spawn twice as often. Live servers always use the normal rates.
 local boostSpawns = RunService:IsStudio() and GameConfig.StudioBoostSpawns == true
 
--- How likely a ghost is to spawn. During Haunted Hour the rarest ghosts are boosted.
-local function spawnWeight(def, haunted: boolean): number
-	local luckyOrder = GhostConfig.Rarities[GameConfig.HauntedHourLuckMinRarity].order
-	if haunted and GhostConfig.Rarities[def.rarity].order >= luckyOrder then
-		return def.spawnWeight * GameConfig.HauntedHourLuck
+-- Is someone's Server Luck booster running (StoreService)?
+local function serverLucky(): boolean
+	return (ReplicatedStorage:GetAttribute("LuckBoostUntil") or 0) > workspace:GetServerTimeNow()
+end
+
+-- How likely a ghost is to spawn. During Haunted Hour the rarest ghosts are boosted, and Server
+-- Luck boosts the rarer ones (the two stack).
+local function spawnWeight(def, haunted: boolean, lucky: boolean): number
+	local order = GhostConfig.Rarities[def.rarity].order
+	local weight = def.spawnWeight
+	if haunted and order >= GhostConfig.Rarities[GameConfig.HauntedHourLuckMinRarity].order then
+		weight *= GameConfig.HauntedHourLuck
 	end
-	return def.spawnWeight
+	if lucky and order >= GhostConfig.Rarities[GameConfig.LuckBoostMinRarity].order then
+		weight *= GameConfig.LuckBoostMultiplier
+	end
+	return weight
 end
 
 local function pickRandomGhost()
@@ -187,13 +198,14 @@ local function pickRandomGhost()
 		return GhostConfig.Ghosts[math.random(#GhostConfig.Ghosts)]
 	end
 	local haunted = HauntedHour.isActive()
+	local lucky = serverLucky()
 	local total = 0
 	for _, def in GhostConfig.Ghosts do
-		total += spawnWeight(def, haunted)
+		total += spawnWeight(def, haunted, lucky)
 	end
 	local roll = math.random() * total
 	for _, def in GhostConfig.Ghosts do
-		roll -= spawnWeight(def, haunted)
+		roll -= spawnWeight(def, haunted, lucky)
 		if roll <= 0 then
 			return def
 		end
@@ -402,7 +414,10 @@ function GhostService.placeGhost(owner: Player, slot: number, ghostId: string, a
 	DataService.setGhost(owner, slot, ghostId, mutationId)
 
 	if arrival then
-		flyTo(model, arrivalPoint(plot), GameConfig.GhostTravelSpeed, function()
+		-- The Fast Flight pass brings the owner's ghosts home quicker.
+		local speed = GameConfig.GhostTravelSpeed
+			* (if StoreConfig.ownsPass(owner, "fast_flight") then GameConfig.FastFlightMultiplier else 1)
+		flyTo(model, arrivalPoint(plot), speed, function()
 			model:PivotTo(plot.slots[slot])
 			entry.arriving = false
 			model:SetAttribute("Arriving", false)

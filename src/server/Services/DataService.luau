@@ -95,6 +95,8 @@ local function newData()
 		spins = 0, -- unused Spin Wheel spins
 		spinDay = 0, -- the day (Shared.DailyReward.today) they last got their free daily spin
 		moneyBoostLeft = 0, -- seconds of Spin Wheel income boost left (only counts down while playing)
+		boosts = {}, -- [boosterId] = seconds left of a Shop booster that's yours (StoreConfig; the money booster uses moneyBoostLeft)
+		receipts = {}, -- ids of the latest Robux purchases already paid out (StoreService), so none is paid twice
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
 		upgrades = {}, -- upgrade levels: { graves = n, lock = n, speed = n, carry = n } (see Shared.Upgrades); all but graves reset on rebirth
@@ -131,9 +133,10 @@ local function loadData(player: Player)
 	return newData(), false
 end
 
-local function save(player: Player, profile: Profile)
+-- Returns true if it saved.
+local function save(player: Player, profile: Profile): boolean
 	if not profile.canSave or not store then
-		return
+		return false
 	end
 	activeSaves += 1
 	profile.data.lastSeen = os.time() -- offline earnings count from the last save
@@ -144,6 +147,7 @@ local function save(player: Player, profile: Profile)
 	if not ok then
 		warn(`[DataService] Save failed for {player.Name}: {err}`)
 	end
+	return ok
 end
 
 function DataService.start()
@@ -262,6 +266,18 @@ function DataService.playerRemoving(player: Player)
 	end
 	profiles[player] = nil
 	save(player, profile)
+end
+
+-- Saves straight away (after a Robux purchase, so it can't be lost). Returns true if it saved.
+function DataService.saveNow(player: Player): boolean
+	local profile = profiles[player]
+	return profile ~= nil and save(player, profile)
+end
+
+-- Whether this session's progress will be saved (false if the load failed or Studio test money is on).
+function DataService.canSave(player: Player): boolean
+	local profile = profiles[player]
+	return profile ~= nil and profile.canSave
 end
 
 -- Called when the server shuts down: save everyone and wait for saves to finish.
@@ -422,6 +438,36 @@ function DataService.setMoneyBoostLeft(player: Player, seconds: number)
 	local profile = profiles[player]
 	if profile then
 		profile.data.moneyBoostLeft = math.max(0, seconds)
+	end
+end
+
+-- Seconds left of one of the player's Shop boosters (StoreConfig.Boosters).
+function DataService.getBoostLeft(player: Player, boosterId: string): number
+	local profile = profiles[player]
+	return if profile then profile.data.boosts[boosterId] or 0 else 0
+end
+
+function DataService.setBoostLeft(player: Player, boosterId: string, seconds: number)
+	local profile = profiles[player]
+	if profile then
+		profile.data.boosts[boosterId] = if seconds > 0 then seconds else nil
+	end
+end
+
+-- Robux purchases: has this one (MarketplaceService's PurchaseId) been paid out already?
+local MAX_RECEIPTS = 50
+function DataService.hasReceipt(player: Player, purchaseId: string): boolean
+	local profile = profiles[player]
+	return profile ~= nil and table.find(profile.data.receipts, purchaseId) ~= nil
+end
+
+function DataService.addReceipt(player: Player, purchaseId: string)
+	local profile = profiles[player]
+	if profile then
+		table.insert(profile.data.receipts, purchaseId)
+		if #profile.data.receipts > MAX_RECEIPTS then
+			table.remove(profile.data.receipts, 1)
+		end
 	end
 end
 

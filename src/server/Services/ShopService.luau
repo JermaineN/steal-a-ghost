@@ -2,10 +2,10 @@
 -- remote); the price and currency always come from ItemConfig here, never from the client.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local Notify = require(script.Parent.Parent.Util.Notify)
 local DataService = require(script.Parent.DataService)
 
@@ -35,7 +35,7 @@ local function tryBuy(player: Player, itemId: unknown)
 	Notify.send(player, "You bought " .. item.name .. "! Equip it from your Inventory.", "success")
 end
 
--- Equips (puts in the hotbar) or unequips an owned item. Max GameConfig.MaxEquippedItems.
+-- Equips (puts in the hotbar) or unequips an owned item. Max Upgrades.maxEquipped.
 local function setEquipped(player: Player, itemId: unknown, equip: unknown)
 	local item = typeof(itemId) == "string" and ItemConfig.byId[itemId]
 	-- Only tools go in the hotbar.
@@ -48,10 +48,10 @@ local function setEquipped(player: Player, itemId: unknown, equip: unknown)
 		if index or DataService.getItemCount(player, item.id) <= 0 then
 			return
 		end
-		if #equipped >= GameConfig.MaxEquippedItems then
+		if #equipped >= Upgrades.maxEquipped(player) then
 			Notify.send(
 				player,
-				`Your hotbar is full! Unequip an item first (max {GameConfig.MaxEquippedItems}).`,
+				`Your hotbar is full! Unequip an item first (max {Upgrades.maxEquipped(player)}).`,
 				"error"
 			)
 			return

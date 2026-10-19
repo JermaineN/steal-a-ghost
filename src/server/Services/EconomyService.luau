@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
+local StoreConfig = require(ReplicatedStorage.Shared.Config.StoreConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
@@ -88,7 +89,8 @@ local function isStandingOn(player: Player, pad: BasePart): boolean
 end
 
 -- Every income tick: each ghost in a base (not being carried off) adds to its pad, boosted by
--- the owner's rebirths, their friends in the server and a Spin Wheel money boost.
+-- the owner's rebirths, their friends in the server, VIP, a money boost (Spin Wheel or Shop
+-- booster) and the 2x Money pass. With the Auto Collect pass it goes straight to their cash.
 local function incomeTick()
 	for _, player in Players:GetPlayers() do
 		if not DataService.isLoaded(player) then
@@ -97,19 +99,26 @@ local function incomeTick()
 		local plot = PlotService.getPlot(player)
 		local rebirths = DataService.getRebirths(player)
 		-- Friends in the server add their bonus on top (FriendBoostService).
-		local friendBoost = 1 + (player:GetAttribute("FriendBoost") or 0)
-		-- A Spin Wheel money boost multiplies everything while it lasts (SpinService).
+		-- VIP adds its bonus the same way.
+		local vipBonus = if StoreConfig.ownsPass(player, "vip") then GameConfig.VipIncomeBonus else 0
+		local friendBoost = 1 + (player:GetAttribute("FriendBoost") or 0) + vipBonus
+		-- A money boost multiplies everything while it lasts (SpinService), and so does the pass.
 		local spinBoost = if (player:GetAttribute("MoneyBoostUntil") or 0) > workspace:GetServerTimeNow()
 			then GameConfig.SpinBoostMultiplier
 			else 1
+		local passBoost = if StoreConfig.ownsPass(player, "double_money") then GameConfig.PassMoneyMultiplier else 1
+		local autoCollect = StoreConfig.ownsPass(player, "auto_collect")
 		local income = 0
 		for slot = 1, if plot then #plot.slots else 0 do
 			local entry = GhostService.getEntry(player, slot)
 			if entry and GhostService.isInBase(entry) then
 				local baseIncome = GhostService.ghostIncome(GhostConfig.byId[entry.id], entry.mutation, rebirths)
-				local slotIncome = math.floor(baseIncome * friendBoost * spinBoost + 0.5)
+				local slotIncome = math.floor(baseIncome * friendBoost * spinBoost * passBoost + 0.5)
 				income += slotIncome
 				DataService.addStored(player, slot, slotIncome * GameConfig.IncomeTickSeconds)
+			end
+			if autoCollect then
+				DataService.collectStored(player, slot)
 			end
 		end
 		player:SetAttribute("IncomePerSecond", income)

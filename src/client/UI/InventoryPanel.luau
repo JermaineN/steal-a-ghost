@@ -1,6 +1,6 @@
 -- The Inventory window (side menu → Inventory), in the Inventory button's orange. One card per
 -- item you own (bought in the Shop), with how many you have, and an Equip button that puts it
--- in the hotbar (max GameConfig.MaxEquippedItems; equipped cards get an "EQUIPPED" ribbon). The
+-- in the hotbar (max Upgrades.maxEquipped; equipped cards get an "EQUIPPED" ribbon). The
 -- server marks owned items with "Item_<itemId>" = count and the equipped ones with "Equipped".
 -- Two tabs under the header: Items, and Titles (TitleConfig, owned ones are "Title_<id>"
 -- attributes): Wear shows that title above your head (one at a time, the "Title" attribute),
@@ -15,6 +15,7 @@ local TitleConfig = require(ReplicatedStorage.Shared.Config.TitleConfig)
 local Rebirth = require(ReplicatedStorage.Shared.Rebirth)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local TitleText = require(ReplicatedStorage.Shared.TitleText)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local Hud = require(script.Parent.Hud)
 local Window = require(script.Parent.Window)
 
@@ -87,7 +88,7 @@ end
 -- Shows the cards of the items you own, with their counts and whether they're equipped.
 local function refresh()
 	local equipped = equippedIds()
-	local full = #equipped >= GameConfig.MaxEquippedItems
+	local full = #equipped >= Upgrades.maxEquipped(player)
 	local showItems = currentTab == "Items"
 	local any = false
 	for _, item in ItemConfig.Items do
@@ -137,7 +138,7 @@ local function refresh()
 	for name, button in tabButtons do
 		Window.paintButton(button, if name == currentTab then INVENTORY_ORANGE else LOCKED_GREY)
 	end
-	slotsLabel.Text = `Hotbar: {#equipped}/{GameConfig.MaxEquippedItems} equipped`
+	slotsLabel.Text = `Hotbar: {#equipped}/{Upgrades.maxEquipped(player)} equipped`
 end
 
 local function buildCard(item, order: number, parent: Instance)
@@ -226,7 +227,7 @@ local function buildCard(item, order: number, parent: Instance)
 		Parent = ribbon,
 	})
 
-	-- Equip puts it in the hotbar (max GameConfig.MaxEquippedItems); Unequip takes it out.
+	-- Equip puts it in the hotbar (max Upgrades.maxEquipped); Unequip takes it out.
 	local equip, equipLabel = Window.button({
 		Name = "Equip",
 		AnchorPoint = Vector2.new(0.5, 0),
@@ -236,8 +237,8 @@ local function buildCard(item, order: number, parent: Instance)
 	}, INVENTORY_ORANGE)
 	equip.Activated:Connect(function()
 		local isEquipped = table.find(equippedIds(), item.id) ~= nil
-		if not isEquipped and #equippedIds() >= GameConfig.MaxEquippedItems then
-			Hud.showToast(`Your hotbar is full! Unequip an item first (max {GameConfig.MaxEquippedItems}).`, "error")
+		if not isEquipped and #equippedIds() >= Upgrades.maxEquipped(player) then
+			Hud.showToast(`Your hotbar is full! Unequip an item first (max {Upgrades.maxEquipped(player)}).`, "error")
 			return
 		end
 		Remotes.EquipItem:FireServer(item.id, not isEquipped)
@@ -460,7 +461,12 @@ function InventoryPanel.start()
 
 	-- Buying something updates the window straight away.
 	player.AttributeChanged:Connect(function(attribute)
-		if string.match(attribute, "^Item_") or string.match(attribute, "^Title") or attribute == "Equipped" then
+		if
+			string.match(attribute, "^Item_")
+			or string.match(attribute, "^Title")
+			or attribute == "Equipped"
+			or attribute == "Pass_extra_slot"
+		then
 			refresh()
 		end
 	end)

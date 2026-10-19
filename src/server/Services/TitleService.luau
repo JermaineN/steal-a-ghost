@@ -1,12 +1,14 @@
 -- Titles (TitleConfig): a word above a player's head that everyone sees, like "THE GOAT". A
 -- player owns a title if their UserId is on its allow-list, they've earned it
--- (DataService.grantTitle), or they have enough rebirths for a rebirth title. They pick which
+-- (DataService.grantTitle), they have enough rebirths for a rebirth title, or they own its game
+-- pass (VIP). They pick which
 -- one to show in the Inventory (EquipTitle remote); the choice is saved. Owned titles are shown to the player's device as "Title_<id>" = true
 -- attributes, and the one they're showing as the "Title" attribute.
 -- The first time someone owns a title (and has never picked one), it's put on for them.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
+local StoreConfig = require(ReplicatedStorage.Shared.Config.StoreConfig)
 local TitleConfig = require(ReplicatedStorage.Shared.Config.TitleConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local TitleText = require(ReplicatedStorage.Shared.TitleText)
@@ -28,6 +30,9 @@ local function owns(player: Player, titleId: string): boolean
 		return true
 	end
 	if title.rebirths and DataService.getRebirths(player) >= title.rebirths then
+		return true
+	end
+	if title.gamePass and StoreConfig.ownsPass(player, title.gamePass) then
 		return true
 	end
 	return DataService.hasEarnedTitle(player, titleId)
@@ -118,6 +123,17 @@ function TitleService.rebirthed(player: Player)
 			if DataService.getTitle(player) == nil then
 				setTitle(player, title.id)
 			end
+		end
+	end
+end
+
+-- Called when a game pass is bought mid-game (StoreService): unlocks its title and puts it on.
+function TitleService.passBought(player: Player)
+	for _, title in TitleConfig.Titles do
+		if title.gamePass and not player:GetAttribute("Title_" .. title.id) and owns(player, title.id) then
+			player:SetAttribute("Title_" .. title.id, true)
+			Notify.send(player, `New title unlocked: {title.text}!`, "success")
+			setTitle(player, title.id)
 		end
 	end
 end
