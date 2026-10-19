@@ -59,6 +59,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 47 | Mini Pumpkin pet: generated jack-o'-lantern with flapping bat wings | #76 |
 | 48 | Ghost Buddy pet: any found ghost, half size, picked from the Index | #77 |
 | 49 | Game passes created and on sale (VIP, 2x Money, Auto Collect, cosmetics…) | #78 |
+| 50 | Pictures for all eight game passes | #79 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1331,3 +1332,24 @@ the Creator Hub (prices are read live, so no code change is needed).
 
 **Tested:** in Studio, every id returns the right pass and says it's for sale. **Not tested:**
 buying one (that spends real Robux) and the Shop window showing the prices (needs a playtest).
+
+## 50. Pictures for the game passes
+
+The eight Robux passes now have drawn pictures in the same sticker style as the item icons,
+instead of emojis: a stack of bills with "2x" (2x Money), a gold crown (VIP), a new hotbar slot
+with a plus (Extra Hotbar Slot), a zooming ghost (Fast Flight), a magnet pulling a coin (Auto
+Collect), a horned skull (NIGHTMARE title), gold sparkles (Golden Sparkles) and a ghost with a
+collar (Ghost Buddy).
+
+`scripts/draw-pass-icons.ps1` draws two files per pass into `assets/`:
+- `pass-<id>.png` (transparent): uploaded, set as `image` on the pass rows in `StoreConfig` and
+  `CosmeticConfig`, and shown on the Shop and Inventory cards.
+- `pass-<id>-hub.png` (512x512 on a coloured glow): for the pass icon on the Creator Hub, which
+  crops it to a circle. **Not uploaded yet**: on the Creator Hub, open each pass under
+  Monetization → Passes and change its image to the matching file.
+
+The NIGHTMARE title card in the Shop still shows the animated title word itself, so its picture
+only appears on the Creator Hub.
+
+**Tested:** in a Studio playtest, the Gamepasses tab and the Cosmetics tab show the new pictures.
+**Not tested:** the Inventory's Cosmetics tab (same code path).
