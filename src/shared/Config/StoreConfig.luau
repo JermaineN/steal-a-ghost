@@ -32,10 +32,10 @@ StoreConfig.Boosters = {
 -- Gem packs, bought with Robux (Developer Products). `bonus` is just the label on the card.
 -- stylua: ignore
 StoreConfig.GemPacks = {
-	{ id = "gems_500",  gems = 500,  productId = 0 },
-	{ id = "gems_1200", gems = 1200, productId = 0, bonus = "+20% bonus" },
-	{ id = "gems_3000", gems = 3000, productId = 0, bonus = "+50% bonus" },
-	{ id = "gems_8000", gems = 8000, productId = 0, bonus = "BEST VALUE" },
+	{ id = "gems_500",  gems = 500,  productId = 3720051141 },
+	{ id = "gems_1200", gems = 1200, productId = 3720051199, bonus = "+20% bonus" },
+	{ id = "gems_3000", gems = 3000, productId = 3720051271, bonus = "+50% bonus" },
+	{ id = "gems_8000", gems = 8000, productId = 3720051338, bonus = "BEST VALUE" },
 }
 
 -- Game passes, bought once with Robux. Owning one sets the "Pass_<id>" player attribute.
