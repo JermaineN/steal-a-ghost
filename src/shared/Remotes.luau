@@ -19,6 +19,7 @@ local EVENT_NAMES = {
 	"Rebirth", -- client -> server: rebirth now (no arguments; the server checks the cost)
 	"Rebirthed", -- server -> all clients: a player rebirthed (player, rebirth number reached)
 	"ShopBuy", -- client -> server: buy one of a Shop item (itemId); the server checks the price
+	"BuyBooster", -- client -> server: buy a Shop booster with gems (boosterId from StoreConfig.Boosters)
 	"DailyClaim", -- client -> server: claim today's daily reward (no arguments)
 	"EquipItem", -- client -> server: put an owned item in the hotbar or take it out (itemId, equip: boolean)
 	"MalletSwing", -- server -> all clients: a Mega Mallet swing (character, slamAt server time, origin CFrame) or a cancel (character, false)

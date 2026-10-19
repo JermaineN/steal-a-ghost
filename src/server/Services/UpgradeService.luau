@@ -51,6 +51,10 @@ function UpgradeService.playerLoaded(player: Player)
 	player:GetAttributeChangedSignal("Upgrade_carry"):Connect(function()
 		applySpeed(player)
 	end)
+	-- The Shop's Speed Boost starting or ending (StoreService).
+	player:GetAttributeChangedSignal("SpeedBoostUntil"):Connect(function()
+		applySpeed(player)
+	end)
 end
 
 local function buy(player: Player, kindId: unknown)

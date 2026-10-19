@@ -60,8 +60,9 @@ local function rollPrize(): number
 	return #GameConfig.SpinPrizes
 end
 
--- Starts (or lengthens) the income boost. Winning another adds its time on top.
-local function addBoost(player: Player, seconds: number)
+-- Starts (or lengthens) the income boost. Winning another adds its time on top. The Shop's 2x
+-- Money booster (StoreService) uses this too.
+function SpinService.addMoneyBoost(player: Player, seconds: number)
 	local untilTime = math.max(now(), player:GetAttribute("MoneyBoostUntil") or 0) + seconds
 	player:SetAttribute("MoneyBoostUntil", untilTime)
 	DataService.setMoneyBoostLeft(player, untilTime - now())
@@ -72,7 +73,7 @@ local function payOut(player: Player, index: number)
 	if prize.kind == "gems" then
 		DataService.addGems(player, prize.amount)
 	elseif prize.kind == "boost" then
-		addBoost(player, prize.seconds)
+		SpinService.addMoneyBoost(player, prize.seconds)
 	else
 		DataService.addItem(player, prize.itemId, 1)
 	end

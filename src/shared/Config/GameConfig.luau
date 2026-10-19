@@ -233,6 +233,15 @@ return {
 	-- Hotbar: how many Inventory items can be equipped at once (they go in the slots after the bat).
 	MaxEquippedItems = 2,
 
+	-- Shop boosters and game passes (what they are and their prices: StoreConfig).
+	LuckBoostMultiplier = 2, -- Server Luck: ghosts of LuckBoostMinRarity or rarer are this many times as likely
+	LuckBoostMinRarity = "Epic",
+	SpeedBoostBonus = 0.3, -- Speed Boost: +30% walk speed (on top of the Speed upgrade)
+	PassMoneyMultiplier = 2, -- 2x Money pass: income × this, forever
+	VipIncomeBonus = 0.1, -- VIP pass: +10% income (added like the friend boost)
+	PassExtraSlots = 1, -- Extra Hotbar Slot pass: this many more equipped items
+	FastFlightMultiplier = 2, -- Fast Flight pass: bought ghosts fly home this many times as fast
+
 	-- Smoke Bomb (Shop item): click to vanish in a smoke cloud. You're invisible for
 	-- SmokeBombSeconds, or until you're knocked over, caged or die, then you reappear in another
 	-- puff. No other items while invisible. The cooldown starts when you use it.

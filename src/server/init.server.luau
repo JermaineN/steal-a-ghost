@@ -35,6 +35,7 @@ local MalletService = require(Services.MalletService)
 local NukeService = require(Services.NukeService)
 local TitleService = require(Services.TitleService)
 local SpinService = require(Services.SpinService)
+local StoreService = require(Services.StoreService)
 
 local map = MapBuilder.build()
 PlotService.start(map.plots)
@@ -65,6 +66,7 @@ MalletService.start()
 NukeService.start()
 TitleService.start()
 SpinService.start()
+StoreService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed plus their Speed upgrade (StealService
 -- slows thieves down; UpgradeService applies a newly bought level straight away).
@@ -91,6 +93,7 @@ local function onPlayerAdded(player: Player)
 		OfflineService.playerLoaded(player)
 		DailyRewardService.playerLoaded(player)
 		LeaderboardService.playerLoaded(player)
+		StoreService.playerLoaded(player) -- game passes, before titles (VIP)
 		TitleService.playerLoaded(player)
 		SpinService.playerLoaded(player)
 	end

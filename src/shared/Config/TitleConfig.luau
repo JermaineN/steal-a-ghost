@@ -9,6 +9,7 @@
 --                  game and saved (DataService.grantTitle).
 --   rebirths       earned by reaching this many rebirths (TitleService). These titles show in
 --                  the Inventory even before you own them, locked, with a progress bar.
+--   gamePass       owned with this game pass (a StoreConfig.Passes id)
 local Theme = require(script.Parent.Parent.Theme)
 
 local TitleConfig = {}
@@ -49,6 +50,15 @@ TitleConfig.Titles = {
 		),
 		shine = true,
 		allowedUserIds = { WINTER_UNICORN_USER_ID },
+	},
+	-- The VIP game pass's title, in gold.
+	{
+		id = "vip",
+		text = "VIP",
+		color = Color3.fromRGB(255, 200, 40),
+		gradient = gradient(Color3.fromRGB(255, 170, 30), Color3.fromRGB(255, 240, 130), Color3.fromRGB(255, 170, 30)),
+		shine = true,
+		gamePass = "vip",
 	},
 	-- Rebirth titles: the first two in one plain colour, the last in shiny silver (like Eerie).
 	{
