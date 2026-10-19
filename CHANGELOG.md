@@ -60,6 +60,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 48 | Ghost Buddy pet: any found ghost, half size, picked from the Index | #77 |
 | 49 | Game passes created and on sale (VIP, 2x Money, Auto Collect, cosmetics…) | #78 |
 | 50 | Pictures for all eight game passes | #79 |
+| 51 | Flashier Golden Sparkles with a chime loop, Smoke Bomb hides effects, rarity sorting | #80 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1353,3 +1354,27 @@ only appears on the Creator Hub.
 
 **Tested:** in a Studio playtest, the Gamepasses tab and the Cosmetics tab show the new pictures.
 **Not tested:** the Inventory's Cosmetics tab (same code path).
+
+## 51. Flashier Golden Sparkles, Smoke Bomb hides effects, rarity sorting
+
+**Golden Sparkles** (a Robux aura) is now much louder: bigger, denser gold glitter, big white
+star flashes popping on and off around you, gold motes rising from your feet, a warm gold glow
+(PointLight), a gold trail behind you as you move, and a soft looping wind-chime sound
+(`GameConfig.GoldenAuraSound`, "Wind Chimes 2 (SFX)" by Pro Sound Effects, volume 0.3, heard up
+to 40 studs away). Auras in `CosmeticModels` can now have `light`, `trail` and `sound` besides
+their particle emitters; all of it sits on the `CosmeticAura` attachments, so taking the aura
+off removes everything.
+
+**Smoke Bomb:** while invisible, worn auras (now including their sound and trail) and pets were
+already taken off; the Smoke Bomb now also turns off any particles, trails, beams, lights, fire,
+smoke and sparkles on the character itself (for example from avatar accessories), and turns them
+back on when you reappear.
+
+**Sorting:** the Shop's Items and Cosmetics tabs and the Inventory's Items and Cosmetics tabs
+list the rarest first (`ItemConfig.sortByRarity`). Within a rarity, Shop items show the priciest
+first; everything else keeps its config order.
+
+**Tested:** in a Studio playtest, the aura has its 12 emitters, light, trail and a playing,
+looping sound; with the Smoke Bomb, the aura, its sound and the pet are gone while invisible and
+come back after; the Shop and Inventory list Mythic → Legendary → Epic → Rare.
+**Not tested:** whether the sound volume feels right to other players (needs a 2-player test).

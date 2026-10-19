@@ -436,26 +436,27 @@ function ShopPanel.start()
 		grids[name] = grid
 	end
 
-	-- Items: cheapest first, gem items then cash items (the two currencies can't be compared).
-	local sorted = {}
+	-- Items and cosmetics: rarest first; within a rarity, gem items before cash items (the two
+	-- currencies can't be compared), then the priciest first.
+	local items = {}
 	for _, item in ItemConfig.Items do
 		if item.shop ~= false then
-			table.insert(sorted, item)
+			table.insert(items, item)
 		end
 	end
-	table.sort(sorted, function(a, b)
+	table.sort(items, function(a, b)
 		if a.currency ~= b.currency then
 			return a.currency == "gems"
 		end
-		return a.price < b.price
+		return a.price > b.price
 	end)
-	for order, item in sorted do
+	for order, item in ItemConfig.sortByRarity(items) do
 		buildItemCard(item, order, grids.Items)
 	end
 	for order, booster in StoreConfig.Boosters do
 		buildBoosterCard(booster, order, grids.Boosters)
 	end
-	for order, cosmetic in CosmeticConfig.Cosmetics do
+	for order, cosmetic in ItemConfig.sortByRarity(CosmeticConfig.Cosmetics) do
 		buildCosmeticCard(cosmetic, order, grids.Cosmetics)
 	end
 	for order, pack in StoreConfig.GemPacks do

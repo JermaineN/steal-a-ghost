@@ -523,10 +523,11 @@ function InventoryPanel.start()
 	local grid = Window.grid(panel.window, Vector2.new(150, 206))
 	grid.Position += UDim2.fromOffset(0, TAB_HEIGHT + 8)
 	grid.Size -= UDim2.fromOffset(0, TAB_HEIGHT + 8)
-	for order, item in ItemConfig.Items do
+	-- Rarest first.
+	for order, item in ItemConfig.sortByRarity(ItemConfig.Items) do
 		buildCard(item, order, grid)
 	end
-	for order, cosmetic in CosmeticConfig.Cosmetics do
+	for order, cosmetic in ItemConfig.sortByRarity(CosmeticConfig.Cosmetics) do
 		if cosmetic.kind ~= "title" then
 			buildCosmeticCard(cosmetic, #ItemConfig.Items + order, grid)
 		end

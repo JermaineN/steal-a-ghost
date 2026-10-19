@@ -81,8 +81,8 @@ local function smokeCloud(position: Vector3)
 	Debris:AddItem(anchor, fade + 1)
 end
 
--- Hides every visible thing on the character (body, accessories, face, name and any wanted tag)
--- and remembers how it was.
+-- Hides every visible thing on the character (body, accessories, face, name, any wanted tag and
+-- effects like particles and trails) and remembers how it was.
 local function hide(player: Player, character: Model)
 	local hidden: Hidden = {}
 	local function set(instance: Instance, property: string, value: any)
@@ -96,7 +96,19 @@ local function hide(player: Player, character: Model)
 			set(item, "Transparency", 1)
 		elseif item:IsA("Decal") then
 			set(item, "Transparency", 1)
-		elseif item:IsA("BillboardGui") or item:IsA("Highlight") then
+		elseif
+			item:IsA("BillboardGui")
+			or item:IsA("Highlight")
+			-- Effects and glows, e.g. from avatar accessories. (Worn auras and pets are taken off
+			-- by CosmeticService while Invisible.)
+			or item:IsA("ParticleEmitter")
+			or item:IsA("Trail")
+			or item:IsA("Beam")
+			or item:IsA("Light")
+			or item:IsA("Fire")
+			or item:IsA("Smoke")
+			or item:IsA("Sparkles")
+		then
 			set(item, "Enabled", false)
 		elseif item:IsA("Humanoid") then
 			set(item, "DisplayDistanceType", Enum.HumanoidDisplayDistanceType.None)

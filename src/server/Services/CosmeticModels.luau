@@ -1,6 +1,7 @@
 -- How each cosmetic (CosmeticConfig) looks, built in code (except pet meshes made in Studio, see
 -- MESH_PETS). CosmeticService decides when to put them on and take them off.
---   aura       particle emitters on attachments in the character's root part
+--   aura       particle emitters (plus any light, trail and sound) on attachments in the
+--              character's root part
 --   pet        a small unanchored model; CosmeticService makes it follow its owner
 --   tombstone  a colour and material painted over the base's tombstones
 --   flowers    a little model placed beside each grave
@@ -30,67 +31,160 @@ end
 -- Auras
 ---------------------------------------------------------------------------
 
--- Each aura is a list of emitters; each emitter's settings are copied onto a ParticleEmitter,
+-- Each aura has a list of emitters; each emitter's settings are copied onto a ParticleEmitter,
 -- and it's placed at every point in `points` (relative to the root part's centre). Emitters on
 -- an attachment emit from that point, so a ring of points makes a ring of particles.
-local FEET_RING = {}
-for step = 0, 5 do
-	local angle = step / 6 * math.pi * 2
-	table.insert(FEET_RING, Vector3.new(math.cos(angle) * 1.4, -2.6, math.sin(angle) * 1.4))
+-- Optional extras: `light` (a PointLight), `trail` (a Trail between two points, left behind as
+-- you move) and `sound` (a looping sound, a GameConfig sound config). Everything sits on
+-- attachments named "CosmeticAura", so removeAura takes it all off.
+local function ring(radius: number, height: number, count: number): { Vector3 }
+	local points = {}
+	for step = 0, count - 1 do
+		local angle = step / count * math.pi * 2
+		table.insert(points, Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius))
+	end
+	return points
 end
+local FEET_RING = ring(1.4, -2.6, 6)
 
 local AURAS = {
 	-- Purple flames licking up from around the feet.
 	aura_purple = {
-		{
-			points = FEET_RING,
-			Texture = FIRE_TEXTURE,
-			Color = ColorSequence.new(Color3.fromRGB(230, 140, 255), Color3.fromRGB(120, 40, 230)),
-			LightEmission = 1,
-			Size = sequence(1.8, 1.3, 0),
-			Transparency = sequence(0.1, 0.4, 1),
-			Lifetime = NumberRange.new(0.6, 1),
-			Rate = 14,
-			Speed = NumberRange.new(2.5, 4),
-			SpreadAngle = Vector2.new(10, 10),
-			EmissionDirection = Enum.NormalId.Top,
+		emitters = {
+			{
+				points = FEET_RING,
+				Texture = FIRE_TEXTURE,
+				Color = ColorSequence.new(Color3.fromRGB(230, 140, 255), Color3.fromRGB(120, 40, 230)),
+				LightEmission = 1,
+				Size = sequence(1.8, 1.3, 0),
+				Transparency = sequence(0.1, 0.4, 1),
+				Lifetime = NumberRange.new(0.6, 1),
+				Rate = 14,
+				Speed = NumberRange.new(2.5, 4),
+				SpreadAngle = Vector2.new(10, 10),
+				EmissionDirection = Enum.NormalId.Top,
+			},
 		},
 	},
-	-- Gold glitter drifting out all around the body.
+	-- A Robux aura, so it's loud: gold glitter bursting out all around, big star flashes
+	-- twinkling on and off, gold motes rising from the feet, a warm glow, a gold trail behind
+	-- you and a soft chiming loop.
 	aura_golden = {
-		{
-			points = { Vector3.new(0, 0.5, 0), Vector3.new(0, -1.5, 0) },
-			Texture = SPARKLE_TEXTURE,
-			Color = ColorSequence.new(Color3.fromRGB(255, 225, 90), Color3.fromRGB(255, 170, 30)),
-			LightEmission = 1,
-			Size = sequence(0.8, 0.6, 0),
-			Transparency = sequence(0, 0.1, 1),
-			Lifetime = NumberRange.new(0.8, 1.3),
-			Rate = 30,
-			Speed = NumberRange.new(1.5, 2.5),
-			RotSpeed = NumberRange.new(-90, 90),
-			SpreadAngle = Vector2.new(180, 180),
+		emitters = {
+			-- Glitter bursting out of the body.
+			{
+				points = { Vector3.new(0, 0.5, 0), Vector3.new(0, -1.5, 0) },
+				Texture = SPARKLE_TEXTURE,
+				Color = ColorSequence.new(Color3.fromRGB(255, 240, 140), Color3.fromRGB(255, 170, 30)),
+				LightEmission = 1,
+				Size = sequence(1.3, 1, 0),
+				Transparency = sequence(0, 0.1, 1),
+				Lifetime = NumberRange.new(0.8, 1.4),
+				Rate = 60,
+				Speed = NumberRange.new(2, 4),
+				Drag = 2,
+				RotSpeed = NumberRange.new(-180, 180),
+				Rotation = NumberRange.new(0, 360),
+				SpreadAngle = Vector2.new(180, 180),
+			},
+			-- Big star flashes popping on and off around the body.
+			{
+				points = ring(1.7, 0.3, 4),
+				Texture = SPARKLE_TEXTURE,
+				Color = ColorSequence.new(Color3.fromRGB(255, 255, 220)),
+				LightEmission = 1,
+				LightInfluence = 0,
+				Size = sequence(0, 3.5, 0),
+				Transparency = sequence(0, 0, 0.6),
+				Lifetime = NumberRange.new(0.25, 0.4),
+				Rate = 5,
+				Speed = NumberRange.new(1.5, 3),
+				SpreadAngle = Vector2.new(180, 180),
+				Rotation = NumberRange.new(0, 90),
+			},
+			-- Gold motes floating up from a ring at the feet.
+			{
+				points = FEET_RING,
+				Texture = SPARKLE_TEXTURE,
+				Color = ColorSequence.new(Color3.fromRGB(255, 215, 60), Color3.fromRGB(255, 250, 200)),
+				LightEmission = 1,
+				Size = sequence(0.8, 0.5, 0),
+				Transparency = sequence(0.1, 0.2, 1),
+				Lifetime = NumberRange.new(1.2, 1.8),
+				Rate = 8,
+				Speed = NumberRange.new(2.5, 4),
+				SpreadAngle = Vector2.new(8, 8),
+				EmissionDirection = Enum.NormalId.Top,
+			},
 		},
+		light = { point = Vector3.zero, Color = Color3.fromRGB(255, 200, 80), Brightness = 3, Range = 14 },
+		trail = {
+			from = Vector3.new(0, 1, 0),
+			to = Vector3.new(0, -2.2, 0),
+			Color = ColorSequence.new(Color3.fromRGB(255, 235, 130), Color3.fromRGB(255, 160, 20)),
+			Transparency = sequence(0.35, 0.7, 1),
+			LightEmission = 1,
+			Lifetime = 0.45,
+			FaceCamera = true,
+		},
+		sound = GameConfig.GoldenAuraSound,
 	},
 }
 
--- Puts an aura on a character's root part: one attachment named "CosmeticAura" per point
--- (attachments only work directly on a part). Take it off with CosmeticModels.removeAura.
-function CosmeticModels.aura(cosmeticId: string, root: BasePart)
-	for _, settings in AURAS[cosmeticId] or {} do
-		for _, point in settings.points do
-			local attachment = Instance.new("Attachment")
-			attachment.Name = "CosmeticAura"
-			attachment.Position = point
-			local emitter = Instance.new("ParticleEmitter")
-			for key, value in settings do
-				if key ~= "points" then
-					(emitter :: any)[key] = value
-				end
-			end
-			emitter.Parent = attachment
-			attachment.Parent = root
+local function auraAttachment(root: BasePart, position: Vector3): Attachment
+	local attachment = Instance.new("Attachment")
+	attachment.Name = "CosmeticAura"
+	attachment.Position = position
+	attachment.Parent = root
+	return attachment
+end
+
+-- Copies every setting except the ones listed in `skip` onto an instance.
+local function apply(instance: Instance, settings: { [string]: any }, skip: { [string]: boolean })
+	for key, value in settings do
+		if not skip[key] then
+			(instance :: any)[key] = value
 		end
+	end
+end
+
+-- Puts an aura on a character's root part (attachments only work directly on a part). Take it
+-- off with CosmeticModels.removeAura.
+function CosmeticModels.aura(cosmeticId: string, root: BasePart)
+	local aura = AURAS[cosmeticId]
+	if not aura then
+		return
+	end
+	for _, settings in aura.emitters do
+		for _, point in settings.points do
+			local emitter = Instance.new("ParticleEmitter")
+			apply(emitter, settings, { points = true })
+			emitter.Parent = auraAttachment(root, point)
+		end
+	end
+	if aura.light then
+		local light = Instance.new("PointLight")
+		apply(light, aura.light, { point = true })
+		light.Parent = auraAttachment(root, aura.light.point)
+	end
+	if aura.trail then
+		local trail = Instance.new("Trail")
+		apply(trail, aura.trail, { from = true, to = true })
+		trail.Attachment0 = auraAttachment(root, aura.trail.from)
+		trail.Attachment1 = auraAttachment(root, aura.trail.to)
+		trail.Parent = trail.Attachment0
+	end
+	if aura.sound then
+		local sound = Instance.new("Sound")
+		sound.SoundId = "rbxassetid://" .. aura.sound.soundId
+		sound.Volume = aura.sound.volume
+		sound.Looped = true
+		-- Heard only close by.
+		sound.RollOffMode = Enum.RollOffMode.InverseTapered
+		sound.RollOffMinDistance = 6
+		sound.RollOffMaxDistance = aura.sound.maxDistance or 40
+		sound.Parent = auraAttachment(root, Vector3.zero)
+		sound:Play()
 	end
 end
 
