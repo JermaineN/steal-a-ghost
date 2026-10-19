@@ -67,7 +67,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 55 | A "!" on the menu tab while something is waiting | #83 |
 | 56 | Title rarities and milestone titles | #84 |
 | 57 | Flat colours for Legendary-and-below titles | #85 |
-| 58 | Codes: redeem codes for gems, cash or spins (side menu → Codes) | not merged yet |
+| 58 | Codes: redeem codes for gems, cash or spins (side menu → Codes) | #86 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
