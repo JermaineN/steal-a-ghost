@@ -1637,7 +1637,7 @@ Seraph compared before/after on the walkway at night (its robe no longer washes 
 errors. **Not tested:** a real rebirth (faked by setting Rebirths), the new cosmetic prices in
 the Shop (config numbers), and the Robux prices (not changed yet).
 
-## 62. Icons for the game passes and gem packs on the Creator Hub
+## 62. Icons for the game passes and gem packs on the Creator Hub (#90)
 
 All twelve Robux items on the Creator Hub showed Roblox's default picture (a grey ticket for the
 eight game passes, a grey cube for the four gem packs). They now have the sticker-style pictures:
