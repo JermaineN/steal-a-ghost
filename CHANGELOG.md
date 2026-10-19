@@ -57,6 +57,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 45 | Spin Wheel spins for gems in the Shop's Boosters tab | #74 |
 | 46 | Gold Tombstones look like shiny cartoon gold | #75 |
 | 47 | Mini Pumpkin pet: generated jack-o'-lantern with flapping bat wings | #76 |
+| 48 | Ghost Buddy pet: any found ghost, half size, picked from the Index | #77 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1276,3 +1277,32 @@ meshes showed up as grey boxes in a playtest, so the generated face is used inst
 after; no errors. **Not tested:** what other players see (2-player test).
 
 **Remember:** save and publish the place, or the new model is lost.
+
+## 48. Ghost Buddy pet (replaces Bat Buddy)
+
+The Bat Buddy pet is now **Ghost Buddy**: a half-size copy of one of your ghosts that follows
+you around. It's a Wisp until you pick another one: open a ghost you've found in the Index and
+press the new pink **Equip as pet** button (it shows once you own Ghost Buddy, and reads "Your
+pet ✓" for the one you have). It has no name tag and plays the ghosts' usual float animation.
+It lags behind while you walk, speeds up the further back it is, and slows down as it reaches
+you.
+
+It's still a Mythic Robux pet with no game pass yet (passId 0, "Coming soon"), so nobody can get
+it in the live game until you make the pass and put its id in `CosmeticConfig`.
+
+**How it works:** `CosmeticConfig` row `pet_ghost` (was `pet_bat`; nobody owned it). The chosen
+ghost is saved as `petGhost` (default `GameConfig.GhostPetDefault`, Wisp) and mirrored as the
+`PetGhost` attribute. The Index button fires `ChoosePetGhost` (ghostId); `CosmeticService`
+checks the ghost exists, is found and that they own Ghost Buddy, saves it and wears the pet.
+`CosmeticModels` copies the ghost from `ReplicatedStorage.GhostPreviews` (the Index's clean
+copies), scales it by `GameConfig.GhostPetScale` (0.5) and tags it so `GhostAnimation` floats
+it. The lag is in client `PetAnimation`: on the owner's device it aims the pet at its spot and
+caps its speed at `GameConfig.GhostPetFollowSpeed` (2.5) × the distance. Bigger ghosts float a
+little further out.
+
+**Tested (solo, Studio):** Wisp by default, half its size, no tags, floating; bought a Boo and a
+Banshee, equipped each from the Index (button, message, "Your pet ✓"); an unfound ghost is
+refused; at a walk speed of 24.5 it trails about 10 studs behind (about 6 at normal speed),
+then slows down to its spot; hidden while Invisible; the Mini Pumpkin still stays right beside
+you. **Not tested:** what other players see (2-player test), and the chosen ghost being kept
+after rejoining (saving only works live).

@@ -1,4 +1,6 @@
--- Flaps pet wings on this player's screen, and floats this player's own pet up and down. The server tags each wing "FlappingWing" (see server
+-- Flaps pet wings on this player's screen, and floats this player's own pet up and down. A pet
+-- with a "FollowSpeed" attribute (the Ghost Buddy) also lags behind: its top speed is that ×
+-- how far it is from its spot, so it speeds up when far away and slows down as it gets close. The server tags each wing "FlappingWing" (see server
 -- CosmeticModels) and holds it to the pet's body with a Weld named "WingWeld" whose C0 sits at
 -- the wing's hinge. Turning that C0 here only moves the wing on this device, so the flapping is
 -- smooth and nothing extra is sent over the network.
@@ -46,6 +48,24 @@ local function track(part: Instance)
 	}
 end
 
+-- The player's own pet: lag behind (FollowSpeed) by capping how fast its AlignPosition may pull
+-- it. This device moves the pet, so everyone sees it lag.
+local MIN_FOLLOW_SPEED = 1 -- studs per second, so it still settles into its spot
+local function follow(target: Attachment)
+	local pet = Workspace:FindFirstChild("Pets") and Workspace.Pets:FindFirstChild(Players.LocalPlayer.Name .. "_Pet")
+	local speed = pet and pet:GetAttribute("FollowSpeed")
+	local body = pet and (pet :: Model).PrimaryPart
+	local align = body and body:FindFirstChildOfClass("AlignPosition")
+	if typeof(speed) == "number" and body and align then
+		-- Pulling toward the attachment itself would match the owner's speed (it moves relative
+		-- to them), so aim at where the attachment is instead, and cap the speed.
+		align.Mode = Enum.PositionAlignmentMode.OneAttachment
+		align.Position = target.WorldPosition
+		local gap = (body.Position - target.WorldPosition).Magnitude
+		align.MaxVelocity = math.max(MIN_FOLLOW_SPEED, speed * gap)
+	end
+end
+
 -- Makes this player's own pet float up and down. The pet follows an attachment on the root
 -- part (server CosmeticService), and this device is the one moving the pet, so moving the
 -- attachment here bobs the pet for everyone.
@@ -64,6 +84,7 @@ local function bob(now: number)
 		bobBase = target.Position
 	end
 	target.Position = bobBase + Vector3.new(0, BOB_HEIGHT * math.sin(now * BOB_SPEED), 0)
+	follow(target)
 end
 
 local function animate()

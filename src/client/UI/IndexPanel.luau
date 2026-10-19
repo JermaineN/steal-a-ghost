@@ -22,6 +22,7 @@ local TweenService = game:GetService("TweenService")
 
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local CosmeticConfig = require(ReplicatedStorage.Shared.Config.CosmeticConfig)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local MutationConfig = require(ReplicatedStorage.Shared.Config.MutationConfig)
@@ -39,6 +40,7 @@ local POP = TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 local GEM_BLUE = Theme.GemBlue
 local BADGE_RED = Color3.fromRGB(235, 50, 60)
 local UNFOUND_GREY = Color3.fromRGB(70, 64, 84)
+local GHOST_PET = "pet_ghost" -- the Ghost Buddy pet (CosmeticConfig), which can look like any found ghost
 
 -- The mutations in the order a ghost page lists them: most common first.
 local MUTATIONS = table.clone(MutationConfig.Mutations)
@@ -512,11 +514,47 @@ function IndexPanel.openGhost(ghostId: string)
 		end
 	end)
 
+	-- "Equip as pet": shown once they own the Ghost Buddy pet; makes it look like this ghost.
+	local petButton = new("TextButton", {
+		Name = "EquipPet",
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0.5, 0, 1, -8),
+		Size = UDim2.new(0.5, -200, 0, 44),
+		BackgroundColor3 = Theme.FriendPink,
+		Font = FONT,
+		TextScaled = true,
+		TextColor3 = WHITE,
+		Text = "Equip as pet",
+		Visible = false,
+		Parent = content,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = petButton })
+	new("UIStroke", {
+		Color = TEXT_OUTLINE,
+		Thickness = 3,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		Parent = petButton,
+	})
+	new("UIStroke", { Color = TEXT_OUTLINE, Thickness = 1.25, Parent = petButton })
+	new("UIPadding", { PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), Parent = petButton })
+	petButton.Activated:Connect(function()
+		if petButton.Active then
+			petButton.Active = false -- until the server answers (the page refreshes then)
+			Remotes.ChoosePetGhost:FireServer(ghostId)
+		end
+	end)
+
 	pageContent, pageGhostId, pageTurn = content, ghostId, turn
 	pageRefresh = function()
 		for _, refreshRow in rows do
 			refreshRow()
 		end
+		local isPet = player:GetAttribute("Wear_pet") == GHOST_PET and player:GetAttribute("PetGhost") == ghostId
+		petButton.Visible = CosmeticConfig.owns(player, GHOST_PET)
+		petButton.Active = not isPet
+		petButton.AutoButtonColor = not isPet
+		petButton.Text = if isPet then "Your pet ✓" else "Equip as pet"
+		petButton.BackgroundColor3 = if isPet then UNFOUND_GREY else Theme.FriendPink
 		local claimable = mutationClaimableCount(ghostId)
 		pageClaimAll.Visible = claimable >= 1
 		pageClaimAll.Active = true
@@ -763,6 +801,11 @@ function IndexPanel.start()
 			cards[ghostId].refresh()
 			updateCounter()
 			if ghostId == pageGhostId and pageRefresh then
+				pageRefresh()
+			end
+		elseif attribute == "PetGhost" or attribute == "Wear_pet" or attribute == "Cosmetic_" .. GHOST_PET then
+			-- The open page's "Equip as pet" button changes with the pet.
+			if pageRefresh then
 				pageRefresh()
 			end
 		end

@@ -377,6 +377,14 @@ return {
 		137626560269194, -- Foggy Nights
 	},
 
+	-- Ghost Buddy pet (CosmeticConfig pet_ghost): a found ghost, this fraction of its normal size.
+	GhostPetScale = 0.5,
+	-- How quickly it catches up with you: its top speed is this × how many studs it is from its
+	-- spot, so it lags behind while you walk, speeds up when far away and slows down as it gets
+	-- close. (The other pets stay right beside you.)
+	GhostPetFollowSpeed = 2.5,
+	GhostPetDefault = "wisp", -- the ghost it looks like until they pick one in the Index
+
 	-- Saving
 	AutoSaveSeconds = 120,
 	DataStoreName = "StealAGhost_v1",

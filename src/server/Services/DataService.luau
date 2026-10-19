@@ -99,6 +99,7 @@ local function newData()
 		receipts = {}, -- ids of the latest Robux purchases already paid out (StoreService), so none is paid twice
 		cosmetics = {}, -- [cosmeticId] = true for cosmetics bought with gems (CosmeticConfig; Robux ones come from game passes)
 		worn = {}, -- the cosmetic worn of each kind: { aura = id, pet = id, tombstone = id, flowers = id }
+		petGhost = GameConfig.GhostPetDefault, -- the ghost the Ghost Buddy pet looks like (picked in the Index, must be found)
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
 		upgrades = {}, -- upgrade levels: { graves = n, lock = n, speed = n, carry = n } (see Shared.Upgrades); all but graves reset on rebirth
@@ -262,6 +263,7 @@ function DataService.playerAdded(player: Player): boolean
 	for cosmeticId in data.cosmetics do
 		player:SetAttribute("Cosmetic_" .. cosmeticId, true)
 	end
+	player:SetAttribute("PetGhost", data.petGhost)
 	return true
 end
 
@@ -480,6 +482,26 @@ function DataService.setWorn(player: Player, kind: string, cosmeticId: string?)
 	if profile then
 		profile.data.worn[kind] = cosmeticId
 	end
+end
+
+-- The ghost the Ghost Buddy pet looks like (mirrored as the "PetGhost" attribute).
+function DataService.getPetGhost(player: Player): string
+	local profile = profiles[player]
+	return if profile then profile.data.petGhost else GameConfig.GhostPetDefault
+end
+
+function DataService.setPetGhost(player: Player, ghostId: string)
+	local profile = profiles[player]
+	if profile then
+		profile.data.petGhost = ghostId
+		player:SetAttribute("PetGhost", ghostId)
+	end
+end
+
+-- Has the player found this ghost (it's in their Index)?
+function DataService.hasDiscovered(player: Player, ghostId: string): boolean
+	local profile = profiles[player]
+	return profile ~= nil and profile.data.discovered[ghostId] == true
 end
 
 -- Robux purchases: has this one (MarketplaceService's PurchaseId) been paid out already?

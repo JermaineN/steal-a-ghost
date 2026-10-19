@@ -5,9 +5,12 @@
 --   tombstone  a colour and material painted over the base's tombstones
 --   flowers    a little model placed beside each grave
 local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
+local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Parts = require(script.Parent.Parent.Util.Parts)
+local GhostModels = require(script.Parent.GhostModels)
 
 local CosmeticModels = {}
 
@@ -171,35 +174,6 @@ local PETS = {
 		light.Parent = body
 		return body
 	end,
-	-- A round purple bat with two wings, pointy ears and red eyes (light enough to see at night).
-	pet_bat = function(model: Model): BasePart
-		local body = petPart(model, {
-			Name = "Body",
-			Shape = Enum.PartType.Ball,
-			Size = Vector3.new(1.2, 1.2, 1.2),
-			Color = Color3.fromRGB(95, 60, 130),
-			Material = Enum.Material.SmoothPlastic,
-			CFrame = CFrame.new(),
-		})
-		for _, side in { -1, 1 } do
-			petPart(model, {
-				Name = "Wing",
-				Size = Vector3.new(1.3, 0.1, 0.8),
-				Color = Color3.fromRGB(140, 80, 190),
-				Material = Enum.Material.SmoothPlastic,
-				CFrame = CFrame.new(side * 1.1, 0.2, 0.1) * CFrame.Angles(0, 0, math.rad(side * -20)),
-			})
-			petPart(model, {
-				Name = "Ear",
-				Size = Vector3.new(0.2, 0.4, 0.2),
-				Color = Color3.fromRGB(95, 60, 130),
-				Material = Enum.Material.SmoothPlastic,
-				CFrame = CFrame.new(side * 0.3, 0.65, 0) * CFrame.Angles(0, 0, math.rad(side * -15)),
-			})
-		end
-		eyes(model, body, 0.22, 0.1, 0.24, Color3.fromRGB(255, 50, 60))
-		return body
-	end,
 }
 
 -- Pets with a mesh made in Studio. Like the ghosts' ServerStorage.GhostMeshes, these can't live
@@ -275,8 +249,54 @@ local function meshPet(cosmeticId: string): Model?
 	return model
 end
 
+-- The Ghost Buddy: a copy of one of the ghosts, at GameConfig.GhostPetScale of its size. It's
+-- copied from the clean previews GhostService makes for the Index (no name tag, prompts or
+-- light), and tagged so every device plays the ghosts' usual float animation on it.
+CosmeticModels.GHOST_PET = "pet_ghost"
+
+local function ghostPet(ghostId: string?): Model?
+	local previews = ReplicatedStorage:FindFirstChild("GhostPreviews")
+	local template = previews
+		and (previews:FindFirstChild(ghostId or "") or previews:FindFirstChild(GameConfig.GhostPetDefault))
+	if not (template and template:IsA("Model") and template.PrimaryPart) then
+		return nil
+	end
+	local model = template:Clone()
+	model.Name = "Pet"
+	local body = model.PrimaryPart :: BasePart
+	model:ScaleTo(model:GetScale() * GameConfig.GhostPetScale)
+	model:PivotTo(CFrame.new())
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.Anchored = false
+			part.CanCollide = false
+			part.CanQuery = false
+			part.CanTouch = false
+			part.Massless = true
+			-- Pieces that aren't joined to anything yet (the simple look's eyes) are welded on.
+			local joined = part:FindFirstChildWhichIsA("JointInstance") or part:FindFirstChildOfClass("WeldConstraint")
+			if part ~= body and not joined then
+				local weld = Instance.new("WeldConstraint")
+				weld.Part0 = body
+				weld.Part1 = part
+				weld.Parent = part
+			end
+		end
+	end
+	-- Ghosts the player owns float instead of waddling (the Spectre King), so give it an owner.
+	model:SetAttribute("OwnerUserId", 0)
+	-- Its owner's device slows it down near its spot so it lags behind (client PetAnimation).
+	model:SetAttribute("FollowSpeed", GameConfig.GhostPetFollowSpeed)
+	CollectionService:AddTag(model, GhostModels.ANIMATED_TAG)
+	return model
+end
+
 -- Builds a pet's model (not parented yet), its PrimaryPart the body. Nil if there's no such pet.
-function CosmeticModels.pet(cosmeticId: string): Model?
+-- `ghostId` is the ghost a Ghost Buddy looks like.
+function CosmeticModels.pet(cosmeticId: string, ghostId: string?): Model?
+	if cosmeticId == CosmeticModels.GHOST_PET then
+		return ghostPet(ghostId)
+	end
 	local fromMesh = meshPet(cosmeticId)
 	if fromMesh then
 		return fromMesh

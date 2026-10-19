@@ -22,6 +22,7 @@ local EVENT_NAMES = {
 	"BuyBooster", -- client -> server: buy a Shop booster with gems (boosterId from StoreConfig.Boosters)
 	"BuyCosmetic", -- client -> server: buy a cosmetic with gems (cosmeticId from CosmeticConfig)
 	"WearCosmetic", -- client -> server: wear an owned cosmetic (kind, cosmeticId), or take that kind off (kind, "")
+	"ChoosePetGhost", -- client -> server: the Ghost Buddy pet should look like this found ghost (ghostId); also wears it
 	"DailyClaim", -- client -> server: claim today's daily reward (no arguments)
 	"EquipItem", -- client -> server: put an owned item in the hotbar or take it out (itemId, equip: boolean)
 	"MalletSwing", -- server -> all clients: a Mega Mallet swing (character, slamAt server time, origin CFrame) or a cancel (character, false)

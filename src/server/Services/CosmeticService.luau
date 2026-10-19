@@ -8,6 +8,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local CosmeticConfig = require(ReplicatedStorage.Shared.Config.CosmeticConfig)
+local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Notify = require(script.Parent.Parent.Util.Notify)
@@ -38,14 +39,18 @@ end
 -- A pet floats after its owner: AlignPosition and AlignOrientation pull its body toward an
 -- attachment on the owner's root part. The owner's device simulates it, so it moves smoothly.
 local function spawnPet(player: Player, root: BasePart, cosmeticId: string)
-	local pet = CosmeticModels.pet(cosmeticId)
+	local pet = CosmeticModels.pet(cosmeticId, DataService.getPetGhost(player))
 	if not pet then
 		return
 	end
 	local body = pet.PrimaryPart :: BasePart
+	-- Bigger pets (some ghosts) float further out, so they don't overlap their owner.
+	local _, size = pet:GetBoundingBox()
+	local extra = math.max(0, math.max(size.X, size.Z) - 2) / 2
+	local offset = PET_OFFSET + Vector3.new(extra, 0, extra)
 	local target = Instance.new("Attachment")
 	target.Name = "CosmeticPetTarget"
-	target.Position = PET_OFFSET
+	target.Position = offset
 	target.Parent = root
 	local own = Instance.new("Attachment")
 	own.Parent = body
@@ -61,7 +66,7 @@ local function spawnPet(player: Player, root: BasePart, cosmeticId: string)
 	orient.MaxTorque = 100000
 	orient.Responsiveness = 20
 	orient.Parent = body
-	pet:PivotTo(root.CFrame * CFrame.new(PET_OFFSET))
+	pet:PivotTo(root.CFrame * CFrame.new(offset))
 	pet.Name = player.Name .. "_Pet"
 	pet.Parent = petFolder
 	pcall(body.SetNetworkOwner, body, player)
@@ -260,6 +265,25 @@ local function setWorn(player: Player, kind: unknown, cosmeticId: unknown)
 	end
 end
 
+-- "Equip as pet" in the Index: the Ghost Buddy should look like this ghost. Only ghosts they've
+-- found count, and only if they own the Ghost Buddy; it's worn straight away (or rebuilt).
+local function choosePetGhost(player: Player, ghostId: unknown)
+	if typeof(ghostId) ~= "string" or not GhostConfig.byId[ghostId] or not DataService.isLoaded(player) then
+		return
+	end
+	if not DataService.hasDiscovered(player, ghostId) then
+		return
+	end
+	local cosmetic = CosmeticConfig.byId[CosmeticModels.GHOST_PET]
+	if not (cosmetic and CosmeticConfig.owns(player, cosmetic.id)) then
+		Notify.send(player, `Get {cosmetic and cosmetic.name or "the ghost pet"} in the Shop first!`, "error")
+		return
+	end
+	DataService.setPetGhost(player, ghostId)
+	wear(player, "pet", cosmetic.id)
+	Notify.send(player, `{GhostConfig.byId[ghostId].name} is now your pet!`, "success")
+end
+
 -- Called once the player's data has loaded (before TitleService, so bought titles count).
 function CosmeticService.playerLoaded(player: Player)
 	-- Robux cosmetics: owned while they own the game pass.
@@ -308,6 +332,7 @@ end
 function CosmeticService.start()
 	Remotes.BuyCosmetic.OnServerEvent:Connect(buy)
 	Remotes.WearCosmetic.OnServerEvent:Connect(setWorn)
+	Remotes.ChoosePetGhost.OnServerEvent:Connect(choosePetGhost)
 	MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, gamePassId, purchased)
 		local cosmetic = CosmeticConfig.byPassId[gamePassId]
 		if purchased and cosmetic and player.Parent then
