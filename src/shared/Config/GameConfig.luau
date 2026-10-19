@@ -329,6 +329,7 @@ return {
 	NukeKnockbackLift = 187.5, -- upward launch: 1.5x the Mega Mallet's
 	NukeRagdollSeconds = 3.5, -- floppy after landing: the same as the Mega Mallet
 	NukeCooldownSeconds = 200,
+	NukeSharedCooldownSeconds = 50, -- a launch puts everyone else's nuke on at least this cooldown
 	NukeIcon = "rbxassetid://81602201807177", -- source: assets/nuke-icon.png
 	NukeSirenSound = { soundId = 9113073742, volume = 0.6 }, -- "Air Raid Siren Old Fashioned 1" (Pro Sound Effects)
 	NukeBeepSound = { soundId = 9117060349, volume = 0.8 }, -- "Nasa Transmission Beep 2" (Pro Sound Effects), each countdown second

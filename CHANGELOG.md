@@ -1122,7 +1122,8 @@ pulse. Then everyone is frozen while a cutscene shows the nuke falling onto the 
 map from a low camera that follows it down. When it hits, the screen flashes, the cutscene ends
 and every player (the launcher too) is launched up and away: 1.5x the Mega Mallet's push and
 lift, the same 3.5 s ragdoll. Thieves drop their ghost. Cooldown 200 s; one nuke at a time per
-server. Anyone who had won the old "mythic_placeholder" item gets a Nuke instead.
+server. A launch also puts everyone else's nuke on a 50 s cooldown
+(`NukeSharedCooldownSeconds`; a longer cooldown already running is kept). Anyone who had won the old "mythic_placeholder" item gets a Nuke instead.
 
 **How it works:** `NukeService` (server) checks the use, sends `NukeLaunched` (name, cutsceneAt,
 explodeAt, target) to everyone, anchors every free character for the cutscene (no items work
