@@ -318,6 +318,7 @@ function CaptureService.tryCapture(capturer: Player, owner: Player, slot: number
 		GhostService.removeGhost(owner, slot)
 		GhostService.placeGhost(capturer, newSlot, entry.id, nil, entry.mutation)
 		DataService.addSteal(capturer)
+		DataService.recordGhost(capturer, entry.mutation, false)
 		BountyService.onSteal(capturer, def.price)
 		Notify.send(capturer, `You captured {name}! It's in your base.`, "success")
 		if owner.Parent then

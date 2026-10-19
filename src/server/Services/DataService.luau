@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
+local GhostConfig = require(ReplicatedStorage.Shared.Config.GhostConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local Notify = require(script.Parent.Parent.Util.Notify)
@@ -102,6 +103,7 @@ local function newData()
 		petGhost = GameConfig.GhostPetDefault, -- the ghost the Ghost Buddy pet looks like (picked in the Index, must be found)
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
+		stats = {}, -- milestone counters for titles: { ghostsBought = n, mutations = n, shinies = n }
 		upgrades = {}, -- upgrade levels: { graves = n, lock = n, speed = n, carry = n } (see Shared.Upgrades); all but graves reset on rebirth
 		lastSeen = 0, -- os.time() of the last save (offline earnings measure the time since)
 	}
@@ -165,6 +167,28 @@ function DataService.start()
 end
 
 -- Returns true once the player's data is loaded (false if they left while loading).
+-- Milestone stats (TitleConfig `milestone`): "steals", "found" (ghosts in the Index), and the
+-- counters in data.stats. Shown to the player's device as "Stat_<name>" attributes, which
+-- TitleService also watches to unlock milestone titles.
+local function statValue(data, name: string): number
+	if name == "steals" then
+		return data.steals
+	elseif name == "found" then
+		local count = 0
+		for ghostId in data.discovered do
+			if GhostConfig.byId[ghostId] then
+				count += 1
+			end
+		end
+		return count
+	end
+	return data.stats[name] or 0
+end
+
+local function syncStat(player: Player, data, name: string)
+	player:SetAttribute("Stat_" .. name, statValue(data, name))
+end
+
 function DataService.playerAdded(player: Player): boolean
 	local data, canSave = loadData(player)
 	if not player.Parent then
@@ -264,6 +288,9 @@ function DataService.playerAdded(player: Player): boolean
 		player:SetAttribute("Cosmetic_" .. cosmeticId, true)
 	end
 	player:SetAttribute("PetGhost", data.petGhost)
+	for _, name in { "steals", "found", "ghostsBought", "mutations", "shinies" } do
+		syncStat(player, data, name)
+	end
 	return true
 end
 
@@ -578,6 +605,7 @@ function DataService.setGhost(player: Player, slot: number, ghostId: string?, mu
 		if ghostId and not profile.data.discovered[ghostId] then
 			profile.data.discovered[ghostId] = true
 			player:SetAttribute("Index_" .. ghostId, true)
+			syncStat(player, profile.data, "found")
 		end
 		-- ...and this ghost's mutation, on its Index page.
 		local key = ghostId and mutationId and ghostId .. ":" .. mutationId
@@ -648,6 +676,35 @@ function DataService.addSteal(player: Player)
 	local profile = profiles[player]
 	if profile then
 		profile.data.steals += 1
+		syncStat(player, profile.data, "steals")
+	end
+end
+
+function DataService.getStat(player: Player, name: string): number
+	local profile = profiles[player]
+	return if profile then statValue(profile.data, name) else 0
+end
+
+-- A new ghost for this player (bought, out-bid, stolen or captured; not one loaded from their
+-- save): counts toward the milestone titles. `bought` = paid for it on the walkway or in flight.
+function DataService.recordGhost(player: Player, mutationId: string?, bought: boolean)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	local stats = profile.data.stats
+	local function add(name: string)
+		stats[name] = (stats[name] or 0) + 1
+		syncStat(player, profile.data, name)
+	end
+	if bought then
+		add("ghostsBought")
+	end
+	if mutationId then
+		add("mutations")
+		if mutationId == "shiny" then
+			add("shinies")
+		end
 	end
 end
 

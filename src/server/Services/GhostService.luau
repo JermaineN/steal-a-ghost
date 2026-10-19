@@ -250,6 +250,7 @@ local function tryBuy(player: Player, def, model: Model, mutationId: string?)
 	model:Destroy()
 	-- It's yours (and saved) right away, then flies from where you bought it to its grave.
 	GhostService.placeGhost(player, slot, def.id, { from = boughtAt, paid = def.price, buyCount = 0 }, mutationId)
+	DataService.recordGhost(player, mutationId, true)
 	Notify.send(player, "You bought " .. name .. "! It's flying to your base.", "success")
 end
 
@@ -461,6 +462,7 @@ function GhostService.tryRebuy(buyer: Player, owner: Player, slot: number, entry
 		{ from = from, paid = price, buyCount = buyCount },
 		entry.mutation
 	)
+	DataService.recordGhost(buyer, entry.mutation, true)
 
 	local outbid = rebuyPrice(def, buyCount + 1)
 	Notify.send(buyer, `You bought {name} for ${Format.cash(price)}! It's flying to your base.`, "success")

@@ -1,6 +1,7 @@
 -- Titles (TitleConfig): a word above a player's head that everyone sees, like "THE GOAT". A
 -- player owns a title if their UserId is on its allow-list, they've earned it
--- (DataService.grantTitle), they have enough rebirths for a rebirth title, they own its game
+-- (DataService.grantTitle), they have enough rebirths for a rebirth title, they've reached a
+-- milestone title's goal (DataService stats, "Stat_<name>" attributes), they own its game
 -- pass (VIP) or they bought it in the Shop (CosmeticConfig). They pick which
 -- one to show in the Inventory (EquipTitle remote); the choice is saved. Owned titles are shown to the player's device as "Title_<id>" = true
 -- attributes, and the one they're showing as the "Title" attribute.
@@ -31,6 +32,9 @@ local function owns(player: Player, titleId: string): boolean
 		return true
 	end
 	if title.rebirths and DataService.getRebirths(player) >= title.rebirths then
+		return true
+	end
+	if title.milestone and DataService.getStat(player, title.milestone.stat) >= title.milestone.goal then
 		return true
 	end
 	if title.gamePass and StoreConfig.ownsPass(player, title.gamePass) then
@@ -98,6 +102,26 @@ function TitleService.playerLoaded(player: Player)
 	player.CharacterAdded:Connect(function(character)
 		character:WaitForChild("Head", 10)
 		decorate(player)
+	end)
+	-- A milestone stat went up (DataService): unlock any milestone title it has just reached.
+	player.AttributeChanged:Connect(function(attribute)
+		if string.sub(attribute, 1, 5) ~= "Stat_" then
+			return
+		end
+		for _, title in TitleConfig.Titles do
+			if title.milestone and not player:GetAttribute("Title_" .. title.id) and owns(player, title.id) then
+				player:SetAttribute("Title_" .. title.id, true)
+				Notify.send(
+					player,
+					`New title unlocked: {title.text}!`,
+					"success",
+					{ note = TitleConfig.milestoneText(title), seconds = 5 }
+				)
+				if DataService.getTitle(player) == nil then
+					setTitle(player, title.id)
+				end
+			end
+		end
 	end)
 	player:GetAttributeChangedSignal("Invisible"):Connect(function()
 		local tag = player.Character and player.Character:FindFirstChild(TAG_NAME)

@@ -65,6 +65,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 53 | The Divine ghost is now the Seraph | #82 |
 | 54 | Gem packs can be bought with Robux | #83 |
 | 55 | A "!" on the menu tab while something is waiting | #83 |
+| 56 | Title rarities and milestone titles | #84 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1455,3 +1456,39 @@ those buttons.
 the menu opens and comes back when it closes; no errors. **Not tested:** the Index case on its
 own (it uses the same signal as the Index button's badge).
 
+## 56. Title rarities and milestone titles
+
+Every title now has a rarity (Common to Secret), and its card in the Inventory and Shop is
+coloured like an item of that rarity, with the rarity word on top. The title words keep their
+own colours. THE GOAT and SUPERNOVA are Secret, VIP and NIGHTMARE Mythic, PHANTOM Legendary
+(now also Legendary in the Shop), and the rebirth titles REBORN, UNDYING and ETERNAL are
+Rare, Epic and Legendary. The Titles tab lists them rarest first, owned and locked together.
+
+Ten new milestone titles are earned by playing, and show locked in the Titles tab with a
+progress bar until then:
+
+| Title | Rarity | Goal |
+|---|---|---|
+| GHOST HUNTER | Common | Buy 20 ghosts |
+| PICKPOCKET | Common | Steal 3 ghosts |
+| COLLECTOR | Uncommon | Find 5 ghosts in the Index |
+| GHOST HOARDER | Uncommon | Buy 100 ghosts |
+| ODDBALL | Rare | Get 5 mutated ghosts |
+| CAT BURGLAR | Rare | Steal 25 ghosts |
+| MUTATED | Epic | Get 20 mutated ghosts |
+| MASTER THIEF | Epic | Steal 100 ghosts |
+| SHINY HUNTER | Legendary | Get 5 Shiny ghosts |
+| GRAVEKEEPER | Legendary | Find every ghost in the Index |
+
+Only PHANTOM (gems) and NIGHTMARE (Robux) can be bought. New saved counters in DataService
+(`stats`: `ghostsBought`, `mutations`, `shinies`; `DataService.recordGhost` is called on a walkway
+buy, an out-bid, a steal and a capture) plus the existing `steals` and Index finds are shown as
+`Stat_<name>` attributes. TitleService watches them and unlocks a title when its goal is reached
+(TitleConfig `milestone = { stat, goal }`). Counting starts now: steals and Index finds from
+before count, but ghosts bought and mutations from before don't (they were never saved).
+
+**Tested:** in a Studio playtest, the Titles tab shows the rarity colours and order, locked
+milestone titles with their goal and a 0/25-style bar, and buying a walkway ghost raised
+`ghostsBought` and `found` and (with the goal set to 1 for the test) unlocked GHOST HUNTER, which
+then showed as owned. No errors. **Not tested:** the steal, capture and Shiny counters (they
+need a 2-player test or a lucky Shiny), and saving the counters (only in the live game).
