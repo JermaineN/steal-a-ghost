@@ -69,6 +69,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 57 | Flat colours for Legendary-and-below titles | #85 |
 | 58 | Codes: redeem codes for gems, cash or spins (side menu → Codes) | #86 |
 | 59 | Spin "Get more", 2x Money badge, VIP and Fast Flight buffs | #87 |
+| 60 | Seven new ghosts: Spirit, Lost Soul, Ghoul, Ghast, Yokai, Onryo, Oni | #88 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1582,3 +1583,29 @@ set, a bought Wisp flew with all three trails, landed in about 3.5 s, and had no
 landing (screenshot taken mid-flight). No errors. **Not tested:** the outbid switching (needs a
 2-player test: buy with the pass, get outbid by a player without it, then outbid back), and
 the +15% income in play (it's a config number in the existing VIP income code).
+
+## 60. Seven new ghosts
+
+Seven new ghosts on the walkway, each with an AI-generated model you approved and its own glow
+and particles (`GhostModels.<id>`). Since every list of ghosts reads `GhostConfig`, they're also
+in the Index (with their mutations and gem rewards), the Ghost Buddy picker and rebirths.
+
+| Ghost | Rarity | Price | Income | Look |
+|---|---|---|---|---|
+| Spirit | Common | $50 | $2/s | Tiny mint teardrop ghost; mint sparks |
+| Lost Soul | Uncommon | $900 | $20/s | Crying blue hooded ghost with a lantern; falling tears |
+| Ghoul | Rare | $2.5K | $50/s | Hunched green undead; walks on the walkway, green stench |
+| Ghast | Rare | $3.5K | $70/s | Big wailing white ghost; pale mist |
+| Yokai | Epic | $12K | $200/s | Masked fox spirit with many tails; blue foxfire |
+| Onryo | Legendary | $50K | $650/s | White kimono, long black hair, red eyes; dark wisps, dim red glow |
+| Oni | Mythic | $1M | $9K/s | Red horned demon with a club; walks, embers and smoke |
+
+The models are in `ServerStorage.GhostMeshes` (`spirit`, `lost_soul`, `ghoul`, `ghast`, `yokai`,
+`onryo`, `oni`), which is **Studio-only: save/publish the place** or they're lost (the ghosts
+would fall back to plain balls). The Oni is the second Mythic: pricier and a bit rarer than the
+Spectre King.
+
+**Tested** in a Studio playtest: all seven ghosts were built by the game's own code
+(`GhostPreviews`) with their models, placed by the player and looked right in the map's lighting
+(screenshot), and the Lost Soul label showed $900 / +$20/s. No errors. **Not tested:** buying
+one off the walkway, the Ghoul/Oni walk animation while moving, and their Index pages.

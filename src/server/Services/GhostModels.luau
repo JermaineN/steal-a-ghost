@@ -392,24 +392,28 @@ function GhostModels.divine_1(model: Model, body: BasePart, def): number?
 	-- Like the King: lift it so its tail floats just above the ground.
 	local lift = def.size * heightScale / 2 - 2.6
 	local holyGold = Color3.fromRGB(255, 225, 140)
-	local labelHeight, mesh = meshGhost(model, body, def, heightScale, holyGold, 0, lift)
+	-- Nearly solid (0.1), so its gold trim and robe folds read instead of washing out.
+	local labelHeight, mesh = meshGhost(model, body, def, heightScale, holyGold, 0.1, lift)
 	if not mesh then
 		return nil
 	end
 	-- A robe shouldn't stretch like a flame (and stretching would pull it away from its wings).
 	mesh:SetAttribute("Flicker", false)
 
+	-- A soft glow: brighter light bleached the white robe so you couldn't make it out.
 	local light = body:FindFirstChildOfClass("PointLight")
 	if light then
-		light.Brightness = 2.5
+		light.Brightness = 1
+		light.Range = def.size * 2.2
 	end
 
 	for _, part in model:GetChildren() do
-		-- A solid glowing gold halo (its texture would hide the Neon glow).
+		-- A solid glowing gold halo (its texture would hide the Neon glow), in a deeper gold so
+		-- the glow doesn't flare.
 		if part.Name == "Halo" and part:IsA("MeshPart") then
 			part.TextureID = ""
 			part.Material = Enum.Material.Neon
-			part.Color = Color3.fromRGB(255, 210, 90)
+			part.Color = Color3.fromRGB(215, 165, 60)
 		end
 
 		-- Wings hang off the robe on a Weld (not the WeldConstraint attachMesh gave them), so the
@@ -436,7 +440,7 @@ function GhostModels.divine_1(model: Model, body: BasePart, def): number?
 	-- Soft glowing motes drifting slowly down off it, like falling feathers.
 	local feathers = Instance.new("ParticleEmitter")
 	feathers.Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(255, 240, 200))
-	feathers.LightEmission = 0.8
+	feathers.LightEmission = 0.3
 	feathers.Size = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, 0),
 		NumberSequenceKeypoint.new(0.2, 0.3),
@@ -513,14 +517,15 @@ function GhostModels.addRarityAura(body: BasePart, rarity: string, size: number)
 		sparkles.Name = "DivineAura"
 		sparkles.Texture = SPARKLE_TEXTURE
 		sparkles.Color = Theme.RarityGradients.Divine
-		sparkles.LightEmission = 1
+		-- Fewer, smaller and softer than at first, so they don't hide the ghost.
+		sparkles.LightEmission = 0.4
 		sparkles.Size = NumberSequence.new({
 			NumberSequenceKeypoint.new(0, 0),
-			NumberSequenceKeypoint.new(0.3, size * 0.25),
+			NumberSequenceKeypoint.new(0.3, size * 0.15),
 			NumberSequenceKeypoint.new(1, 0),
 		})
 		sparkles.Lifetime = NumberRange.new(1.2, 2)
-		sparkles.Rate = 10
+		sparkles.Rate = 5
 		sparkles.Speed = NumberRange.new(0.8, 1.6)
 		sparkles.SpreadAngle = Vector2.new(40, 40)
 		sparkles.EmissionDirection = Enum.NormalId.Top
@@ -596,6 +601,246 @@ function GhostModels.sheet_ghost(model: Model, body: BasePart, def): number?
 	end
 	-- Cloth shouldn't stretch like a flame; it just bobs and sways.
 	mesh:SetAttribute("Flicker", false)
+	return labelHeight
+end
+
+-- Makes a ParticleEmitter on `parent` with the given properties (e.g. { Rate = 5, ... }).
+local function addParticles(parent: Instance, properties: { [string]: any }): ParticleEmitter
+	local emitter = Instance.new("ParticleEmitter")
+	for property, value in properties do
+		(emitter :: any)[property] = value
+	end
+	emitter.Parent = parent
+	return emitter
+end
+
+-- For ghosts with feet on the ground: lifts (or lowers) the mesh so its feet touch the ground.
+-- Ghosts float with their centre 4 studs up (the same sum as the Spectre King's).
+local function feetLift(def, heightScale: number): number
+	return def.size * heightScale / 2 - 2.6
+end
+
+-- Spirit: a tiny, shy mint-white teardrop ghost with a curled tail and stubby arms.
+function GhostModels.spirit(model: Model, body: BasePart, def): number?
+	local mint = Color3.fromRGB(170, 255, 230)
+	local labelHeight, mesh = meshGhost(model, body, def, 1.4, mint)
+	if not mesh then
+		return nil
+	end
+
+	-- A few soft mint sparks drifting up off it.
+	addParticles(mesh, {
+		Color = ColorSequence.new(Color3.new(1, 1, 1), mint),
+		LightEmission = 1,
+		Size = NumberSequence.new(0.2, 0),
+		Transparency = NumberSequence.new(0.2, 1),
+		Lifetime = NumberRange.new(0.8, 1.4),
+		Rate = 4,
+		Speed = NumberRange.new(0.4, 1),
+		SpreadAngle = Vector2.new(30, 30),
+		EmissionDirection = Enum.NormalId.Top,
+	})
+	return labelHeight
+end
+
+-- Lost Soul: a sad little blue hooded ghost with teary eyes, carrying a lantern with a blue flame.
+function GhostModels.lost_soul(model: Model, body: BasePart, def): number?
+	local soulBlue = Color3.fromRGB(110, 170, 255)
+	local labelHeight, mesh = meshGhost(model, body, def, 1.3, soulBlue, 0.1)
+	if not mesh then
+		return nil
+	end
+	-- A hood shouldn't stretch like a flame; it just bobs and sways.
+	mesh:SetAttribute("Flicker", false)
+
+	-- Blue tear-drops slowly falling off it.
+	addParticles(mesh, {
+		Color = ColorSequence.new(Color3.fromRGB(200, 230, 255), soulBlue),
+		LightEmission = 0.8,
+		Size = NumberSequence.new(0.18, 0.05),
+		Transparency = NumberSequence.new(0.2, 1),
+		Lifetime = NumberRange.new(1, 1.6),
+		Rate = 3,
+		Speed = NumberRange.new(0.2, 0.5),
+		SpreadAngle = Vector2.new(20, 20),
+		EmissionDirection = Enum.NormalId.Bottom,
+		Acceleration = Vector3.new(0, -1, 0),
+	})
+	return labelHeight
+end
+
+-- Ghoul: a hunched grey-green undead with long claws and glowing yellow eyes. It shuffles
+-- along the walkway on its feet like the Spectre King.
+function GhostModels.ghoul(model: Model, body: BasePart, def): number?
+	local heightScale = 1.2
+	local sickly = Color3.fromRGB(190, 230, 90)
+	local labelHeight, mesh = meshGhost(model, body, def, heightScale, sickly, 0, feetLift(def, heightScale))
+	if not mesh then
+		return nil
+	end
+	mesh:SetAttribute("Flicker", false)
+	mesh:SetAttribute("Walk", true)
+
+	local light = body:FindFirstChildOfClass("PointLight")
+	if light then
+		light.Brightness = 1
+		light.Range = def.size * 2
+	end
+
+	-- A faint sickly green stench rising off it.
+	addParticles(mesh, {
+		Color = ColorSequence.new(Color3.fromRGB(150, 190, 80)),
+		LightEmission = 0.2,
+		Size = NumberSequence.new(0.4, 1),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.3, 0.75),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Lifetime = NumberRange.new(1.2, 2),
+		Rate = 4,
+		Speed = NumberRange.new(0.3, 0.6),
+		SpreadAngle = Vector2.new(30, 30),
+		EmissionDirection = Enum.NormalId.Top,
+	})
+	return labelHeight
+end
+
+-- Ghast: a big wailing white ghost with an open mouth and hollow eyes.
+function GhostModels.ghast(model: Model, body: BasePart, def): number?
+	local labelHeight, mesh = meshGhost(model, body, def, 1.2, Color3.fromRGB(215, 220, 255), 0.15)
+	if not mesh then
+		return nil
+	end
+
+	-- Pale mist pouring down off its ragged bottom.
+	addParticles(mesh, {
+		Color = ColorSequence.new(Color3.fromRGB(235, 235, 250)),
+		LightEmission = 0.3,
+		Size = NumberSequence.new(0.6, 1.5),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.3, 0.7),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Lifetime = NumberRange.new(1.2, 2),
+		Rate = 6,
+		Speed = NumberRange.new(0.2, 0.5),
+		SpreadAngle = Vector2.new(30, 30),
+		EmissionDirection = Enum.NormalId.Bottom,
+	})
+	return labelHeight
+end
+
+-- Yokai: a fox spirit with a painted mask, a bell collar and many flame-tipped tails, ringed by
+-- blue spirit flames. Fully solid so its colours stay clear.
+function GhostModels.yokai(model: Model, body: BasePart, def): number?
+	local foxfire = Color3.fromRGB(90, 160, 255)
+	local labelHeight, mesh = meshGhost(model, body, def, 1.2, foxfire, 0)
+	if not mesh then
+		return nil
+	end
+	mesh:SetAttribute("Flicker", false)
+
+	-- Blue foxfire flickering up off its tails.
+	addParticles(mesh, {
+		Color = ColorSequence.new(Color3.fromRGB(200, 230, 255), foxfire),
+		LightEmission = 1,
+		Size = NumberSequence.new(0.35, 0),
+		Transparency = NumberSequence.new(0.1, 1),
+		Lifetime = NumberRange.new(0.6, 1.1),
+		Rate = 10,
+		Speed = NumberRange.new(0.8, 1.5),
+		SpreadAngle = Vector2.new(25, 25),
+		EmissionDirection = Enum.NormalId.Top,
+		Shape = Enum.ParticleEmitterShape.Box,
+		ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface,
+	})
+	return labelHeight
+end
+
+-- Onryo: a vengeful spirit in a white burial kimono, long black hair over her face and glowing
+-- red eyes. A dim red glow and dark wisps of hair-like smoke drifting down off her hem.
+function GhostModels.onryo(model: Model, body: BasePart, def): number?
+	local labelHeight, mesh = meshGhost(model, body, def, 1.2, Color3.fromRGB(255, 50, 60), 0.1)
+	if not mesh then
+		return nil
+	end
+	mesh:SetAttribute("Flicker", false)
+
+	-- Keep the red glow dim and close (like the Wraith's), so her white kimono stays white.
+	local light = body:FindFirstChildOfClass("PointLight")
+	if light then
+		light.Brightness = 0.8
+		light.Range = def.size * 1.6
+	end
+
+	addParticles(mesh, {
+		Color = ColorSequence.new(Color3.fromRGB(20, 15, 20)),
+		LightEmission = 0,
+		Size = NumberSequence.new(0.5, 1.3),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.3, 0.6),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Lifetime = NumberRange.new(1.2, 2),
+		Rate = 6,
+		Speed = NumberRange.new(0.2, 0.5),
+		SpreadAngle = Vector2.new(30, 30),
+		EmissionDirection = Enum.NormalId.Bottom,
+	})
+	return labelHeight
+end
+
+-- Oni: a big red horned demon with a spiked club, wild white hair and a fiery tail. Fully solid,
+-- glowing orange, stomping along the walkway like the Spectre King, with embers flying off it.
+function GhostModels.oni(model: Model, body: BasePart, def): number?
+	local heightScale = 1.3
+	local fire = Color3.fromRGB(255, 120, 40)
+	local labelHeight, mesh = meshGhost(model, body, def, heightScale, fire, 0, feetLift(def, heightScale))
+	if not mesh then
+		return nil
+	end
+	mesh:SetAttribute("Flicker", false)
+	mesh:SetAttribute("Walk", true)
+
+	local light = body:FindFirstChildOfClass("PointLight")
+	if light then
+		light.Brightness = 2.5
+		light.Range = def.size * 3
+	end
+
+	-- Fiery embers rising off him (sized up, since he's as big as the King).
+	addParticles(mesh, {
+		Color = ColorSequence.new(Color3.fromRGB(255, 220, 120), Color3.fromRGB(255, 60, 30)),
+		LightEmission = 1,
+		Size = NumberSequence.new(0.35, 0),
+		Transparency = NumberSequence.new(0, 1),
+		Lifetime = NumberRange.new(0.8, 1.5),
+		Rate = 14,
+		Speed = NumberRange.new(1, 2),
+		SpreadAngle = Vector2.new(35, 35),
+		EmissionDirection = Enum.NormalId.Top,
+		Shape = Enum.ParticleEmitterShape.Box,
+		ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface,
+	})
+	-- Dark smoke curling up behind the embers.
+	addParticles(mesh, {
+		Color = ColorSequence.new(Color3.fromRGB(40, 25, 25)),
+		LightEmission = 0,
+		Size = NumberSequence.new(0.8, 2),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.3, 0.7),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+		Lifetime = NumberRange.new(1.4, 2.2),
+		Rate = 5,
+		Speed = NumberRange.new(0.5, 1),
+		SpreadAngle = Vector2.new(30, 30),
+		EmissionDirection = Enum.NormalId.Top,
+	})
 	return labelHeight
 end
 
