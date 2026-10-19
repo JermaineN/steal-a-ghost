@@ -52,8 +52,8 @@ return {
 	RepurchaseMarkup = 0.5,
 
 	-- Banner across the top of everyone's screen when a top-rarity ghost spawns on the walkway
-	-- (gold for Legendary, a bigger rainbow one for Mythic, and the big one again in heavenly
-	-- colours for Divine and silver-and-red with a dark flash for Secret). Sounds are free Creator
+	-- (gold for Legendary, a bigger shiny red one for Mythic, and the big one again in heavenly
+	-- colours for Divine and black-and-white with a dark flash for Secret). Sounds are free Creator
 	-- Store audio (the Mythic one is a Roblox-licensed APM Music track); swap the IDs for any other
 	-- audio. Divine and Secret reuse the Mythic sound until you pick their own.
 	RareSpawnAnnouncements = {

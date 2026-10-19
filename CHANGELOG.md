@@ -50,6 +50,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 38 | Spin Wheel: daily and online spins, gems, x2 money, a Mythic item | #65 |
 | 39 | Phones: smaller HUD and buttons, Haunted Hour pill at the top | #67 |
 | 40 | Phones: base texts 20% smaller | #68 |
+| 41 | Mythic text shiny red; Secret and THE GOAT shiny dark grey, looping | #69 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1089,3 +1090,24 @@ on this device only (not those under `workspace.WalkwayGhosts`): the billboard g
 base label measured 152×68 (was 190×85) with the name at 80% width, the
 collect pads 96×44 (was 120×56), walkway labels stayed 190 wide, and the screenshot showed the
 lock text and base sign unchanged. Not tested on a real phone.
+
+## 41. Mythic shiny red; Secret and THE GOAT shiny dark grey, looping (#69)
+
+Mythic text everywhere (ghost labels, the Index, spawn banners, the sell pop-up, item cards,
+the capture sign) is now shiny red instead of rainbow: deep red with bright highlights, still
+sliding back and forth. The Spectre King's sparkle stars stay rainbow.
+
+Secret text no longer looks like Mythic: it's dark grey with two thin white shines that scroll
+one way in a seamless loop (5 seconds per loop) instead of sliding back and forth. THE GOAT
+title now uses the Secret colours, so it matches and follows any future change.
+
+**How it works:** the colours are `Theme.RarityGradients.Mythic` / `.Secret`; THE GOAT's
+`gradient` is `Theme.RarityGradients.Secret`. `GradientAnimator` scrolls any `AnimatedGradient`
+whose colours are in its `LOOPING` list (Secret) by shifting the colours along each frame and
+wrapping them round (`LOOP_SECONDS`); a looping pattern must start and end on the same colour.
+The big spawn banner hands a looping gradient to GradientAnimator instead of its own swing.
+
+**Tested (solo):** fired the Mythic and Secret spawn banners from the server and screenshotted
+them; THE GOAT above the head showed the new colours; measured the shine moving one way
+(0.1 of the width every half second, wrapping round) on the title and the banner. Not tested:
+a Secret ghost's label on the walkway (no Secret ghost spawned; same gradient code path).

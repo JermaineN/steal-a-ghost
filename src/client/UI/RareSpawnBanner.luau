@@ -1,6 +1,6 @@
 -- Banner across the top of the screen when a top-rarity ghost spawns on the walkway.
 --   Legendary: slides down in shimmering gold with the ghost's name and price, with a chime.
---   Mythic:    the screen flashes, a dark strip drops in, and a huge rainbow title lands with a
+--   Mythic:    the screen flashes, a dark strip drops in, and a huge shiny red title lands with a
 --              bigger sound; its colours drift slowly and it stays longer.
 --   Divine / Secret: the same big banner in their own colours (Secret flashes the screen dark).
 --   Shiny mutation: the big banner in Shiny's colours, on any rarity ("SHINY GHOST SPAWNED!",
@@ -8,6 +8,7 @@
 --   Undead mutation: the smaller (Legendary-style) banner in Undead's colours, or the big one
 --              when the ghost is Mythic or rarer ("UNDEAD MYTHIC GHOST SPAWNED!").
 -- The server only says which ghost spawned (Remotes.RareSpawn); everything here is visual.
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -20,6 +21,7 @@ local MutationConfig = require(ReplicatedStorage.Shared.Config.MutationConfig)
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local GradientAnimator = require(script.Parent.Parent.GradientAnimator)
 
 local player = Players.LocalPlayer
 
@@ -212,7 +214,7 @@ local function showBig(style: BigStyle, announcement)
 		Text = style.title,
 		Parent = content,
 	}, 5)
-	local rainbow = new("UIGradient", { Color = style.gradient, Parent = title })
+	local shimmer = new("UIGradient", { Color = style.gradient, Parent = title })
 	local titleScale = new("UIScale", { Scale = 2.5, Parent = title })
 	outlinedText({
 		Position = UDim2.fromOffset(0, 74),
@@ -224,12 +226,17 @@ local function showBig(style: BigStyle, announcement)
 		Parent = content,
 	}, 3.5)
 
-	-- The rainbow drifts slowly back and forth; the title itself stays still once it lands.
+	-- The colours drift slowly back and forth (looping colours, like Secret's, scroll one way
+	-- through GradientAnimator instead); the title itself stays still once it lands.
 	local started = os.clock()
 	local animation = RunService.RenderStepped:Connect(function()
 		local t = os.clock() - started
-		rainbow.Offset = Vector2.new(math.sin(t * 0.8) * 0.5, 0)
+		shimmer.Offset = Vector2.new(math.sin(t * 0.8) * 0.5, 0)
 	end)
+	if GradientAnimator.loops(style.gradient) then
+		animation:Disconnect()
+		CollectionService:AddTag(shimmer, GradientAnimator.TAG)
+	end
 
 	playSound(announcement)
 	TweenService:Create(strip, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {

@@ -9,6 +9,8 @@
 --                  game and saved (DataService.grantTitle).
 --   rebirths       earned by reaching this many rebirths (TitleService). These titles show in
 --                  the Inventory even before you own them, locked, with a progress bar.
+local Theme = require(script.Parent.Parent.Theme)
+
 local TitleConfig = {}
 
 local function gradient(...: Color3): ColorSequence
@@ -27,15 +29,9 @@ TitleConfig.Titles = {
 	{
 		id = "the_goat",
 		text = "THE GOAT",
-		color = Color3.fromRGB(255, 70, 90),
-		-- The Secret rarity's colours: silver stripes with a blood-red streak.
-		gradient = gradient(
-			Color3.fromRGB(255, 255, 255),
-			Color3.fromRGB(140, 140, 155),
-			Color3.fromRGB(255, 50, 70),
-			Color3.fromRGB(140, 140, 155),
-			Color3.fromRGB(255, 255, 255)
-		),
+		-- The Secret rarity's colours: shiny black and white.
+		color = Color3.fromRGB(230, 230, 240),
+		gradient = Theme.RarityGradients.Secret,
 		shine = true,
 		allowedUserIds = { OWNER_USER_ID },
 	},
