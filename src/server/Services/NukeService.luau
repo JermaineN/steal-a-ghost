@@ -8,7 +8,8 @@
 --   3. Blast: everyone is let go and launched up and away from the middle (the launcher too), and
 --      stays floppy for NukeRagdollSeconds after landing; thieves drop the ghost they carry.
 -- The server sends one NukeLaunched remote with the times and every device plays its part from
--- that. Only one nuke can be on its way at a time. Cooldown starts on use.
+-- that. Only one nuke can be on its way at a time. Cooldown starts on use, and a launch also puts
+-- everyone else's nuke on at least NukeSharedCooldownSeconds.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -132,7 +133,25 @@ function NukeService.tryUse(player: Player, tool: Tool)
 		return
 	end
 	readyAt[player] = now + GameConfig.NukeCooldownSeconds
-	tool:SetAttribute("ReadyAt", readyAt[player]) -- the hotbar shows the cooldown from this
+	-- The hotbar shows the cooldown from these.
+	tool:SetAttribute("ReadyAt", readyAt[player])
+	tool:SetAttribute("CooldownTotal", GameConfig.NukeCooldownSeconds)
+
+	-- Everyone else's nuke goes on a shorter cooldown (a longer one already running stays).
+	local sharedReadyAt = now + GameConfig.NukeSharedCooldownSeconds
+	for _, other in Players:GetPlayers() do
+		if other == player or (readyAt[other] or 0) >= sharedReadyAt then
+			continue
+		end
+		readyAt[other] = sharedReadyAt
+		local backpack = other:FindFirstChildOfClass("Backpack")
+		local otherTool = (backpack and backpack:FindFirstChild(NukeService.ITEM_ID))
+			or (other.Character and other.Character:FindFirstChild(NukeService.ITEM_ID))
+		if otherTool then
+			otherTool:SetAttribute("ReadyAt", sharedReadyAt)
+			otherTool:SetAttribute("CooldownTotal", GameConfig.NukeSharedCooldownSeconds)
+		end
+	end
 
 	-- The button lights up.
 	local button = tool:FindFirstChild("Button", true)
