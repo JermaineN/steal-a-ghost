@@ -74,7 +74,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 62 | Icons for game passes and gem packs on the Creator Hub | #90 |
 | 63 | EARLY TESTER title (Divine) for the five early testers | #91 |
 | 64 | HALLOWEEN code turned on (until Nov 1) | #92 |
-| 65 | Data wipe for the public launch (fresh saves and leaderboards) | #PR |
+| 65 | Data wipe for the public launch (fresh saves and leaderboards) | #93 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1686,7 +1686,7 @@ when the game reaches 1,000 likes.
 bonus included, and +$10K) and a second try said "Already used". **Not tested:** that the
 redemption is saved (only checkable in the live game).
 
-## 65. Data wipe for the public launch (#PR)
+## 65. Data wipe for the public launch (#93)
 
 Everyone starts from scratch when the game goes public: cash, gems, ghosts, rebirths, items,
 upgrades, Index finds, earned titles, gem-bought cosmetics, redeemed codes and the leaderboards.
