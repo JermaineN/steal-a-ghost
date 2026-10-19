@@ -842,3 +842,25 @@ down for 5.1 s (in the air, then 3.5 s after landing); Player1 got "SMASH! You l
 player!". With Player2 40 studs away at 60 degrees to the side (outside the 50 degree cone), the
 swing didn't hit them. One earlier swing hit nobody, most likely because the tool was replaced
 while it was still loading in (that counts as putting it away).
+
+## 29. Mega Mallet price
+
+The Mega Mallet now costs 2,000 gems (was 2,500). Not playtested (a one-number change).
+
+## 30. Tennis Racket
+
+A new Shop item (200 gems, bought once): swings and hits exactly like the bat (same range, arc,
+swing animation and speed, no cooldown, same height) but knocks people **eleven times further
+back**, and after getting up they can't be knocked over again for 1.9 s (1.9x the bat's 1 s), with a tennis
+"thwock" (Pro Sound Effects' "Tennis Ball Hits CU Impacts 3", only the racket hit: 0.7 s from 1.27 s in). Thieves it hits
+drop their ghost, like the bat. Orange racket model with white strings; icon from
+`scripts/draw-racket-icon.ps1`. Config: `RacketIcon`,
+`RacketPushMultiplier`, `RacketHitSound` (GameConfig); `racketHits` and `buildRacket` in ItemService.
+
+**2-player test** (with the first version, 2x push and 2x height): bought it (−200 gems); the
+racket hit played the tennis sound and launched Player2 with (10, 120, 0); a bat hit for
+comparison was "bonk" and (5, 60, 0). The user then asked for normal height and 3x distance:
+then the user found the hit sound silent (the clip's hit is at 1.33 s, after the old 0.7 s
+cut-off; now it starts at 1.27 s, measured loud at once) and asked for 11x the bat's distance and 1.9x its
+immunity after getting up: now (55, 60, 0) and 1.9 s (`RacketImmunityMultiplier`; RagdollService.knock
+takes an optional `immunitySeconds`). **Not retested** in a 2-player test after these changes.

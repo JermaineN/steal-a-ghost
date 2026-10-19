@@ -19,8 +19,9 @@ local ItemConfig = {}
 ItemConfig.Items = {
 	{ id = "smoke_bomb", name = "Smoke Bomb", description = "Vanish in a puff of smoke", price = 250, currency = "gems", color = Color3.fromRGB(175, 95, 255), image = "rbxassetid://109587585269112", once = true, tool = true },
 	{ id = "universal_key", name = "Universal Key", description = "Unlock any locked base", price = 500, currency = "gems", color = Color3.fromRGB(255, 190, 40), image = "rbxassetid://86142974980494", once = true, tool = true },
-	{ id = "mega_mallet", name = "Mega Mallet", description = "Slam the ground, launch everyone", price = 2500, currency = "gems", color = Color3.fromRGB(235, 60, 50), image = "rbxassetid://78467553699874", once = true, tool = true },
+	{ id = "mega_mallet", name = "Mega Mallet", description = "Slam the ground, launch everyone", price = 2000, currency = "gems", color = Color3.fromRGB(235, 60, 50), image = "rbxassetid://78467553699874", once = true, tool = true },
 	{ id = "polterpuller", name = "PolterPuller 4000", description = "Capture ghosts straight home", price = 1100, currency = "gems", color = Color3.fromRGB(120, 255, 130), image = "rbxassetid://110348892274923", once = true, tool = true },
+	{ id = "tennis_racket", name = "Tennis Racket", description = "A bat that knocks people further", price = 200, currency = "gems", color = Color3.fromRGB(205, 245, 60), image = "rbxassetid://95075449356080", once = true, tool = true },
 	{ id = "shield",     name = "Shield",     description = "Shrug off knockbacks and cages", price = 300, currency = "gems", color = Color3.fromRGB(80, 200, 255), image = "rbxassetid://108221968843411", once = true, tool = true },
 	{ id = "gravity",    name = "Gravity",    description = "Pull everyone toward you",  price = 700, currency = "gems", color = Color3.fromRGB(110, 60, 200),  image = "rbxassetid://100121928705722", once = true, tool = true },
 }

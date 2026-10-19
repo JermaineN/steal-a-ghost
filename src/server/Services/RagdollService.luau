@@ -74,8 +74,15 @@ end
 
 -- Knocks the player over, pushing them with `velocity` (studs per second). They stay floppy for
 -- `seconds` (the bat's GameConfig.BatRagdollSeconds if not given), counted from the hit, or from
--- when they land if `afterLanding` is true.
-function RagdollService.knock(player: Player, velocity: Vector3, seconds: number?, afterLanding: boolean?)
+-- when they land if `afterLanding` is true. After getting up they can't be knocked over again for
+-- `immunitySeconds` (GameConfig.BatHitImmunitySeconds if not given).
+function RagdollService.knock(
+	player: Player,
+	velocity: Vector3,
+	seconds: number?,
+	afterLanding: boolean?,
+	immunitySeconds: number?
+)
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	if not character or not humanoid or humanoid.Health <= 0 or not RagdollService.canKnock(player) then
@@ -102,7 +109,7 @@ function RagdollService.knock(player: Player, velocity: Vector3, seconds: number
 		end
 		task.wait(seconds or GameConfig.BatRagdollSeconds)
 		ragdolled[player] = nil
-		immuneUntil[player] = os.clock() + GameConfig.BatHitImmunitySeconds
+		immuneUntil[player] = os.clock() + (immunitySeconds or GameConfig.BatHitImmunitySeconds)
 		-- They may have respawned or left meanwhile; a new character starts with its joints on.
 		if player.Parent and player.Character == character then
 			for _, joint in joints do

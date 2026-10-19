@@ -131,6 +131,17 @@ return {
 	BatKnockbackSpin = 6, -- tumble while flying, in radians per second
 	BatRagdollSeconds = 3.5, -- how long a hit player stays floppy (in the air and on the ground)
 	BatHitSound = { soundId = 137041944943141, volume = 0.8, pitch = 1 }, -- "bonk" (DEGG_20)
+	-- Tennis Racket (Shop item): swings and hits exactly like the bat (same range, arc and swing
+	-- speed, no cooldown and the same height) but knocks people this many times further back,
+	-- with a tennis "thwock".
+	RacketPushMultiplier = 11,
+	-- After getting up from a racket hit, can't be knocked over again for this many times the
+	-- bat's BatHitImmunitySeconds.
+	RacketImmunityMultiplier = 1.9,
+	RacketIcon = "rbxassetid://95075449356080", -- source: assets/racket-icon.png
+	-- "Tennis Ball Hits CU Impacts 3" (Pro Sound Effects): only the racket hit, which starts at
+	-- `startAt` seconds into the clip and lasts `length` (the rest is footsteps and bounces).
+	RacketHitSound = { soundId = 9119985856, volume = 1, pitch = 1, startAt = 1.27, length = 0.7 },
 	BatHitImmunitySeconds = 1, -- after getting up, can't be knocked over again for this long
 	RagdollMaxAirSeconds = 6, -- a launched player counts as landed after this long, even if they never seem to
 
