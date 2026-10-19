@@ -53,7 +53,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 41 | Mythic text shiny red; Secret and THE GOAT shiny dark grey, looping | #69 |
 | 42 | Nuke (the Spin Wheel's Mythic prize) | #70 |
 | 43 | Shop tabs: Items, Boosters, Currency (Robux gems), Gamepasses | #72 |
-| 44 | Cosmetics: titles, auras, pets, tombstones and flowers (Shop and Inventory tabs) | (not merged yet) |
+| 44 | Cosmetics: titles, auras, pets, tombstones and flowers (Shop and Inventory tabs) | #73 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1178,7 +1178,7 @@ real Robux purchases (need the IDs; then try them in Studio, where purchases are
 purchases), the VIP title unlocking on purchase, boosters carrying over a rejoin (saving only
 works in the live game), and Server Luck's announcement to other players (2-player test).
 
-## 44. Cosmetics: titles, auras, pets, tombstones, flowers
+## 44. Cosmetics: titles, auras, pets, tombstones, flowers (#73)
 
 A new **Cosmetics** tab in the Shop (between Boosters and Currency) and in the Inventory (between
 Items and Titles). Everyone sees them; they don't change the game.
