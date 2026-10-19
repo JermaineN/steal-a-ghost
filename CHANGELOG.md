@@ -62,7 +62,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 50 | Pictures for all eight game passes | #79 |
 | 51 | Flashier Golden Sparkles with a chime loop, Smoke Bomb hides effects, rarity sorting | #80 |
 | 52 | The Secret ghost is now the Grim Reaper | #81 |
-| 53 | The Divine ghost is now the Seraph | |
+| 53 | The Divine ghost is now the Seraph | #82 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
