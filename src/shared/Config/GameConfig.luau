@@ -401,5 +401,10 @@ return {
 
 	-- Saving
 	AutoSaveSeconds = 120,
-	DataStoreName = "StealAGhost_v1",
+	-- Changing these names starts everyone from scratch (a "data wipe"): the game reads and saves
+	-- a new, empty store. The old one isn't deleted, so changing the name back brings it back.
+	-- Allow-list things (Cage, Landmine, THE GOAT, SUPERNOVA, EARLY TESTER) and game passes
+	-- aren't saved data, so they're kept. v1 was wiped for the public launch (2026-10-20).
+	DataStoreName = "StealAGhost_v2",
+	LeaderboardStorePrefix = "Leaderboard_v2_", -- + the stat key, one store per leaderboard
 }

@@ -74,6 +74,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 62 | Icons for game passes and gem packs on the Creator Hub | #90 |
 | 63 | EARLY TESTER title (Divine) for the five early testers | #91 |
 | 64 | HALLOWEEN code turned on (until Nov 1) | #92 |
+| 65 | Data wipe for the public launch (fresh saves and leaderboards) | #PR |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1684,3 +1685,21 @@ when the game reaches 1,000 likes.
 **Tested** in a Studio playtest: redeeming " halloween " paid out (+575 gems, the VIP pass's gem
 bonus included, and +$10K) and a second try said "Already used". **Not tested:** that the
 redemption is saved (only checkable in the live game).
+
+## 65. Data wipe for the public launch (#PR)
+
+Everyone starts from scratch when the game goes public: cash, gems, ghosts, rebirths, items,
+upgrades, Index finds, earned titles, gem-bought cosmetics, redeemed codes and the leaderboards.
+It works by pointing the game at new, empty stores (`GameConfig.DataStoreName` = `StealAGhost_v2`,
+`GameConfig.LeaderboardStorePrefix` = `Leaderboard_v2_`). The old `v1` data isn't deleted, so
+setting the names back would bring it back.
+
+**Kept:** anything given by an allow-list in the config rather than saved: the Cage and Landmine,
+THE GOAT, SUPERNOVA and EARLY TESTER. Game passes (and their titles and Robux cosmetics) are
+checked with Roblox on every join, so they're kept too. **Lost:** gems bought with Robux gem packs
+before the wipe (they were saved data).
+
+**Tested** in a Studio playtest: the game reads `StealAGhost_v2` and the `Leaderboard_v2_` boards,
+and jerizaxe still has THE GOAT, the Landmine and the VIP/NIGHTMARE titles; no new errors.
+**Not tested:** the live game (Studio can't reach DataStores); after publishing, join and check
+you start with the starting cash.
