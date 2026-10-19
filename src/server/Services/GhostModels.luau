@@ -377,6 +377,87 @@ function GhostModels.spectre_king(model: Model, body: BasePart, def): number?
 	return labelHeight
 end
 
+-- Seraph (the Divine ghost): a tall, faceless angel spirit in a gold-trimmed white robe, arms
+-- open, two glowing eyes under its hood, big feathered wings and a golden halo; its robe curls
+-- into a ghostly tail. The wings slowly beat (client PetAnimation, the same code that flaps the
+-- pets' wings), the halo glows, and soft light motes drift down off it like falling feathers (the
+-- Divine rarity aura adds rising gold sparkles on top).
+-- The mesh (ServerStorage.GhostMeshes.divine_1) is a Model of Body, LeftWing, RightWing, Halo
+-- and two Eye parts; each wing has a "Hinge" attachment where it joins the back and a "Side"
+-- attribute (-1 left, 1 right), like the mesh pets in CosmeticModels.
+local SERAPH_FLAP_SPEED = 4 -- radians per second: slow, graceful wingbeats
+local SERAPH_FLAP_ANGLE = math.rad(14)
+function GhostModels.divine_1(model: Model, body: BasePart, def): number?
+	local heightScale = 1.15
+	-- Like the King: lift it so its tail floats just above the ground.
+	local lift = def.size * heightScale / 2 - 2.6
+	local holyGold = Color3.fromRGB(255, 225, 140)
+	local labelHeight, mesh = meshGhost(model, body, def, heightScale, holyGold, 0, lift)
+	if not mesh then
+		return nil
+	end
+	-- A robe shouldn't stretch like a flame (and stretching would pull it away from its wings).
+	mesh:SetAttribute("Flicker", false)
+
+	local light = body:FindFirstChildOfClass("PointLight")
+	if light then
+		light.Brightness = 2.5
+	end
+
+	for _, part in model:GetChildren() do
+		-- A solid glowing gold halo (its texture would hide the Neon glow).
+		if part.Name == "Halo" and part:IsA("MeshPart") then
+			part.TextureID = ""
+			part.Material = Enum.Material.Neon
+			part.Color = Color3.fromRGB(255, 210, 90)
+		end
+
+		-- Wings hang off the robe on a Weld (not the WeldConstraint attachMesh gave them), so the
+		-- client can swing them around the hinge by changing the weld's C0.
+		local hinge = part:FindFirstChild("Hinge")
+		if part:IsA("BasePart") and hinge and hinge:IsA("Attachment") then
+			local hold = part:FindFirstChildOfClass("WeldConstraint")
+			if hold then
+				hold:Destroy()
+			end
+			local weld = Instance.new("Weld")
+			weld.Name = "WingWeld"
+			weld.Part0 = mesh
+			weld.Part1 = part
+			weld.C0 = mesh.CFrame:ToObjectSpace(hinge.WorldCFrame)
+			weld.C1 = hinge.CFrame
+			weld.Parent = part
+			part:SetAttribute("FlapSpeed", SERAPH_FLAP_SPEED)
+			part:SetAttribute("FlapAngle", SERAPH_FLAP_ANGLE)
+			CollectionService:AddTag(part, "FlappingWing")
+		end
+	end
+
+	-- Soft glowing motes drifting slowly down off it, like falling feathers.
+	local feathers = Instance.new("ParticleEmitter")
+	feathers.Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(255, 240, 200))
+	feathers.LightEmission = 0.8
+	feathers.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.2, 0.3),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	feathers.Transparency = NumberSequence.new(0.1, 0.8)
+	feathers.Lifetime = NumberRange.new(2, 3)
+	feathers.Rate = 6
+	feathers.Speed = NumberRange.new(0.2, 0.5)
+	feathers.SpreadAngle = Vector2.new(60, 60)
+	feathers.EmissionDirection = Enum.NormalId.Bottom
+	feathers.Acceleration = Vector3.new(0, -0.3, 0)
+	feathers.Rotation = NumberRange.new(0, 360)
+	feathers.RotSpeed = NumberRange.new(-60, 60)
+	feathers.Shape = Enum.ParticleEmitterShape.Box
+	feathers.ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface
+	feathers.Parent = mesh
+
+	return labelHeight
+end
+
 -- Grim Reaper (the Secret ghost): a menacing cartoon reaper in an all-black hood, a grinning
 -- skull with glowing eyes, skeletal hands, a scythe and a lantern on a strap, its robe trailing
 -- into wispy tendrils. Solid (not see-through), about as tall as the King, with a cold pale

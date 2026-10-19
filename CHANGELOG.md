@@ -62,6 +62,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 50 | Pictures for all eight game passes | #79 |
 | 51 | Flashier Golden Sparkles with a chime loop, Smoke Bomb hides effects, rarity sorting | #80 |
 | 52 | The Secret ghost is now the Grim Reaper | #81 |
+| 53 | The Divine ghost is now the Seraph | #82 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1399,3 +1400,25 @@ was too plain next to the other ghosts; it's kept as `ServerStorage.GhostMeshBac
 with his name, Secret label, price and income, faces the way he's travelling like the other
 ghosts, and has his glow, particles and the Secret aura; size checked next to the King.
 **Not tested:** buying him and how he looks on a grave in a base.
+
+## 53. The Divine ghost is now the Seraph
+
+`divine_1` (id unchanged, so saves are safe) is renamed **Seraph** and gets a real look instead
+of the placeholder ball: a tall, faceless angel spirit in a gold-trimmed white robe with its arms
+open, two soft glowing eyes under its hood, big feathered wings and a golden halo, its robe
+curling into a ghostly tail. `GhostModels.divine_1` makes it solid and a bit smaller than the
+Grim Reaper (height scale 1.15), with a warm gold glow, a Neon halo, and soft white motes
+drifting down off it like falling feathers; the Divine rarity aura adds its rising sparkles.
+The wings slowly beat: they hang on a `WingWeld` and are tagged `FlappingWing`, so the pets'
+wing code (client `PetAnimation`) flaps them too. Wings can now set their own `FlapSpeed` /
+`FlapAngle` attributes; the Seraph's are slower and gentler than the pets'.
+
+The mesh is AI-generated in Studio (picked from four candidates; glowing eyes added as two Neon
+parts and a `Hinge` attachment on each wing) and lives in `ServerStorage.GhostMeshes.divine_1`,
+so it's **only in the place file: save and publish**. The other designs are kept in
+`ServerStorage.GhostMeshBackups` (`divine_1_alt_laurel`, `divine_1_alt_cute`, and the
+untouched `divine_1_alt_majestic`).
+
+**Tested:** in a Studio playtest, the Seraph built by the real GhostService (its Index preview
+copy) shows its eyes, glowing halo, falling motes and wings, and the wings beat on the client;
+no errors. **Not tested:** it spawning on the walkway, buying it, and how it looks on a grave.

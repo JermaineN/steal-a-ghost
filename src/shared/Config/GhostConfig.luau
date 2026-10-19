@@ -26,11 +26,10 @@ GhostConfig.Ghosts = {
 	{ id = "phantom_knight", name = "Phantom Knight", rarity = "Legendary", price = 25000,  income = 350,  spawnWeight = 2.5, size = 4.2, color = Color3.fromRGB(120, 255, 200) },
 	{ id = "wraith",         name = "Wraith",         rarity = "Legendary", price = 100000, income = 1200, spawnWeight = 1.2, size = 4.6, color = Color3.fromRGB(70, 70, 100) },
 	{ id = "spectre_king",   name = "Spectre King",   rarity = "Mythic",    price = 500000, income = 5000, spawnWeight = 0.4, size = 5.2, color = Color3.fromRGB(255, 215, 90) },
-	-- divine_1 is still a PLACEHOLDER: rename it and give it a mesh (ServerStorage.GhostMeshes.<id>
-	-- plus a GhostModels.<id> look); until then it uses the simple ball look. secret_1 is the Grim
-	-- Reaper. Keep the ids: players' saves store ghosts by id, so changing one would delete it
-	-- from everyone who owns it.
-	{ id = "divine_1",       name = "Divine Ghost",   rarity = "Divine",    price = 2500000,  income = 20000, spawnWeight = 0.15, size = 5.5, color = Color3.fromRGB(225, 240, 255) },
+	-- divine_1 is the Seraph and secret_1 the Grim Reaper. Keep the ids even though the names
+	-- changed: players' saves store ghosts by id, so changing one would delete it from everyone
+	-- who owns it.
+	{ id = "divine_1",       name = "Seraph",         rarity = "Divine",    price = 2500000,  income = 20000, spawnWeight = 0.15, size = 5.5, color = Color3.fromRGB(225, 240, 255) },
 	{ id = "secret_1",       name = "Grim Reaper",    rarity = "Secret",    price = 15000000, income = 100000, spawnWeight = 0.05, size = 6,  color = Color3.fromRGB(30, 30, 38) },
 }
 

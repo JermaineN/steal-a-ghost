@@ -1,4 +1,6 @@
--- Flaps pet wings on this player's screen, and floats this player's own pet up and down. A pet
+-- Flaps pet wings (and the Seraph ghost's wings, server GhostModels) on this player's screen, and
+-- floats this player's own pet up and down. A wing can set its own "FlapSpeed" / "FlapAngle"
+-- attributes (radians per second / radians) to beat slower or wider than the default. A pet
 -- with a "FollowSpeed" attribute (the Ghost Buddy) also lags behind: its top speed is that ×
 -- how far it is from its spot, so it speeds up when far away and slows down as it gets close. The server tags each wing "FlappingWing" (see server
 -- CosmeticModels) and holds it to the pet's body with a Weld named "WingWeld" whose C0 sits at
@@ -24,6 +26,8 @@ type Wing = {
 	baseC0: CFrame,
 	side: number, -- -1 left, 1 right
 	phase: number, -- so pets don't all flap in sync
+	speed: number,
+	angle: number,
 }
 local wings: { [Instance]: Wing } = {}
 
@@ -45,6 +49,8 @@ local function track(part: Instance)
 		baseC0 = weld.C0,
 		side = part:GetAttribute("Side") or 1,
 		phase = phase or 0,
+		speed = part:GetAttribute("FlapSpeed") or FLAP_SPEED,
+		angle = part:GetAttribute("FlapAngle") or FLAP_ANGLE,
 	}
 end
 
@@ -102,7 +108,7 @@ local function animate()
 		end
 		-- Turning around the hinge's front-to-back axis lifts the wing tip up or down; the side
 		-- sign makes both tips go up together.
-		local angle = FLAP_ANGLE * math.sin(now * FLAP_SPEED + wing.phase)
+		local angle = wing.angle * math.sin(now * wing.speed + wing.phase)
 		wing.weld.C0 = wing.baseC0 * CFrame.Angles(0, 0, -wing.side * angle)
 	end
 end
