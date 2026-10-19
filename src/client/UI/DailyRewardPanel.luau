@@ -13,6 +13,7 @@ local Format = require(ReplicatedStorage.Shared.Format)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local Mobile = require(script.Parent.Mobile)
 local WelcomeBackPanel = require(script.Parent.WelcomeBackPanel)
 local Window = require(script.Parent.Window)
 
@@ -213,17 +214,18 @@ function DailyRewardPanel.start()
 	local reopen, reopenLabel = Window.button({
 		Name = "Open",
 		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(1, -72, 1, -70),
+		-- Stacked on the Invite button (48 tall, 8 gap), which is smaller on phones.
+		Position = UDim2.new(1, -72, 1, -14 - 56 * Mobile.scale),
 		Size = UDim2.fromOffset(150, 40),
 		Visible = false,
 		Parent = reopenGui,
 	}, GEM_BLUE)
 	reopenLabel.Text = "Daily reward!"
-	local reopenScale = new("UIScale", { Parent = reopen })
+	local reopenScale = new("UIScale", { Scale = Mobile.scale, Parent = reopen })
 	TweenService:Create(
 		reopenScale,
 		TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-		{ Scale = 1.08 }
+		{ Scale = 1.08 * Mobile.scale }
 	):Play()
 	reopen.Activated:Connect(panel.open)
 

@@ -9,6 +9,7 @@ local Format = require(ReplicatedStorage.Shared.Format)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local Mobile = require(script.Parent.Mobile)
 
 local player = Players.LocalPlayer
 
@@ -83,8 +84,8 @@ local function buildCashDisplay(gui: ScreenGui)
 		BackgroundTransparency = 1,
 		Parent = gui,
 	})
-	-- Used to "pop" the number when cash jumps.
-	local pop = new("UIScale", { Parent = display })
+	-- Used to "pop" the number when cash jumps. Starts at Mobile.scale (smaller on phones).
+	local pop = new("UIScale", { Scale = Mobile.scale, Parent = display })
 
 	local cashLabel = text({
 		Name = "Cash",
@@ -145,7 +146,11 @@ local function floatAmount(display: Frame, cashLabel: TextLabel, amount: number)
 	-- Starts just to the right of the cash number (clear of the gems above it) and drifts upward.
 	local label = text({
 		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.fromOffset(cashLabel.TextBounds.X + 14, cashLabel.AbsoluteSize.Y / 2),
+		-- TextBounds and AbsoluteSize are on-screen pixels, so undo the display's phone scale.
+		Position = UDim2.fromOffset(
+			cashLabel.TextBounds.X / Mobile.scale + 14,
+			cashLabel.AbsoluteSize.Y / Mobile.scale / 2
+		),
 		Size = UDim2.fromOffset(200, 34),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextColor3 = if gain then CASH_GREEN else SPEND_RED,
@@ -170,7 +175,10 @@ end
 local function floatGems(gemsRow: Frame, gemsLabel: TextLabel, amount: number)
 	local holder = new("Frame", {
 		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.fromOffset(gemsLabel.Position.X.Offset + gemsLabel.TextBounds.X + 12, GEMS_ROW_HEIGHT / 2),
+		Position = UDim2.fromOffset(
+			gemsLabel.Position.X.Offset + gemsLabel.TextBounds.X / Mobile.scale + 12,
+			GEMS_ROW_HEIGHT / 2
+		),
 		Size = UDim2.fromOffset(160, 30),
 		BackgroundTransparency = 1,
 		ZIndex = 5,
@@ -185,9 +193,10 @@ local function floatGems(gemsRow: Frame, gemsLabel: TextLabel, amount: number)
 		Parent = holder,
 	})
 	local labelOutline = outline(label, 3)
-	label.Size = UDim2.fromOffset(label.TextBounds.X + 4, 30)
+	local labelWidth = label.TextBounds.X / Mobile.scale
+	label.Size = UDim2.fromOffset(labelWidth + 4, 30)
 	local icon = new("ImageLabel", {
-		Position = UDim2.fromOffset(label.TextBounds.X + 6, 1),
+		Position = UDim2.fromOffset(labelWidth + 6, 1),
 		Size = UDim2.fromOffset(28, 28),
 		BackgroundTransparency = 1,
 		Image = GameConfig.GemIcon,
@@ -442,8 +451,8 @@ function Hud.start()
 			if math.abs(change) > income * 1.5 then
 				floatAmount(display, cashLabel, change)
 				-- A quick pop of the number.
-				pop.Scale = 1.12
-				TweenService:Create(pop, TweenInfo.new(0.35, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+				pop.Scale = 1.12 * Mobile.scale
+				TweenService:Create(pop, TweenInfo.new(0.35, Enum.EasingStyle.Back), { Scale = Mobile.scale }):Play()
 			end
 		end)
 	end)
