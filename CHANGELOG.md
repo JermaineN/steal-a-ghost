@@ -52,7 +52,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 40 | Phones: base texts 20% smaller | #68 |
 | 41 | Mythic text shiny red; Secret and THE GOAT shiny dark grey, looping | #69 |
 | 42 | Nuke (the Spin Wheel's Mythic prize) | #70 |
-| 43 | Shop tabs: Items, Boosters, Currency (Robux gems), Gamepasses | (not merged yet) |
+| 43 | Shop tabs: Items, Boosters, Currency (Robux gems), Gamepasses | #72 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1140,7 +1140,7 @@ Mythic slice; you played the warning, sounds and cutscene and confirmed they wor
 other players being launched and thieves dropping ghosts (needs a 2-player test). The falling
 whistle sound is from an unknown uploader (Grummgus); the others are Pro Sound Effects.
 
-## 43. Shop tabs: Items, Boosters, Currency, Gamepasses
+## 43. Shop tabs: Items, Boosters, Currency, Gamepasses (#72)
 
 The Shop now has four tabs:
 - **Items**: the items, as before.
