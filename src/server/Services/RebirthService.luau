@@ -1,6 +1,7 @@
 -- Rebirth: once a player has enough cash (Shared.Rebirth.cost), they can trade in all their cash
--- and every ghost in their base for a permanent income boost and a gem reward. Gems, the Index
--- and their items stay. The Rebirth panel only asks (Rebirth remote); everything is checked here.
+-- and every ghost in their base for a permanent income boost and a gem reward, and restart with
+-- a share of the cost (Rebirth.startingCash). Gems, the Index, items and More Graves stay; the
+-- other upgrades reset. Reaching 1, 5 and 10 rebirths unlocks titles (TitleService). The Rebirth panel only asks (Rebirth remote); everything is checked here.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Format = require(ReplicatedStorage.Shared.Format)
@@ -11,6 +12,7 @@ local DataService = require(script.Parent.DataService)
 local GhostService = require(script.Parent.GhostService)
 local PlotService = require(script.Parent.PlotService)
 local StealService = require(script.Parent.StealService)
+local TitleService = require(script.Parent.TitleService)
 
 local RebirthService = {}
 
@@ -41,8 +43,9 @@ local function tryRebirth(player: Player)
 	end
 	local reached = rebirths + 1
 	local gems = Rebirth.gems(reached)
-	DataService.applyRebirth(player, gems)
+	DataService.applyRebirth(player, gems, Rebirth.startingCash(rebirths))
 	player:SetAttribute("IncomePerSecond", 0)
+	TitleService.rebirthed(player)
 
 	-- Everyone's device plays the light pillar on this player; their own gets the big celebration.
 	Remotes.Rebirthed:FireAllClients(player, reached)

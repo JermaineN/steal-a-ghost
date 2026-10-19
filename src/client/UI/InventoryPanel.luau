@@ -4,13 +4,15 @@
 -- server marks owned items with "Item_<itemId>" = count and the equipped ones with "Equipped".
 -- Two tabs under the header: Items, and Titles (TitleConfig, owned ones are "Title_<id>"
 -- attributes): Wear shows that title above your head (one at a time, the "Title" attribute),
--- Take off removes it.
+-- Take off removes it. Rebirth titles (TitleConfig `rebirths`) show even before you own them:
+-- locked, with a bar for how close you are (rebirths done plus your cash toward the next one).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
 local TitleConfig = require(ReplicatedStorage.Shared.Config.TitleConfig)
+local Rebirth = require(ReplicatedStorage.Shared.Rebirth)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local TitleText = require(ReplicatedStorage.Shared.TitleText)
 local Hud = require(script.Parent.Hud)
@@ -35,7 +37,18 @@ type Card = {
 	equipLabel: TextLabel,
 }
 local cards: { [string]: Card } = {}
-type TitleCard = { card: Frame, stroke: UIStroke, ribbon: Frame, wear: TextButton, wearLabel: TextLabel }
+type TitleCard = {
+	card: Frame,
+	stroke: UIStroke,
+	ribbon: Frame,
+	wear: TextButton,
+	wearLabel: TextLabel,
+	heading: TextLabel,
+	dim: Frame,
+	bar: Frame,
+	barFill: Frame,
+	barText: TextLabel,
+}
 local titleCards: { [string]: TitleCard } = {}
 local emptyLabel: TextLabel
 local slotsLabel: TextLabel
@@ -47,6 +60,19 @@ local tabButtons: { [string]: TextButton } = {}
 
 local function owned(itemId: string): number
 	return player:GetAttribute("Item_" .. itemId) or 0
+end
+
+local function stat(name: string): number
+	local leaderstats = player:FindFirstChild("leaderstats")
+	local value = leaderstats and leaderstats:FindFirstChild(name)
+	return if value then (value :: any).Value else 0
+end
+
+-- How close you are to a rebirth title, 0 to 1: rebirths done, plus your cash toward the next one.
+local function rebirthProgress(needed: number): number
+	local rebirths = stat("Rebirths")
+	local towardNext = math.clamp(stat("Cash") / Rebirth.cost(rebirths), 0, 1)
+	return math.clamp((rebirths + towardNext) / needed, 0, 1)
 end
 
 -- The equipped items (in the hotbar), from the server's "Equipped" attribute ("smoke_bomb,gravity").
@@ -78,16 +104,31 @@ local function refresh()
 		any = any or (showItems and count > 0)
 	end
 	local wearing = player:GetAttribute("Title")
-	for _, title in TitleConfig.Titles do
+	for order, title in TitleConfig.Titles do
 		local entry = titleCards[title.id]
 		local isOwned = player:GetAttribute("Title_" .. title.id) == true
 		local isWorn = wearing == title.id
-		entry.card.Visible = not showItems and isOwned
+		local locked = not isOwned and title.rebirths ~= nil
+		entry.card.Visible = not showItems and (isOwned or locked)
+		-- Owned titles first, then the locked ones.
+		entry.card.LayoutOrder = #ItemConfig.Items + order + (if locked then 100 else 0)
 		entry.ribbon.Visible = isWorn
 		entry.stroke.Thickness = if isWorn then 4 else 2.5
+		entry.stroke.Color = if locked then LOCKED_GREY else title.color
+		entry.dim.Visible = locked
+		entry.wear.Visible = not locked
+		entry.bar.Visible = locked
 		entry.wearLabel.Text = if isWorn then "Take off" else "Wear"
 		Window.paintButton(entry.wear, if isWorn then LOCKED_GREY else title.color)
-		any = any or (not showItems and isOwned)
+		if title.rebirths then
+			local plural = if title.rebirths == 1 then "" else "s"
+			entry.heading.Text = if locked then `Locked: {title.rebirths} rebirth{plural}` else `Rebirth title`
+		end
+		if locked then
+			entry.barFill.Size = UDim2.fromScale(rebirthProgress(title.rebirths), 1)
+			entry.barText.Text = `{math.min(stat("Rebirths"), title.rebirths)}/{title.rebirths} rebirths`
+		end
+		any = any or (not showItems and (isOwned or locked))
 	end
 	emptyLabel.Visible = not any
 	emptyLabel.Text = if showItems then "Nothing here yet. Visit the Shop!" else "No titles yet."
@@ -267,7 +308,20 @@ local function buildTitleCard(title, order: number, parent: Instance)
 	})
 	TitleText.create(holder, title, 2.5)
 
-	Window.text({
+	-- Darkens a locked title's word.
+	local dim = new("Frame", {
+		Name = "Dim",
+		Position = UDim2.fromOffset(4, 34),
+		Size = UDim2.new(1, -8, 0, 52),
+		BackgroundColor3 = Window.PANEL_DARK,
+		BackgroundTransparency = 0.45,
+		ZIndex = 3,
+		Visible = false,
+		Parent = card,
+	})
+	new("UICorner", { CornerRadius = UDim.new(0.2, 0), Parent = dim })
+
+	local heading = Window.text({
 		Position = UDim2.fromOffset(8, 110),
 		Size = UDim2.new(1, -16, 0, 22),
 		TextColor3 = WHITE,
@@ -295,7 +349,45 @@ local function buildTitleCard(title, order: number, parent: Instance)
 		Remotes.EquipTitle:FireServer(if isWorn then "" else title.id)
 	end)
 
-	titleCards[title.id] = { card = card, stroke = stroke, ribbon = ribbon, wear = wear, wearLabel = wearLabel }
+	-- In the Wear button's place while a rebirth title is locked: how close you are.
+	local bar = new("Frame", {
+		Name = "Progress",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 163),
+		Size = UDim2.new(1, -24, 0, 28),
+		BackgroundColor3 = Color3.fromRGB(30, 20, 45),
+		Visible = false,
+		Parent = card,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = bar })
+	new("UIStroke", { Color = Window.TEXT_OUTLINE, Thickness = 2, Parent = bar })
+	local barFill = new("Frame", {
+		Size = UDim2.fromScale(0, 1),
+		BackgroundColor3 = title.color,
+		Parent = bar,
+	})
+	new("UICorner", { CornerRadius = UDim.new(1, 0), Parent = barFill })
+	local barText = Window.text({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.new(1, -12, 1, -8),
+		TextColor3 = WHITE,
+		ZIndex = 2,
+		Parent = bar,
+	})
+
+	titleCards[title.id] = {
+		card = card,
+		stroke = stroke,
+		ribbon = ribbon,
+		wear = wear,
+		wearLabel = wearLabel,
+		heading = heading,
+		dim = dim,
+		bar = bar,
+		barFill = barFill,
+		barText = barText,
+	}
 end
 
 function InventoryPanel.isOpen(): boolean
@@ -368,6 +460,17 @@ function InventoryPanel.start()
 	player.AttributeChanged:Connect(function(attribute)
 		if string.match(attribute, "^Item_") or string.match(attribute, "^Title") or attribute == "Equipped" then
 			refresh()
+		end
+	end)
+	-- The rebirth titles' bars follow your rebirths and cash.
+	task.spawn(function()
+		local leaderstats = player:WaitForChild("leaderstats")
+		for _, name in { "Cash", "Rebirths" } do
+			(leaderstats:WaitForChild(name) :: NumberValue).Changed:Connect(function()
+				if panel.isOpen() and currentTab == "Titles" then
+					refresh()
+				end
+			end)
 		end
 	end)
 	refresh()

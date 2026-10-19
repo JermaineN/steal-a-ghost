@@ -6,7 +6,9 @@
 --   gradient       its colours (white text tinted by this gradient, sliding back and forth)
 --   shine          true = a white glint sweeps across it now and then (looks reflective)
 --   allowedUserIds players who always have it (special titles). Titles can also be earned in
---                  game and saved (DataService.grantTitle); nothing grants them yet.
+--                  game and saved (DataService.grantTitle).
+--   rebirths       earned by reaching this many rebirths (TitleService). These titles show in
+--                  the Inventory even before you own them, locked, with a progress bar.
 local TitleConfig = {}
 
 local function gradient(...: Color3): ColorSequence
@@ -19,6 +21,7 @@ local function gradient(...: Color3): ColorSequence
 end
 
 local OWNER_USER_ID = 5783726738 -- the game's creator (jerizaxe)
+local WINTER_UNICORN_USER_ID = 701124691 -- Winter_Unicorn79
 
 TitleConfig.Titles = {
 	{
@@ -49,8 +52,35 @@ TitleConfig.Titles = {
 			Color3.fromRGB(255, 45, 60)
 		),
 		shine = true,
-		-- Until there's a way to earn it in game.
-		allowedUserIds = { OWNER_USER_ID },
+		allowedUserIds = { WINTER_UNICORN_USER_ID },
+	},
+	-- Rebirth titles: the first two in one plain colour, the last in shiny silver (like Eerie).
+	{
+		id = "reborn",
+		text = "REBORN",
+		color = Color3.fromRGB(170, 110, 255),
+		gradient = gradient(Color3.fromRGB(190, 140, 255), Color3.fromRGB(190, 140, 255)),
+		rebirths = 1,
+	},
+	{
+		id = "undying",
+		text = "UNDYING",
+		color = Color3.fromRGB(255, 120, 50),
+		gradient = gradient(Color3.fromRGB(255, 130, 60), Color3.fromRGB(255, 130, 60)),
+		rebirths = 5,
+	},
+	{
+		id = "eternal",
+		text = "ETERNAL",
+		color = Color3.fromRGB(200, 200, 210),
+		gradient = gradient(
+			Color3.fromRGB(150, 150, 160),
+			Color3.fromRGB(235, 238, 245),
+			Color3.fromRGB(150, 150, 160),
+			Color3.fromRGB(235, 238, 245)
+		),
+		shine = true,
+		rebirths = 10,
 	},
 }
 
