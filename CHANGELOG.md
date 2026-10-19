@@ -58,6 +58,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 46 | Gold Tombstones look like shiny cartoon gold | #75 |
 | 47 | Mini Pumpkin pet: generated jack-o'-lantern with flapping bat wings | #76 |
 | 48 | Ghost Buddy pet: any found ghost, half size, picked from the Index | #77 |
+| 49 | Game passes created and on sale (VIP, 2x Money, Auto Collect, cosmetics…) | #78 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1306,3 +1307,27 @@ refused; at a walk speed of 24.5 it trails about 10 studs behind (about 6 at nor
 then slows down to its spot; hidden while Invisible; the Mini Pumpkin still stays right beside
 you. **Not tested:** what other players see (2-player test), and the chosen ghost being kept
 after rejoining (saving only works live).
+
+## 49. Game passes are on sale
+
+All eight Robux passes that said "Coming soon" now exist on the Creator Hub (made in the
+browser) and are on sale. Their ids are in `StoreConfig.Passes` and `CosmeticConfig`.
+
+| Pass | Robux | Pass id |
+|---|---|---|
+| VIP | 299 | 2037118830 |
+| 2x Money | 249 | 2038180854 |
+| Ghost Buddy Pet | 199 | 2038216814 |
+| Auto Collect | 179 | 2037802785 |
+| Golden Sparkles Aura | 149 | 2039740559 |
+| Extra Hotbar Slot | 129 | 2038342811 |
+| Fast Flight | 99 | 2036308633 |
+| NIGHTMARE Title | 99 | 2038366859 |
+
+Prices follow what similar games charge (permanent income boosts highest, small conveniences and
+cosmetics lowest). Managed pricing is off; Roblox may still show lower local prices in some
+regions. The passes use Roblox's default picture for now; change pictures or prices any time on
+the Creator Hub (prices are read live, so no code change is needed).
+
+**Tested:** in Studio, every id returns the right pass and says it's for sale. **Not tested:**
+buying one (that spends real Robux) and the Shop window showing the prices (needs a playtest).

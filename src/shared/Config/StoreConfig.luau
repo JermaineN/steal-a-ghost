@@ -40,11 +40,11 @@ StoreConfig.GemPacks = {
 -- Game passes, bought once with Robux. Owning one sets the "Pass_<id>" player attribute.
 -- stylua: ignore
 StoreConfig.Passes = {
-	{ id = "double_money", name = "2x Money",          description = "Double income forever",         passId = 0, icon = "💵", color = Theme.MoneyGreen },
-	{ id = "vip",          name = "VIP",               description = "VIP title and +10% income",     passId = 0, icon = "👑", color = Color3.fromRGB(255, 200, 40) },
-	{ id = "extra_slot",   name = "Extra Hotbar Slot", description = "Equip one more item",           passId = 0, icon = "🎒", color = Color3.fromRGB(255, 140, 30) },
-	{ id = "fast_flight",  name = "Fast Flight",       description = "Ghosts fly home 2x faster", passId = 0, icon = "🚀", color = Color3.fromRGB(90, 170, 255) },
-	{ id = "auto_collect", name = "Auto Collect",      description = "Income goes right to cash", passId = 0, icon = "🧲", color = Color3.fromRGB(230, 70, 90) },
+	{ id = "double_money", name = "2x Money",          description = "Double income forever",         passId = 2038180854, icon = "💵", color = Theme.MoneyGreen },
+	{ id = "vip",          name = "VIP",               description = "VIP title and +10% income",     passId = 2037118830, icon = "👑", color = Color3.fromRGB(255, 200, 40) },
+	{ id = "extra_slot",   name = "Extra Hotbar Slot", description = "Equip one more item",           passId = 2038342811, icon = "🎒", color = Color3.fromRGB(255, 140, 30) },
+	{ id = "fast_flight",  name = "Fast Flight",       description = "Ghosts fly home 2x faster", passId = 2036308633, icon = "🚀", color = Color3.fromRGB(90, 170, 255) },
+	{ id = "auto_collect", name = "Auto Collect",      description = "Income goes right to cash", passId = 2037802785, icon = "🧲", color = Color3.fromRGB(230, 70, 90) },
 }
 
 StoreConfig.boosterById = {}
