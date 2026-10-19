@@ -300,7 +300,8 @@ local function ribbonOn(card: Frame, text: string, color: Color3): Frame
 		Size = UDim2.fromOffset(110, 24),
 		BackgroundColor3 = color,
 		Rotation = -6,
-		ZIndex = 3,
+		-- Above the rarity word (ZIndex 4 on titles), so "WEARING" is never hidden behind it.
+		ZIndex = 5,
 		Visible = false,
 		Parent = card,
 	})
@@ -317,7 +318,7 @@ local function ribbonOn(card: Frame, text: string, color: Color3): Frame
 		Size = UDim2.new(1, -12, 1, -6),
 		TextColor3 = WHITE,
 		Text = text,
-		ZIndex = 3,
+		ZIndex = 5,
 		Parent = ribbon,
 	})
 	return ribbon

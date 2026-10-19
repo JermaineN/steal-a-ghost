@@ -361,12 +361,14 @@ return {
 	-- Longer Lock: each upgrade adds LockUpgradeSeconds to LockDurationSeconds.
 	LockUpgradeCosts = { 100000, 1000000, 5000000 },
 	LockUpgradeSeconds = 15,
-	-- Speed: each upgrade adds SpeedUpgradeBonus × WalkSpeed (5 levels = x2 speed).
+	-- Speed: each upgrade adds SpeedUpgradeBonus × WalkSpeed (5 levels = +50% speed).
 	SpeedUpgradeCosts = { 6000, 30000, 120000, 500000, 2000000 },
-	SpeedUpgradeBonus = 0.2,
-	-- Carry Speed: each upgrade adds CarrySpeedUpgradeBonus × CarryWalkSpeed (5 levels = x1.3).
+	SpeedUpgradeBonus = 0.1,
+	-- Carry Speed: each upgrade adds CarrySpeedUpgradeBonus × CarryWalkSpeed (5 levels = +15%).
 	CarrySpeedUpgradeCosts = { 10000, 50000, 200000, 800000, 3000000 },
-	CarrySpeedUpgradeBonus = 0.06,
+	CarrySpeedUpgradeBonus = 0.03,
+	-- Every rebirth adds this × WalkSpeed for good (stacks; not while carrying a stolen ghost).
+	RebirthSpeedBonus = 0.02,
 
 	-- Base lock
 	LockDurationSeconds = 60,
