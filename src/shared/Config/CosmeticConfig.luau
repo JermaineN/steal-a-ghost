@@ -7,7 +7,8 @@
 --   rarity      a GhostConfig.Rarities name: sets the card's colour
 --   currency    "gems" (price) or "robux": a game pass made on the Creator Hub (Monetization →
 --               Passes), its ID in `passId`; 0 = "Coming soon". Its Robux price is set there.
---   icon        an emoji shown on the card until it gets a drawn picture
+--   icon        an emoji shown on the card until it gets a drawn picture (`image`, an
+--               rbxassetid://; Robux ones are drawn by scripts/draw-pass-icons.ps1)
 local GhostConfig = require(script.Parent.GhostConfig)
 
 local CosmeticConfig = {}
@@ -24,12 +25,12 @@ CosmeticConfig.Kinds = {
 -- stylua: ignore
 CosmeticConfig.Cosmetics = {
 	{ id = "title_phantom",   kind = "title",     titleId = "phantom",   name = "PHANTOM title",   description = "A ghostly title",           rarity = "Epic",      currency = "gems",  price = 500,  icon = "👻" },
-	{ id = "title_nightmare", kind = "title",     titleId = "nightmare", name = "NIGHTMARE title", description = "A blood-red shiny title",   rarity = "Mythic",    currency = "robux", passId = 2038366859,   icon = "😈" },
+	{ id = "title_nightmare", kind = "title",     titleId = "nightmare", name = "NIGHTMARE title", description = "A blood-red shiny title",   rarity = "Mythic",    currency = "robux", passId = 2038366859,   image = "rbxassetid://140132710520124", icon = "😈" },
 	{ id = "aura_purple",     kind = "aura",      name = "Purple Flames",   description = "Spooky flames around you",  rarity = "Epic",      currency = "gems",  price = 750,  icon = "🔥" },
-	{ id = "aura_golden",     kind = "aura",      name = "Golden Sparkles", description = "Glitter wherever you go",   rarity = "Legendary", currency = "robux", passId = 2039740559,   icon = "✨" },
+	{ id = "aura_golden",     kind = "aura",      name = "Golden Sparkles", description = "Glitter wherever you go",   rarity = "Legendary", currency = "robux", passId = 2039740559,   image = "rbxassetid://100266280857157", icon = "✨" },
 	{ id = "pet_pumpkin",     kind = "pet",       name = "Mini Pumpkin",    description = "Follows you around", rarity = "Legendary", currency = "gems", price = 1000, icon = "🎃" },
 	-- Looks like a ghost you've found, picked with "Equip as pet" in the Index (Wisp until then).
-	{ id = "pet_ghost",       kind = "pet",       name = "Ghost Buddy",     description = "Any ghost you've found",    rarity = "Mythic",    currency = "robux", passId = 2038216814,   icon = "👻" },
+	{ id = "pet_ghost",       kind = "pet",       name = "Ghost Buddy",     description = "Any ghost you've found",    rarity = "Mythic",    currency = "robux", passId = 2038216814,   image = "rbxassetid://82226327681674", icon = "👻" },
 	{ id = "tomb_gold",       kind = "tombstone", name = "Gold Tombstones", description = "Gold graves at your base", rarity = "Legendary", currency = "gems", price = 1500, icon = "🏆" },
 	{ id = "flowers_lily",    kind = "flowers",   name = "Ghost Lilies",    description = "Glowing flowers at your base", rarity = "Rare", currency = "gems", price = 400,  icon = "🌸" },
 }

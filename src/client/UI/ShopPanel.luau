@@ -293,7 +293,7 @@ local function buildCosmeticCard(cosmetic, order: number, parent: Instance)
 		})
 		TitleText.create(holder, TitleConfig.byId[cosmetic.titleId], 2.5)
 	else
-		local picture = Window.iconPicture(card, cosmetic.color, cosmetic.icon)
+		local picture = Window.iconPicture(card, cosmetic.color, cosmetic.icon, cosmetic.image)
 		Window.rarityLabel(picture, cosmetic)
 	end
 	local robux = cosmetic.currency == "robux"
@@ -374,7 +374,7 @@ end
 local function buildPassCard(pass, order: number, parent: Instance)
 	local card = cardShell(pass.name, pass.description, pass.color, order, parent)
 	card.Name = pass.id
-	Window.iconPicture(card, pass.color, pass.icon)
+	Window.iconPicture(card, pass.color, pass.icon, pass.image)
 	showRobuxPrice(priceRow(card, "robux"), pass.passId, Enum.InfoType.GamePass)
 
 	local buy, buyLabel = buyButton(card)

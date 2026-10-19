@@ -435,7 +435,7 @@ local function buildCosmeticCard(cosmetic, order: number, parent: Instance)
 		Parent = card,
 	})
 	local stroke = new("UIStroke", { Color = cosmetic.color, Thickness = 2.5, Parent = card })
-	local picture = Window.iconPicture(card, cosmetic.color, cosmetic.icon)
+	local picture = Window.iconPicture(card, cosmetic.color, cosmetic.icon, cosmetic.image)
 	Window.rarityLabel(picture, cosmetic)
 	Window.text({
 		Position = UDim2.fromOffset(8, 110),
