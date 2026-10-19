@@ -51,20 +51,23 @@ end
 
 -- The bonk, played from the hit player so everyone nearby hears it. A sound played on the
 -- server is heard by every player.
-local function playBonk(target: Player)
+-- The hit sound on the person who got hit (the bat's "bonk" unless another is given). A sound
+-- config with `startAt` / `length` only plays that part of the clip.
+local function playBonk(target: Player, config: any?)
 	local root = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
 	if not root then
 		return
 	end
-	local config = GameConfig.BatHitSound
+	config = config or GameConfig.BatHitSound
 	local sound = Instance.new("Sound")
 	sound.Name = "Bonk"
 	sound.SoundId = "rbxassetid://" .. config.soundId
 	sound.Volume = config.volume
 	sound.PlaybackSpeed = config.pitch
+	sound.TimePosition = config.startAt or 0
 	sound.Parent = root
 	sound:Play()
-	Debris:AddItem(sound, 4)
+	Debris:AddItem(sound, config.length or 4)
 end
 
 -- Players within `range` and inside the swing's cone (`arcDegrees` wide, centred on where the
@@ -107,6 +110,19 @@ local function batHits(swinger: Player, targets: { Target }, _tool: Tool)
 	end
 end
 
+-- The Tennis Racket: the bat's hit, as high but GameConfig.RacketPushMultiplier times further back.
+local function racketHits(swinger: Player, targets: { Target }, _tool: Tool)
+	local power = GameConfig.RacketPushMultiplier
+	for _, target in targets do
+		playBonk(target.player, GameConfig.RacketHitSound)
+		StealService.knockLoose(swinger, target.player, "smashed")
+		local push = target.direction * GameConfig.BatKnockbackSpeed * power
+			+ Vector3.new(0, GameConfig.BatKnockbackLift, 0)
+		local immunity = GameConfig.BatHitImmunitySeconds * GameConfig.RacketImmunityMultiplier
+		RagdollService.knock(target.player, push, nil, false, immunity)
+	end
+end
+
 local function cageHits(swinger: Player, targets: { Target }, tool: Tool)
 	local target = targets[1] -- only the closest one
 	if not target then
@@ -127,6 +143,8 @@ end
 local ITEMS = {
 	Bat = { range = GameConfig.BatRange, arc = GameConfig.BatHitArcDegrees, onHit = batHits },
 	Cage = { range = GameConfig.CageRange, arc = GameConfig.CageHitArcDegrees, onHit = cageHits },
+	-- The Tennis Racket is an Inventory item (named by its item id), swung exactly like the bat.
+	tennis_racket = { range = GameConfig.BatRange, arc = GameConfig.BatHitArcDegrees, onHit = racketHits },
 }
 
 -- The moment the swing reaches the front.
@@ -226,6 +244,55 @@ local function buildBat(): Tool
 	-- The barrel sticks out past the grip, away from the hand.
 	barrel.CFrame = handle.CFrame * CFrame.new(0, 0, -(handle.Size.Z + barrel.Size.Z) / 2)
 	addWelded(tool, handle, barrel)
+
+	return tool
+end
+
+-- Builds the Tennis Racket: a dark grip (the Handle) and an orange shaft leading to a round
+-- orange frame with white strings, held up like the bat.
+local function buildRacket(): Tool
+	local tool = Instance.new("Tool")
+	tool.Name = "tennis_racket" -- its item id (ItemConfig); the hotbar finds it by this
+	tool.ToolTip = "Click to swing. Knocks people three times further than the bat"
+	tool.TextureId = GameConfig.RacketIcon
+	tool.CanBeDropped = false
+	tool.Grip = CFrame.new(0, 0, 0.6) * CFrame.Angles(math.rad(-60), 0, 0)
+	tool:SetAttribute("Swingable", true) -- BatSwing on the client plays the bat's swing for it
+
+	local orange = Color3.fromRGB(255, 140, 30)
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"
+	handle.Size = Vector3.new(0.3, 0.3, 1.4)
+	handle.Color = Color3.fromRGB(55, 35, 70)
+	handle.Material = Enum.Material.Fabric
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+
+	local shaft = Instance.new("Part")
+	shaft.Size = Vector3.new(0.22, 0.22, 1.1)
+	shaft.Color = orange
+	shaft.Material = Enum.Material.SmoothPlastic
+	shaft.CFrame = handle.CFrame * CFrame.new(0, 0, -1.25)
+	addWelded(tool, handle, shaft)
+
+	-- The head: a round frame across the far end, its face along the racket.
+	local headCFrame = handle.CFrame * CFrame.new(0, 0, -2.75)
+	local frame = Instance.new("Part")
+	frame.Shape = Enum.PartType.Cylinder
+	frame.Size = Vector3.new(0.18, 2.3, 2.3)
+	frame.Color = orange
+	frame.Material = Enum.Material.SmoothPlastic
+	frame.CFrame = headCFrame
+	addWelded(tool, handle, frame)
+
+	local strings = Instance.new("Part")
+	strings.Shape = Enum.PartType.Cylinder
+	strings.Size = Vector3.new(0.2, 1.95, 1.95)
+	strings.Color = Color3.fromRGB(245, 245, 250)
+	strings.Material = Enum.Material.Fabric
+	strings.CFrame = headCFrame
+	addWelded(tool, handle, strings)
 
 	return tool
 end
@@ -750,6 +817,18 @@ function ItemService.start()
 	ITEM_TOOLS[CaptureService.ITEM_ID] = { template = buildPolterPuller(), handler = CaptureService }
 	ITEM_TOOLS[ShieldService.ITEM_ID] = { template = buildShield(), handler = ShieldService }
 	ITEM_TOOLS[MalletService.ITEM_ID] = { template = buildMegaMallet(), handler = MalletService }
+	-- The racket swings like the bat (no cooldown of its own).
+	ITEM_TOOLS.tennis_racket = {
+		template = buildRacket(),
+		handler = {
+			tryUse = function(_player: Player, tool: Tool)
+				swing(tool)
+			end,
+			readyAt = function(_player: Player): number?
+				return nil
+			end,
+		},
+	}
 
 	-- Tool.Activated fires on the server too, so each copy of an item is wired up here.
 	local function onToolAdded(item: Instance)
