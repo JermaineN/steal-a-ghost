@@ -15,27 +15,61 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 3 | Rebirth system and Rebirth window | #30 |
 | 4 | Haunted Hour server event (every 15 min) | #31 |
 | 5 | Friend boost (+10% income per friend) and an Invite friends button | #32 |
-| 6 | Shop and Inventory windows, with placeholder items | #33 |
+| 6 | Shop and Inventory windows | #33 |
 | 7 | Daily reward streak (gems) | #34 |
+| 8 | Mutations (eerie, spooky, undead, shiny), Divine recolour, Secret price | #36 |
+| 9 | First-time tutorial | #37 |
+| 10 | Leaderboards in the map | #38 |
+| 11 | Base upgrades (More Graves, Longer Lock) | #39 |
+| 12 | Offline earnings | #40 |
+| 13 | Wanted / bounty for thieves on a streak | #41 |
+| 14 | Custom hotbar and equipping items | #43 |
+| 15 | Smoke Bomb | #44 |
+| 16 | Gravity, and the Shop sorted by price | #45 |
+| 17 | Universal Key | #46 |
+| 18 | Gravity buff, and a fix for staying slowed after a cage | #47 |
+| 19 | PolterPuller 4000, and balance changes | #48 |
+| 20 | Upgrades prompt only on your own base | #49 |
+| 21 | Lower offline earnings | #50 |
+| 22 | Titles: THE GOAT and SUPERNOVA | #51 |
+| 23 | Inventory tabs: Items and Titles | #52 |
+| 24 | Old placeholder items removed (owners refunded) | #53 |
+| 25 | Shield | #53 |
+| 26 | Item prices doubled, Smoke Bomb cancels, quieter PolterPuller hint | #54 |
+| 27 | Ghost pages in the Index: mutation finds and gems | #55 |
+| 28 | Mega Mallet | #56 |
+| 29 | Mega Mallet price | #57 |
+| 30 | Tennis Racket | #57 |
+| 31 | Speed and Carry Speed upgrades; upgrades reset on rebirth | #59 |
+| 32 | Upgrade prices doubled | #60 |
+| 33 | More Graves is kept through rebirths | #62 |
+| 34 | Rebirth titles (REBORN, UNDYING, ETERNAL) and rebirth starting cash | #63 |
+| 35 | SUPERNOVA is Winter_Unicorn79's | #63 |
+| 36 | Item rarities: card and hotbar colours by rarity | #64 |
+| 37 | Rebirth starting cash lowered to 1% | #65 |
+| 38 | Spin Wheel: daily and online spins, gems, x2 money, a Mythic item | #65 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
 2. **Design the placeholders:** the Divine and Secret ghosts (names and models,
-   `GhostConfig`, section 2) and the 6 Shop items (names, pictures, prices and what they do,
-   `ItemConfig`, section 6).
+   `GhostConfig`, section 2) and the Spin Wheel's Mythic item (`mythic_placeholder`: name,
+   picture and what it does, `ItemConfig`, section 38).
 3. **Pick sounds by ear** if you don't like mine: Divine/Secret spawn banners (they reuse the
    Mythic sound), the rebirth sound and the Haunted Hour thunder (all in `GameConfig`).
 4. **2-player tests** I couldn't do alone (Test → Clients and Servers, 2 players):
    leaving mid-steal (section 1), the rebirth pillar and message as seen by the other player
-   (section 3), and rebirth being blocked while someone steals from you.
-5. **In the live game:** real friends joining (section 5), the invite window, and the
-   next-day daily streak (section 7).
+   (section 3), and rebirth being blocked while someone steals from you. Later sections list
+   their own untested parts under **Tested** / **Not tested**.
+5. **In the live game:** real friends joining (section 5), the invite window, the next-day
+   daily streak (section 7), and the Spin Wheel's saving: unused spins, the x2 boost carrying
+   over a rejoin, and the free spin after midnight (section 38).
 6. Tune numbers if needed: rebirth costs, Haunted Hour timing and luck, friend boost, daily
-   gems, and the new ghosts' prices/odds are all in `GameConfig` / `GhostConfig`.
+   gems, Spin Wheel prizes and odds, and ghost prices/odds are all in `GameConfig` /
+   `GhostConfig`.
 
-Nothing was removed. The only behaviour changes to existing features are: the leave-mid-steal
-rule (section 1), the ghost label in your base showing rebirth-boosted income, and pop-up
-messages now drawing above open windows (section 6).
+Sections 1 to 7 removed nothing. The only behaviour changes they made to features that
+existed before are: the leave-mid-steal rule (section 1), the ghost label in your base showing
+rebirth-boosted income, and pop-up messages now drawing above open windows (section 6).
 
 ---
 
