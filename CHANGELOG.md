@@ -48,6 +48,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 36 | Item rarities: card and hotbar colours by rarity | #64 |
 | 37 | Rebirth starting cash lowered to 1% | #65 |
 | 38 | Spin Wheel: daily and online spins, gems, x2 money, a Mythic item | #65 |
+| 39 | Phones: smaller HUD and buttons, Haunted Hour pill at the top | #67 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1055,3 +1056,20 @@ Spin speeds it straight up to full speed (no jump), then it slows down dramatica
 again. The whole spin now takes 6 seconds (`SpinSeconds`). The motion numbers are at the top of
 `UI/SpinPanel`. **Tested:** measured the speed 4 times a second: 18°/s drifting, up to ~900°/s,
 then down smoothly to 0; it stopped on 20 gems and 20 gems were paid.
+
+## 39. Phone layout: smaller HUD, Haunted Hour pill at the top (#67)
+
+On phones and tablets (a touch screen and no keyboard), these are now 30% smaller: the money,
+income and gems in the bottom-left, the Invite friends, Daily reward and Spin buttons in the
+bottom-right (still stacked neatly), and the titles above everyone's head. The Haunted Hour
+countdown pill moves up into the top bar's row (the middle of that row is empty). PC is unchanged.
+
+**How it works:** `UI/Mobile` decides once whether this device is a phone (`Mobile.isMobile`) and
+gives `Mobile.scale` (`GameConfig.MobileHudScale`, 0.7, on phones; 1 elsewhere). Each piece's
+existing UIScale starts at that size and its pop/pulse/hover is multiplied by it.
+`Mobile.start` shrinks the server-built `TitleTag` billboards on this device only.
+
+**Tested (solo, phone mode forced on for the test and switched back off):** the cash display
+measured 238×67 (was 340×96), the buttons 105 wide (was 150), title tags 168×29 (was 240×42),
+the buttons stacked without overlapping, and the pill sat at the very top. Not tested: a real
+phone or Studio's device emulator, and the floating "+$"/"+N gems" positions on a phone.

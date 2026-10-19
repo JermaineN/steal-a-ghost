@@ -7,6 +7,9 @@ return {
 	-- Plots / server size (set Max Players in Game Settings to match PlotCount)
 	PlotCount = 8,
 	HalloweenMap = true, -- night sky, pumpkins, graveyard and ghost portals (visual only)
+	-- On phones and tablets, the cash/income/gems display, the Invite, Daily reward and Spin
+	-- buttons, and the titles above heads are drawn at this size (0.7 = 30% smaller).
+	MobileHudScale = 0.7,
 
 	-- Economy
 	StartingCash = 100,

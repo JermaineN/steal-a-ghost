@@ -1,5 +1,6 @@
 -- Client entry point.
 local Hud = require(script.UI.Hud)
+local Mobile = require(script.UI.Mobile)
 local RareSpawnBanner = require(script.UI.RareSpawnBanner)
 local SellConfirmPopup = require(script.UI.SellConfirmPopup)
 local Sidebar = require(script.UI.Sidebar)
@@ -34,6 +35,7 @@ local ShieldClient = require(script.ShieldClient)
 local MalletClient = require(script.MalletClient)
 
 GradientAnimator.start()
+Mobile.start()
 Hud.start()
 RareSpawnBanner.start()
 SellConfirmPopup.start()

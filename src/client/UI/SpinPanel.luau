@@ -12,6 +12,7 @@ local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local Mobile = require(script.Parent.Mobile)
 local Window = require(script.Parent.Window)
 
 local SpinPanel = {}
@@ -367,15 +368,16 @@ function SpinPanel.start()
 	local opener, openerLabel = Window.button({
 		Name = "Open",
 		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(1, -72, 1, -118),
+		-- Stacked on the Daily reward and Invite buttons, which are smaller on phones.
+		Position = UDim2.new(1, -72, 1, -14 - 104 * Mobile.scale),
 		Size = UDim2.fromOffset(150, 40),
 		Parent = openGui,
 	}, GREEN)
-	local openerScale = new("UIScale", { Parent = opener })
+	local openerScale = new("UIScale", { Scale = Mobile.scale, Parent = opener })
 	local openerPulse = TweenService:Create(
 		openerScale,
 		TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-		{ Scale = 1.08 }
+		{ Scale = 1.08 * Mobile.scale }
 	)
 	opener.Activated:Connect(panel.toggle)
 
@@ -389,7 +391,7 @@ function SpinPanel.start()
 			openerLabel.Text = "Spin " .. nextSpinClock()
 			Window.paintButton(opener, LOCKED_GREY)
 			openerPulse:Cancel()
-			openerScale.Scale = 1
+			openerScale.Scale = Mobile.scale
 		end
 	end
 	player:GetAttributeChangedSignal("Spins"):Connect(function()

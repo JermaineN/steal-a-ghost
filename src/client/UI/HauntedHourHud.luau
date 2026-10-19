@@ -14,6 +14,7 @@ local TweenService = game:GetService("TweenService")
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local HauntedHour = require(ReplicatedStorage.Shared.HauntedHour)
 local Hud = require(script.Parent.Hud)
+local Mobile = require(script.Parent.Mobile)
 
 local HauntedHourHud = {}
 
@@ -143,11 +144,12 @@ function HauntedHourHud.start()
 		Parent = player:WaitForChild("PlayerGui"),
 	})
 
-	-- The pill at the top of the screen, just under Roblox's top bar.
+	-- The pill at the top of the screen, just under Roblox's top bar. On phones it goes up into
+	-- the top bar's row (its middle is empty; Roblox's buttons are in the corners).
 	local pill = new("Frame", {
 		Name = "Timer",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 62),
+		Position = UDim2.new(0.5, 0, 0, if Mobile.isMobile then 12 else 62),
 		Size = UDim2.fromOffset(260, 34),
 		BackgroundColor3 = WHITE,
 		Visible = false,
