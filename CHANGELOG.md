@@ -900,3 +900,16 @@ own Gravity well; those restore it when they end). `DataService.applyRebirth` cl
 level 5; Carry Speed maxed at level 5 (19.89 by the formula); the window showed all four cards;
 after a rebirth every level was 0 and speed was back to 24.5, also after respawning. No errors.
 **Not tested:** the carry speed while actually stealing (needs a 2-player test).
+
+## 32. Upgrade prices doubled
+
+Every upgrade costs twice as much:
+
+| Upgrade | Costs |
+|---|---|
+| More Graves | $10K · $50K · $1M · $5M |
+| Longer Lock | $20K · $100K · $5M |
+| Speed | $6K · $30K · $120K · $500K · $2M |
+| Carry Speed | $10K · $50K · $200K · $800K · $3M |
+
+Not playtested (only the numbers in `GameConfig` changed).
