@@ -63,8 +63,8 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 51 | Flashier Golden Sparkles with a chime loop, Smoke Bomb hides effects, rarity sorting | #80 |
 | 52 | The Secret ghost is now the Grim Reaper | #81 |
 | 53 | The Divine ghost is now the Seraph | #82 |
-| 54 | Gem packs can be bought with Robux | |
-| 55 | A "!" on the menu tab while something is waiting | |
+| 54 | Gem packs can be bought with Robux | #83 |
+| 55 | A "!" on the menu tab while something is waiting | #83 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
