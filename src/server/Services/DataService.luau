@@ -506,12 +506,12 @@ end
 
 -- The data side of a rebirth (RebirthService has already cleared the base): cash back to the
 -- starting amount, uncollected pad cash gone, one more rebirth, and the gem reward.
-function DataService.applyRebirth(player: Player, gems: number)
+function DataService.applyRebirth(player: Player, gems: number, startingCash: number)
 	local profile = profiles[player]
 	if not profile then
 		return
 	end
-	profile.data.cash = GameConfig.StartingCash
+	profile.data.cash = startingCash
 	profile.cashValue.Value = profile.data.cash
 	profile.data.stored = {}
 	profile.data.ghosts = {}

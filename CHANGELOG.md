@@ -922,3 +922,42 @@ window's lose/keep lines say so. (`DataService.applyRebirth` clears every upgrad
 **Tested (solo, test cash):** bought More Graves ×2, Longer Lock, Speed and Carry Speed, then
 rebirthed: graves stayed at 2, the other three went to 0 and walk speed went back to 24.5. The
 new Rebirth window lines fit.
+
+## 34. Rebirth titles and starting cash
+
+**Rebirth titles:** reaching rebirth 1, 5 and 10 unlocks a title:
+
+| Title | Rebirths | Look |
+|---|---|---|
+| **REBORN** | 1 | plain purple |
+| **UNDYING** | 5 | plain orange |
+| **ETERNAL** | 10 | shiny silver (Eerie's colours, with the glint) |
+
+- The Inventory's Titles tab shows them even while locked: the word is dimmed, the card says
+  "Locked: 5 rebirths", and a progress bar replaces the Wear button ("1/5 rebirths"). The bar
+  counts rebirths done plus your cash toward the next rebirth, so it fills as you play.
+  Owned titles come first, then the locked ones.
+- Unlocking one shows "New title unlocked: REBORN!" a few seconds after the rebirth
+  celebration. Someone who has never picked a title puts it on automatically.
+- Players who already have rebirths get their titles when they join.
+
+**Starting cash:** after a rebirth you restart with 10% of what that rebirth cost (rebirth 1:
+$5K, rebirth 2: $25K) instead of $100. The Rebirth window's "You keep" line says how much.
+
+**How it works:** TitleConfig rows can have `rebirths = N`; `TitleService` treats them as owned
+once the player has that many rebirths, and `TitleService.rebirthed` (called by RebirthService)
+unlocks new ones. `Rebirth.startingCash(rebirths)` (Shared) → `DataService.applyRebirth`.
+Config: `RebirthStartingCashShare`, `RebirthTitleMessageDelay` (GameConfig).
+
+**Tested (solo, test cash):** the Titles tab showed REBORN, UNDYING and ETERNAL locked with
+bars; rebirthing gave $5K cash and unlocked REBORN (Wear button, unlock message); UNDYING's bar
+then read "1/5 rebirths" at 20.4% and ETERNAL's "1/10" at 10.2%; the Rebirth window said
+"restart with $25.0K"; all text fit. The delay on the unlock message was added after that test
+and wasn't re-checked.
+
+## 35. SUPERNOVA is Winter_Unicorn79's
+
+The SUPERNOVA title is now only for Winter_Unicorn79 (UserId 701124691, looked up in Studio);
+the creator no longer has it. If you were wearing it, you'll show no title until you pick
+another one in the Inventory. Not playtested (an allow-list change; the other account can't
+join a Studio test).

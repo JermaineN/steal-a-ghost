@@ -300,11 +300,11 @@ function RebirthPanel.start()
 		Text = "You lose: your cash, your base's ghosts and upgrades (not graves)",
 		Parent = window,
 	})
-	text({
+	-- Filled in by refresh with the cash you'd restart with.
+	local keepLabel = text({
 		Position = UDim2.fromOffset(18, 306),
 		Size = UDim2.new(1, -36, 0, 22),
 		TextColor3 = Theme.MoneyGreen,
-		Text = "You keep: gems, the Index, items, graves and your boost forever",
 		Parent = window,
 	})
 
@@ -376,6 +376,9 @@ function RebirthPanel.start()
 		local cash = stat("Cash")
 		local cost = Rebirth.cost(rebirths)
 		local affordable = player:FindFirstChild("leaderstats") ~= nil and cash >= cost
+		keepLabel.Text = `You keep: gems, the Index, items and graves, and restart with ${Format.cash(
+			Rebirth.startingCash(rebirths)
+		)}`
 
 		count.Text = if rebirths == 0
 			then "You haven't rebirthed yet"
