@@ -18,6 +18,7 @@ local CASH_GREEN = Theme.MoneyGreen
 local SPEND_RED = Theme.SpendRed
 local GEM_BLUE = Theme.GemBlue
 local FRIEND_PINK = Theme.FriendPink
+local BOOST_GOLD = Color3.fromRGB(255, 210, 60)
 local GEMS_ROW_HEIGHT = 42 -- pixels: the gem icon and number above the cash
 
 -- Pop-up messages ("You bought Boo!", "Outbid!"): big rounded text with a dark outline,
@@ -373,11 +374,28 @@ function Hud.start()
 		if friendBoost > 0 then
 			line ..= `  <font color="#{FRIEND_PINK:ToHex()}">+{math.floor(friendBoost * 100 + 0.5)}% friends</font>`
 		end
+		-- A Spin Wheel money boost, with the time it has left.
+		local boostLeft = (player:GetAttribute("MoneyBoostUntil") or 0) - workspace:GetServerTimeNow()
+		if boostLeft > 0 then
+			local seconds = math.ceil(boostLeft)
+			local clock = string.format("%d:%02d", seconds // 60, seconds % 60)
+			line ..= `  <font color="#{BOOST_GOLD:ToHex()}">x{GameConfig.SpinBoostMultiplier} {clock}</font>`
+		end
 		incomeLabel.Text = line
 	end
 	player:GetAttributeChangedSignal("IncomePerSecond"):Connect(updateIncome)
 	player:GetAttributeChangedSignal("FriendBoost"):Connect(updateIncome)
+	player:GetAttributeChangedSignal("MoneyBoostUntil"):Connect(updateIncome)
 	updateIncome()
+	-- The boost's clock ticks down.
+	task.spawn(function()
+		while true do
+			task.wait(1)
+			if player:GetAttribute("MoneyBoostUntil") then
+				updateIncome()
+			end
+		end
+	end)
 
 	-- leaderstats appears once the server has loaded our data.
 	task.spawn(function()

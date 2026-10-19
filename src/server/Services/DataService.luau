@@ -79,6 +79,9 @@ local function newData()
 		titles = {}, -- [titleId] = true for titles earned in game (see TitleConfig)
 		title = nil :: string?, -- the title shown above their head; "" = they chose none, nil = never chose
 		daily = {}, -- daily reward: { day = the day they last claimed, streak = which streak day that was }
+		spins = 0, -- unused Spin Wheel spins
+		spinDay = 0, -- the day (Shared.DailyReward.today) they last got their free daily spin
+		moneyBoostLeft = 0, -- seconds of Spin Wheel income boost left (only counts down while playing)
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
 		upgrades = {}, -- upgrade levels: { graves = n, lock = n, speed = n, carry = n } (see Shared.Upgrades); all but graves reset on rebirth
@@ -235,6 +238,7 @@ function DataService.playerAdded(player: Player): boolean
 	end
 	-- Equipped items (the hotbar), as "smoke_bomb,gravity" (attributes can't hold lists).
 	player:SetAttribute("Equipped", table.concat(data.equipped, ","))
+	player:SetAttribute("Spins", data.spins)
 	return true
 end
 
@@ -366,6 +370,45 @@ function DataService.setDaily(player: Player, day: number, streak: number)
 	local profile = profiles[player]
 	if profile then
 		profile.data.daily = { day = day, streak = streak }
+	end
+end
+
+-- Spin Wheel: unused spins, mirrored to the player's device as the "Spins" attribute.
+function DataService.getSpins(player: Player): number
+	local profile = profiles[player]
+	return if profile then profile.data.spins else 0
+end
+
+function DataService.addSpins(player: Player, amount: number)
+	local profile = profiles[player]
+	if profile then
+		profile.data.spins = math.max(0, profile.data.spins + amount)
+		player:SetAttribute("Spins", profile.data.spins)
+	end
+end
+
+function DataService.getSpinDay(player: Player): number
+	local profile = profiles[player]
+	return if profile then profile.data.spinDay else 0
+end
+
+function DataService.setSpinDay(player: Player, day: number)
+	local profile = profiles[player]
+	if profile then
+		profile.data.spinDay = day
+	end
+end
+
+-- Seconds of Spin Wheel income boost left.
+function DataService.getMoneyBoostLeft(player: Player): number
+	local profile = profiles[player]
+	return if profile then profile.data.moneyBoostLeft else 0
+end
+
+function DataService.setMoneyBoostLeft(player: Player, seconds: number)
+	local profile = profiles[player]
+	if profile then
+		profile.data.moneyBoostLeft = math.max(0, seconds)
 	end
 end
 

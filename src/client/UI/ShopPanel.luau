@@ -169,7 +169,12 @@ function ShopPanel.start()
 	})
 	local grid = Window.grid(panel.window, Vector2.new(150, 224))
 	-- Cheapest first: gem items, then cash items (the two currencies can't be compared directly).
-	local sorted = table.clone(ItemConfig.Items)
+	local sorted = {}
+	for _, item in ItemConfig.Items do
+		if item.shop ~= false then
+			table.insert(sorted, item)
+		end
+	end
 	table.sort(sorted, function(a, b)
 		if a.currency ~= b.currency then
 			return a.currency == "gems"

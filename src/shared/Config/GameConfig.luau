@@ -89,6 +89,29 @@ return {
 	-- day starts the streak over at day 1.
 	DailyRewardGems = { 10, 15, 20, 30, 40, 60, 100 },
 
+	-- Spin Wheel (the "Spin" button, bottom right): one free spin each day (midnight UTC) plus
+	-- one for every SpinOnlineSeconds played in a row (the timer starts over each time you join).
+	-- Unused spins are saved. The prizes go clockwise from the top, one 60-degree slice each;
+	-- `weight` is the chance out of all the weights (these add up to 100, so they're percents).
+	--   kind "gems"  amount gems
+	--   kind "boost" income × SpinBoostMultiplier for `seconds` of play (pauses while offline;
+	--                winning another adds its time)
+	--   kind "item"  one of ItemConfig item `itemId`
+	SpinOnlineSeconds = 10 * 60,
+	SpinBoostMultiplier = 2,
+	SpinSeconds = 6, -- from pressing Spin to the wheel stopping and the prize being paid
+	SpinIcon = "rbxassetid://127321308714174", -- the window's icon (source: assets/spin-wheel-icon.png)
+	SpinWedgeImage = "rbxassetid://119683871169650", -- one white slice, tinted per prize (assets/spin-wedge.png)
+	-- stylua: ignore
+	SpinPrizes = {
+		{ kind = "gems",  amount = 10, weight = 35 },
+		{ kind = "boost", seconds = 10 * 60, weight = 12 },
+		{ kind = "gems",  amount = 20, weight = 30 },
+		{ kind = "item",  itemId = "mythic_placeholder", weight = 1 },
+		{ kind = "gems",  amount = 50, weight = 15 },
+		{ kind = "boost", seconds = 30 * 60, weight = 7 },
+	},
+
 	-- Friend boost: each of your Roblox friends in the same server adds this much to your income
 	-- (0.1 = +10%), up to FriendBoostMax. The Invite button (bottom right) invites friends.
 	FriendBoostPerFriend = 0.1,
@@ -194,7 +217,7 @@ return {
 	RebirthCostGrowth = 4,
 	RebirthIncomeBonus = 0.5, -- each rebirth adds +50% income (1 rebirth = x1.5, 2 = x2, ...)
 	RebirthGems = 50, -- gem reward = this × the rebirth number reached (rebirth 3 gives 150)
-	RebirthStartingCashShare = 0.1, -- you restart with this share of the rebirth's cost (rebirth 2 at $250K → $25K)
+	RebirthStartingCashShare = 0.01, -- you restart with this share of the rebirth's cost (rebirth 2 at $250K → $2.5K)
 	RebirthTitleMessageDelay = 3.5, -- seconds after rebirthing before "New title unlocked" shows (after the celebration)
 	-- Played on the rebirthing player's device with the celebration. "Rewards Level Up - Next
 	-- Tier" (Los Calientes Studio, unknown uploader; swap it if you prefer another).

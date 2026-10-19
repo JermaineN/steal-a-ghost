@@ -9,6 +9,7 @@
 --               colour (card background and outline in the Shop, Inventory and hotbar)
 --   image       the card's picture (an rbxassetid://); "" shows a "?" until there is one
 --   once        true = can only be bought once (a reusable item, not a stack)
+--   shop        false = not sold in the Shop (won some other way, e.g. the Spin Wheel)
 --   tool        true = equipping it puts a usable tool (named by its id) in the hotbar; what it
 --               does is built in ItemService
 --
@@ -27,6 +28,9 @@ ItemConfig.Items = {
 	{ id = "tennis_racket", name = "Tennis Racket", description = "A bat that knocks people further", price = 200, currency = "gems", rarity = "Rare", image = "rbxassetid://95075449356080", once = true, tool = true },
 	{ id = "shield",     name = "Shield",     description = "Shrug off knockbacks and cages", price = 300, currency = "gems", rarity = "Epic", image = "rbxassetid://108221968843411", once = true, tool = true },
 	{ id = "gravity",    name = "Gravity",    description = "Pull everyone toward you",  price = 700, currency = "gems", rarity = "Legendary", image = "rbxassetid://100121928705722", once = true, tool = true },
+	-- PLACEHOLDER: the Spin Wheel's Mythic prize (GameConfig.SpinPrizes). Not sold in the Shop
+	-- (shop = false) and not a tool yet. Give it a name, picture and what it does; keep the id.
+	{ id = "mythic_placeholder", name = "Mythic Item", description = "Won from the Spin Wheel", price = 0, currency = "gems", rarity = "Mythic", image = "", shop = false },
 }
 
 -- Rarities of the hotbar tools that aren't Shop items (the Bat has none and stays brown).
