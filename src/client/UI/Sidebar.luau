@@ -1,7 +1,7 @@
--- The side menu: press M (or tap the tab on the middle of the left edge) to slide out four
--- buttons (Shop, Rebirth, Index, Inventory), one after another; press again to tuck them away.
--- Each opens its window: ShopPanel, RebirthPanel, IndexPanel (the Ghost Index) and
--- InventoryPanel.
+-- The side menu: press M (or tap the tab on the middle of the left edge) to slide out five
+-- buttons (Shop, Rebirth, Index, Inventory, Codes), one after another; press again to tuck them
+-- away. Each opens its window: ShopPanel, RebirthPanel, IndexPanel (the Ghost Index),
+-- InventoryPanel and CodesPanel.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -12,6 +12,7 @@ local IndexPanel = require(script.Parent.IndexPanel)
 local RebirthPanel = require(script.Parent.RebirthPanel)
 local ShopPanel = require(script.Parent.ShopPanel)
 local InventoryPanel = require(script.Parent.InventoryPanel)
+local CodesPanel = require(script.Parent.CodesPanel)
 
 local Sidebar = {}
 
@@ -28,6 +29,9 @@ local GAP = 16 -- between buttons (room for the name tags that hang off their bo
 -- Space around each button inside its fading group, which hides anything outside its edges
 -- (the name tag and the hover growth need the room).
 local PAD = 16
+-- The menu sits this far above the middle of the left edge, so its bottom button stays clear of
+-- the cash and gems in the bottom-left corner.
+local LIFT = 40
 local STAGGER = 0.06 -- seconds between each button appearing
 local SLIDE_IN = TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 local SLIDE_AWAY = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
@@ -39,6 +43,7 @@ local OPTIONS = {
 	{ name = "Rebirth", accent = Color3.fromRGB(175, 95, 255) },
 	{ name = "Index", accent = Color3.fromRGB(255, 190, 40) },
 	{ name = "Inventory", accent = Color3.fromRGB(255, 140, 30) },
+	{ name = "Codes", accent = CodesPanel.ACCENT },
 }
 
 local function new(className: string, props: { [string]: any }): any
@@ -63,6 +68,7 @@ local PANELS = {
 	Rebirth = RebirthPanel,
 	Index = IndexPanel,
 	Inventory = InventoryPanel,
+	Codes = CodesPanel,
 }
 
 -- What each button does: open (or close) its window.
@@ -308,12 +314,12 @@ local function addBadge(button: GuiObject, changed: BindableEvent, initial: any,
 	update(initial)
 end
 
--- Shrinks everything on small (phone) screens, like the HUD does.
+-- Shrinks everything on shorter screens (full size from 900 pixels tall), like the HUD does.
 local function scaleToScreen(scale: UIScale)
 	local function update()
 		local camera = workspace.CurrentCamera
 		local height = if camera then camera.ViewportSize.Y else 900
-		scale.Scale = math.clamp(height / 800, 0.6, 1)
+		scale.Scale = math.clamp(height / 900, 0.55, 1)
 	end
 	update()
 	if workspace.CurrentCamera then
@@ -325,7 +331,7 @@ function Sidebar.start()
 	local gui = new("ScreenGui", {
 		Name = "Sidebar",
 		ResetOnSpawn = false,
-		IgnoreGuiInset = true, -- measure from the very top of the screen, so the tab is truly centred
+		IgnoreGuiInset = true, -- measure from the very top of the screen
 		Parent = Players.LocalPlayer:WaitForChild("PlayerGui"),
 	})
 	local stackHeight = #OPTIONS * BUTTON_SIZE + (#OPTIONS - 1) * GAP
@@ -333,7 +339,7 @@ function Sidebar.start()
 	local root = new("Frame", {
 		Name = "Root",
 		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.new(0, 12, 0.5, 0),
+		Position = UDim2.new(0, 12, 0.5, -LIFT),
 		Size = UDim2.fromOffset(TAB_SIZE + GAP + BUTTON_SIZE, stackHeight),
 		BackgroundTransparency = 1,
 		Parent = gui,

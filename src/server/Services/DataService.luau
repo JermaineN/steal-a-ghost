@@ -101,6 +101,7 @@ local function newData()
 		cosmetics = {}, -- [cosmeticId] = true for cosmetics bought with gems (CosmeticConfig; Robux ones come from game passes)
 		worn = {}, -- the cosmetic worn of each kind: { aura = id, pet = id, tombstone = id, flowers = id }
 		petGhost = GameConfig.GhostPetDefault, -- the ghost the Ghost Buddy pet looks like (picked in the Index, must be found)
+		codes = {}, -- [CODE] = true for every code they have redeemed (side menu → Codes, Server.Config.CodeConfig)
 		tutorialDone = false, -- finished (or skipped) the first-time tutorial
 		steals = 0, -- ghosts successfully stolen (the Top Thieves leaderboard)
 		stats = {}, -- milestone counters for titles: { ghostsBought = n, mutations = n, shinies = n }
@@ -545,6 +546,19 @@ function DataService.addReceipt(player: Player, purchaseId: string)
 		if #profile.data.receipts > MAX_RECEIPTS then
 			table.remove(profile.data.receipts, 1)
 		end
+	end
+end
+
+-- Codes (CodeService): has this player already redeemed this code (in capitals)?
+function DataService.hasRedeemedCode(player: Player, code: string): boolean
+	local profile = profiles[player]
+	return profile ~= nil and profile.data.codes[code] == true
+end
+
+function DataService.markCodeRedeemed(player: Player, code: string)
+	local profile = profiles[player]
+	if profile then
+		profile.data.codes[code] = true
 	end
 end
 

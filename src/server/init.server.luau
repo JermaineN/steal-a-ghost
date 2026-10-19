@@ -37,6 +37,7 @@ local TitleService = require(Services.TitleService)
 local SpinService = require(Services.SpinService)
 local StoreService = require(Services.StoreService)
 local CosmeticService = require(Services.CosmeticService)
+local CodeService = require(Services.CodeService)
 
 local map = MapBuilder.build()
 PlotService.start(map.plots)
@@ -69,6 +70,7 @@ TitleService.start()
 SpinService.start()
 StoreService.start()
 CosmeticService.start()
+CodeService.start()
 
 -- Every new character walks at GameConfig.WalkSpeed plus their Speed upgrade (StealService
 -- slows thieves down; UpgradeService applies a newly bought level straight away).

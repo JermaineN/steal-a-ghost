@@ -67,6 +67,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 55 | A "!" on the menu tab while something is waiting | #83 |
 | 56 | Title rarities and milestone titles | #84 |
 | 57 | Flat colours for Legendary-and-below titles | #85 |
+| 58 | Codes: redeem codes for gems, cash or spins (side menu → Codes) | #86 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1506,3 +1507,45 @@ flat title's gradient for the client's GradientAnimator.
 no animation tag and no glint; PHANTOM, VIP, NIGHTMARE, THE GOAT and SUPERNOVA are unchanged; the
 Titles tab shows the flat colours. No errors. **Not tested:** the title above the head and in
 chat for a flat title (they use the same TitleText code).
+
+## 58. Codes (side menu → Codes)
+
+A fifth side menu button, **Codes** (a teal gift box icon), opens a window with a text box and a
+Redeem button. Players type a code you've posted (in a clip, a video description or the Roblox
+group) and get its reward once. The line under the box answers: "+100 gems!" in green, or in red
+"Already used", "Invalid or expired code", "Type a code first" or "Slow down! Try again in a
+moment." Enter in the box works like the button. The first code is **SPOOKY** (100 gems).
+
+**How to add a code:** open `src/server/Config/CodeConfig.luau` and add a row, then publish:
+
+```lua
+{ code = "1KLIKES", gems = 250, spins = 1 },
+{ code = "HALLOWEEN", gems = 500, cash = 10000, expires = "2026-11-01" },
+```
+
+`gems`, `cash` and `spins` are all optional (use any mix); `expires` is the last day it works
+(UTC, it stops at the end of that day), left out = never expires. Upper/lower case and spaces
+around the code don't matter. Each player can use each code once. Don't rename a code that's
+already out (people who used it could use the new name again); add a new one instead.
+
+How it works: CodeConfig is in ServerScriptService, which players' devices never receive, so
+exploiters can't read codes before you post them. The window (client `UI/CodesPanel`) only sends
+the typed text with the `RedeemCode` remote. `CodeService` checks it's a short string, allows one
+try per player every `GameConfig.CodeCooldownSeconds` (2), looks the code up, checks the expiry
+and whether this player used it, then saves it in their data (new `codes` key, `[CODE] = true`)
+and pays through DataService (`addGems` / `addCash` / `addSpins`). It answers with `CodeResult`
+(success, message). Text longer than `GameConfig.CodeMaxLength` (30) is never looked up.
+
+With five buttons the side menu was tall enough to cover the gems counter, so it now sits 40
+pixels above the middle of the left edge and is full size from 900 pixels of screen height
+(was 800).
+
+**Tested:** in a Studio playtest, like a player: pressed M, clicked Codes, typed " spooky " in the
+box and clicked Redeem: "+100 gems!" and gems went 0 → 100. Typing SPOOKY again and pressing Enter
+said "Already used" with no gems; a wrong code said "Invalid or expired code"; Redeem with an empty
+box said "Type a code first". Sent from the client: a number and a 500-letter text were ignored, and
+two codes in a row got "Slow down!" for the second. Checked the expiry date maths on the server
+(2026-11-01 is still valid today, 2026-10-01 has expired), that the client sees nothing in
+ServerScriptService, and the side menu clear of the gems counter. No errors. **Not tested:** an
+expired code through the window (no expired code exists), and saving which codes were used (only
+in the live game; DataStores are off in Studio).

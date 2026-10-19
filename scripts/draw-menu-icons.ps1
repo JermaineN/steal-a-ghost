@@ -128,3 +128,24 @@ Sticker $g (RoundRect 116 104 24 30 6) (Brush 255 215 90)        # buckle
 $g.DrawLine((Pen $INK 6), 96, 160, 160, 160)                     # pocket seam
 $g.DrawArc((Pen $SHINE 10), 66, 128, 40, 80, 150, 70)
 Save $bmp $g "menu-inventory.png"
+
+# --- Codes: a teal gift box with an orange ribbon and bow ---
+$bmp, $g = New-Canvas
+$orange = Brush 255 140 30
+foreach ($loop in @(@(62, 22, 66, 56, 20), @(128, 22, 66, 56, -20))) {   # bow loops
+	$bow = New-Object System.Drawing.Drawing2D.GraphicsPath
+	$bow.AddEllipse($loop[0], $loop[1], $loop[2], $loop[3])
+	$m = New-Object System.Drawing.Drawing2D.Matrix
+	$m.RotateAt($loop[4], (New-Object System.Drawing.PointF ($loop[0] + $loop[2] / 2), ($loop[1] + $loop[3] / 2)))
+	$bow.Transform($m)
+	Sticker $g $bow $orange
+}
+Sticker $g (RoundRect 50 120 156 108 14) (Brush 40 175 165)    # box
+Sticker $g (RoundRect 36 82 184 50 14) (Brush 60 215 200)      # lid
+Sticker $g (RoundRect 112 132 32 96 4) $orange                 # ribbon down the box
+Sticker $g (RoundRect 110 82 36 50 4) $orange                  # ribbon over the lid
+$g.FillEllipse((New-Object System.Drawing.SolidBrush $INK), 110, 58, 36, 34)   # knot
+$g.FillEllipse((Brush 255 175 70), 116, 63, 24, 24)
+$g.DrawLine((Pen $SHINE 10), 54, 98, 96, 98)
+$g.DrawLine((Pen $SHINE 10), 66, 140, 66, 200)
+Save $bmp $g "menu-codes.png"
