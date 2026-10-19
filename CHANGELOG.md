@@ -71,6 +71,8 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 59 | Spin "Get more", 2x Money badge, VIP and Fast Flight buffs | #87 |
 | 60 | Seven new ghosts: Spirit, Lost Soul, Ghoul, Ghast, Yokai, Onryo, Oni | #88 |
 | 61 | Rebirth speed, softer Divine ghost, speed upgrade tuning, cheaper cosmetics, WEARING ribbon | #89 |
+| 62 | Icons for game passes and gem packs on the Creator Hub | #90 |
+| 63 | EARLY TESTER title (Divine) for the five early testers | #91 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1659,3 +1661,15 @@ picture was put into the page's file box from Roblox's own copy and saved with S
 **Tested:** Roblox's APIs show a new picture id on all twelve items; in a Studio playtest the
 Currency tab shows the four pile pictures. **Not tested:** how the pictures look once moderation
 finishes (check the purchase pop-up in the live game).
+
+## 63. EARLY TESTER title for the early testers (#91)
+
+A new Divine title, **EARLY TESTER**, in the Divine rarity's colours (heavenly white and blue,
+sliding, with the shine glint). It belongs to the five players who tested the game before launch:
+AyoGamerOfficial, Joespo, wintrishere15, Winter_Unicorn79 and Jessn350 (`allowedUserIds` in
+`TitleConfig`, their UserIds looked up from Roblox). They pick it in Inventory → Titles; anyone
+else doesn't see it as owned. Winter_Unicorn79 keeps SUPERNOVA too.
+
+**Tested:** the config loads in Studio with the right text, rarity, gradient and the five ids.
+**Not tested:** wearing it in game (needs one of those accounts, or a temporary `-1` on the list
+in a 2-player test).

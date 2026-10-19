@@ -36,6 +36,14 @@ end
 
 local OWNER_USER_ID = 5783726738 -- the game's creator (jerizaxe)
 local WINTER_UNICORN_USER_ID = 701124691 -- Winter_Unicorn79
+-- The players who tested the game before launch.
+local EARLY_TESTER_USER_IDS = {
+	129697926, -- AyoGamerOfficial
+	280803878, -- Joespo
+	659456331, -- wintrishere15
+	WINTER_UNICORN_USER_ID,
+	5282578235, -- Jessn350
+}
 
 TitleConfig.Titles = {
 	{
@@ -61,6 +69,15 @@ TitleConfig.Titles = {
 		),
 		shine = true,
 		allowedUserIds = { WINTER_UNICORN_USER_ID },
+	},
+	{
+		id = "early_tester",
+		rarity = "Divine",
+		text = "EARLY TESTER",
+		-- The Divine rarity's colours: heavenly white and blue.
+		gradient = Theme.RarityGradients.Divine,
+		shine = true,
+		allowedUserIds = EARLY_TESTER_USER_IDS,
 	},
 	-- The VIP game pass's title, in gold.
 	{
