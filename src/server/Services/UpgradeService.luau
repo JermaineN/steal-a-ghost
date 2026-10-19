@@ -1,7 +1,7 @@
 -- Upgrades: More Graves (how many of the base's graves are open), Longer Lock (how long the
 -- base stays locked), Speed (walk speed) and Carry Speed (walk speed while carrying a stolen
 -- ghost). Bought with cash in the Upgrades window, which opens from the Upgrades signpost at
--- your base's entrance. Levels are saved and reset to 0 on rebirth (DataService.applyRebirth);
+-- your base's entrance. Levels are saved; all but More Graves reset to 0 on rebirth (DataService.applyRebirth);
 -- the maths is in Shared.Upgrades. The player's device sees each level as an "Upgrade_<id>"
 -- attribute.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
