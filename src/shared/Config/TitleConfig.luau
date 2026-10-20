@@ -20,8 +20,12 @@
 --                  out-bids), steals (steals and captures), found (ghosts in the Index),
 --                  mutations (mutated ghosts you got), shinies (Shiny ghosts you got).
 --                  These show in the Inventory even before you own them, locked, with a bar.
+--   ghostMutations a GhostConfig id: earned by finding that ghost in every mutation (the Index's
+--                  "IndexMut_<ghostId>_<mutationId>" attributes). One "THE <GHOST>" title per
+--                  ghost is made below the list; locked ones show with a bar too.
 local Theme = require(script.Parent.Parent.Theme)
 local GhostConfig = require(script.Parent.GhostConfig)
+local MutationConfig = require(script.Parent.MutationConfig)
 
 local TitleConfig = {}
 
@@ -192,6 +196,50 @@ TitleConfig.Titles = {
 		rebirths = 10,
 	},
 }
+
+-- Ghost mutation titles: "THE WISP" for finding a Wisp in every mutation, one per ghost.
+-- Common to Rare ghosts give an Epic title, Epic and Legendary ghosts a Legendary one, and
+-- Mythic, Divine and Secret ghosts a title of their own rarity (with its shiny colours).
+local MUTATION_TITLE_RARITY = {
+	Common = "Epic",
+	Uncommon = "Epic",
+	Rare = "Epic",
+	Epic = "Legendary",
+	Legendary = "Legendary",
+	Mythic = "Mythic",
+	Divine = "Divine",
+	Secret = "Secret",
+}
+for _, ghost in GhostConfig.Ghosts do
+	local rarity = MUTATION_TITLE_RARITY[ghost.rarity]
+	local fancy = GhostConfig.Rarities[rarity].order >= GhostConfig.Rarities.Mythic.order
+	table.insert(TitleConfig.Titles, {
+		id = "ghost_" .. ghost.id,
+		rarity = rarity,
+		text = "THE " .. string.upper(ghost.name),
+		gradient = if fancy then Theme.RarityGradients[rarity] else nil,
+		shine = fancy or nil,
+		ghostMutations = ghost.id,
+	})
+end
+
+-- How many of a ghost's mutations the player has found (works on the server and the client:
+-- DataService mirrors each find as an "IndexMut_<ghostId>_<mutationId>" attribute).
+function TitleConfig.mutationsFound(player: Player, ghostId: string): number
+	local found = 0
+	for _, mutation in MutationConfig.Mutations do
+		if player:GetAttribute("IndexMut_" .. ghostId .. "_" .. mutation.id) then
+			found += 1
+		end
+	end
+	return found
+end
+
+-- "Find all 4 Wisp mutations", for the Inventory and the unlock message.
+function TitleConfig.ghostMutationsText(title): string
+	local ghost = GhostConfig.byId[title.ghostMutations]
+	return `Find all {#MutationConfig.Mutations} {ghost.name} mutations`
+end
 
 -- What each milestone stat means, for the Inventory ("Steal 25 ghosts") and the unlock message.
 TitleConfig.MilestoneText = {

@@ -36,6 +36,7 @@ local EVENT_NAMES = {
 	"NukeLaunched", -- server -> all clients: a nuke is coming (launcher's display name, cutsceneAt, explodeAt server times, ground target Vector3)
 	"RedeemCode", -- client -> server: redeem a code typed in the Codes window (code text; the server checks it)
 	"CodeResult", -- server -> that player only: how redeeming went (success: boolean, message to show)
+	"SystemChat", -- server -> all clients: post a line in chat (tag, tag Color3, rich-text message), e.g. a server booster starting
 }
 
 local folder

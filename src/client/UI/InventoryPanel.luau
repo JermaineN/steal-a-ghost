@@ -9,7 +9,8 @@
 -- Take off removes it. Rebirth titles (TitleConfig `rebirths`) show even before you own them:
 -- locked, with a bar for how close you are (rebirths done plus your cash toward the next one).
 -- Milestone titles (TitleConfig `milestone`) also show while locked, with a bar for the stat
--- ("Stat_<name>" attributes).
+-- ("Stat_<name>" attributes), and so do ghost mutation titles ("THE WISP"), with a bar for how
+-- many of that ghost's mutations you've found ("IndexMut_" attributes).
 -- Every card is coloured by its rarity, rarest first.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -17,6 +18,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CosmeticConfig = require(ReplicatedStorage.Shared.Config.CosmeticConfig)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local ItemConfig = require(ReplicatedStorage.Shared.Config.ItemConfig)
+local MutationConfig = require(ReplicatedStorage.Shared.Config.MutationConfig)
 local TitleConfig = require(ReplicatedStorage.Shared.Config.TitleConfig)
 local Rebirth = require(ReplicatedStorage.Shared.Rebirth)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -138,7 +140,7 @@ local function refresh()
 		local entry = titleCards[title.id]
 		local isOwned = player:GetAttribute("Title_" .. title.id) == true
 		local isWorn = wearing == title.id
-		local locked = not isOwned and (title.rebirths ~= nil or title.milestone ~= nil)
+		local locked = not isOwned and (title.rebirths ~= nil or title.milestone ~= nil or title.ghostMutations ~= nil)
 		entry.card.Visible = showTitles and (isOwned or locked)
 		-- Rarest first (Secret down to Common), owned and locked mixed together.
 		entry.card.LayoutOrder = #ItemConfig.Items + order
@@ -157,6 +159,16 @@ local function refresh()
 			if locked then
 				entry.barFill.Size = UDim2.fromScale(math.clamp(have / goal, 0, 1), 1)
 				entry.barText.Text = `{math.min(have, goal)}/{goal}`
+			end
+		end
+		if title.ghostMutations then
+			local goal = #MutationConfig.Mutations
+			local have = TitleConfig.mutationsFound(player, title.ghostMutations)
+			-- Short, so it fits the card (the title itself names the ghost).
+			entry.heading.Text = if locked then `Find all {goal} mutations` else "Mutation title"
+			if locked then
+				entry.barFill.Size = UDim2.fromScale(math.clamp(have / goal, 0, 1), 1)
+				entry.barText.Text = `{math.min(have, goal)}/{goal} mutations`
 			end
 		end
 		if title.rebirths then
@@ -556,6 +568,7 @@ function InventoryPanel.start()
 			string.match(attribute, "^Item_")
 			or string.match(attribute, "^Title")
 			or string.match(attribute, "^Stat_")
+			or string.match(attribute, "^IndexMut_")
 			or attribute == "Equipped"
 			or attribute == "Pass_extra_slot"
 			or string.match(attribute, "^Cosmetic_")
