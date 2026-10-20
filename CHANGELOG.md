@@ -76,6 +76,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 64 | HALLOWEEN code turned on (until Nov 1) | #92 |
 | 65 | Data wipe for the public launch (fresh saves and leaderboards) | #93 |
 | 66 | Golden Sparkles only sparkle while you move | #94 |
+| 67 | Mega Mallet running-pose fix, $1K rebirth starting cash cap, Golden Sparkles sound only while moving | #95 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1716,3 +1717,21 @@ in `CosmeticModels`.
 
 **Not tested:** Studio wasn't open, so this wasn't playtested. Wear Golden Sparkles in a playtest
 and check it stops when you stand still and starts again when you walk.
+
+## 67. Mega Mallet running fix, rebirth cash cap, quiet Golden Sparkles (#95)
+
+- **Mega Mallet:** swinging while running no longer starts with your running legs. The code
+  swing used to be added on top of whatever Roblox's Animator was playing; now, for the swing's
+  length, it fades out the Animator's pose on every joint except the right arm that holds the
+  mallet (`MalletClient`, `KEEP_ANIMATED`), easing in and out over 0.15 s.
+- **Rebirth:** the cash you restart with is still 1% of the rebirth's cost, but never more than
+  `GameConfig.RebirthStartingCashMax` ($1,000). Rebirth 1 gives $500, every later one $1,000.
+  The Rebirth window shows the same number.
+- **Golden Sparkles:** the chiming sound now plays only while you move, like the sparkles
+  (`CosmeticModels.watchMovement` turns the sound on and off with the particles).
+
+**Tested** in a solo Studio playtest: starting cash for rebirths 0–9 ($500, then $1,000);
+wearing Golden Sparkles, the sound is off standing still, on while walking, off again after
+stopping; replaying the mallet swing (server-fired `MalletSwing`) while running, the legs held the
+swing pose instead of the run cycle. No new errors. **Not tested:** an actual rebirth, and what
+other players see and hear (2-player test).

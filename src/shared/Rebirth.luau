@@ -25,9 +25,10 @@ function Rebirth.income(baseIncome: number, rebirths: number): number
 end
 
 -- The cash a player restarts with after rebirthing from `rebirths` (RebirthStartingCashShare of
--- what that rebirth cost, and never less than StartingCash).
+-- what that rebirth cost, never more than RebirthStartingCashMax and never less than StartingCash).
 function Rebirth.startingCash(rebirths: number): number
-	return math.max(GameConfig.StartingCash, math.floor(Rebirth.cost(rebirths) * GameConfig.RebirthStartingCashShare))
+	local share = math.floor(Rebirth.cost(rebirths) * GameConfig.RebirthStartingCashShare)
+	return math.max(GameConfig.StartingCash, math.min(share, GameConfig.RebirthStartingCashMax))
 end
 
 -- Gems given for reaching rebirth number `reached`.
