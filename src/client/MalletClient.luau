@@ -76,7 +76,17 @@ local JOINTS = {
 	lh = { "LeftUpperLeg", "LeftHip" },
 	rk = { "RightLowerLeg", "RightKnee" },
 	lk = { "LeftLowerLeg", "LeftKnee" },
+	-- Not posed, only held still (so a run or walk cycle doesn't keep moving them).
+	le = { "LeftLowerArm", "LeftElbow" },
+	lw = { "LeftHand", "LeftWrist" },
+	ra = { "RightFoot", "RightAnkle" },
+	la = { "LeftFoot", "LeftAnkle" },
 }
+-- The tool-holding arm keeps the Animator's pose underneath (it's what holds the mallet up).
+-- Every other joint fades out whatever the Animator is playing, so swinging while running
+-- doesn't start with running legs.
+local KEEP_ANIMATED = { rs = true, rw = true }
+local BLEND_SECONDS = 0.15
 
 -- Key moments, in seconds from the click (the slam is at WINDUP). `ease` shapes the move into
 -- that pose: "smooth" eases in and out, "slam" starts slow and hits hard.
@@ -142,12 +152,17 @@ local function playAnimation(character: Model, startedAt: number)
 		local pose = poseAt(elapsed)
 		-- A little tremble while loading up.
 		local shake = if elapsed > 0.45 and elapsed < WINDUP then math.sin(elapsed * 55) * 1.2 else 0
+		-- How much of the Animator's pose to replace: eases in at the start and back out at the end.
+		local takeOver = math.clamp(elapsed / BLEND_SECONDS, 0, 1)
+			* math.clamp((KEYS[#KEYS].time - elapsed) / BLEND_SECONDS, 0, 1)
 		for key, joint in joints do
-			local angle = (pose :: any)[key] + (if key == "waist" then shake else 0)
-			if angle ~= 0 then
-				-- Rotating before the animated pose turns the joint in its parent part's frame.
-				(joint :: any).Transform = CFrame.Angles(rad(angle), 0, 0) * (joint :: any).Transform
+			local angle = ((pose :: any)[key] or 0) + (if key == "waist" then shake else 0)
+			local animated = (joint :: any).Transform
+			if not KEEP_ANIMATED[key] then
+				animated = animated:Lerp(CFrame.identity, takeOver)
 			end
+			-- Rotating before the animated pose turns the joint in its parent part's frame.
+			(joint :: any).Transform = CFrame.Angles(rad(angle), 0, 0) * animated
 		end
 	end)
 end

@@ -162,10 +162,10 @@ local function stopWatching(root: BasePart)
 	end
 end
 
--- Turns the emitters on while the root part moves sideways faster than
+-- Turns the emitters (and the aura's sound) on while the root part moves sideways faster than
 -- GameConfig.AuraMovingSpeed, and off while standing still (jumping on the spot doesn't count).
--- Done on the server, so everyone sees the same thing.
-local function watchMovement(root: BasePart, emitters: { ParticleEmitter })
+-- Done on the server, so everyone sees and hears the same thing.
+local function watchMovement(root: BasePart, emitters: { ParticleEmitter }, sound: Sound?)
 	stopWatching(root)
 	local moving = nil
 	movementWatchers[root] = RunService.Heartbeat:Connect(function()
@@ -179,6 +179,9 @@ local function watchMovement(root: BasePart, emitters: { ParticleEmitter })
 			moving = nowMoving
 			for _, emitter in emitters do
 				emitter.Enabled = nowMoving
+			end
+			if sound then
+				sound.Playing = nowMoving
 			end
 		end
 	end)
@@ -200,8 +203,24 @@ function CosmeticModels.aura(cosmeticId: string, root: BasePart)
 			table.insert(emitters, emitter)
 		end
 	end
+	local sound: Sound? = nil
+	if aura.sound then
+		sound = Instance.new("Sound")
+		sound.SoundId = "rbxassetid://" .. aura.sound.soundId
+		sound.Volume = aura.sound.volume
+		sound.Looped = true
+		-- Heard only close by.
+		sound.RollOffMode = Enum.RollOffMode.InverseTapered
+		sound.RollOffMinDistance = 6
+		sound.RollOffMaxDistance = aura.sound.maxDistance or 40
+		sound.Parent = auraAttachment(root, Vector3.zero)
+		if not aura.movingOnly then
+			sound:Play()
+		end
+	end
 	if aura.movingOnly then
-		watchMovement(root, emitters)
+		-- The watcher plays the sound only while moving, like the particles.
+		watchMovement(root, emitters, sound)
 	end
 	if aura.light then
 		local light = Instance.new("PointLight")
@@ -214,18 +233,6 @@ function CosmeticModels.aura(cosmeticId: string, root: BasePart)
 		trail.Attachment0 = auraAttachment(root, aura.trail.from)
 		trail.Attachment1 = auraAttachment(root, aura.trail.to)
 		trail.Parent = trail.Attachment0
-	end
-	if aura.sound then
-		local sound = Instance.new("Sound")
-		sound.SoundId = "rbxassetid://" .. aura.sound.soundId
-		sound.Volume = aura.sound.volume
-		sound.Looped = true
-		-- Heard only close by.
-		sound.RollOffMode = Enum.RollOffMode.InverseTapered
-		sound.RollOffMinDistance = 6
-		sound.RollOffMaxDistance = aura.sound.maxDistance or 40
-		sound.Parent = auraAttachment(root, Vector3.zero)
-		sound:Play()
 	end
 end
 

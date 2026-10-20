@@ -229,7 +229,8 @@ return {
 	RebirthCostGrowth = 4,
 	RebirthIncomeBonus = 0.5, -- each rebirth adds +50% income (1 rebirth = x1.5, 2 = x2, ...)
 	RebirthGems = 50, -- gem reward = this × the rebirth number reached (rebirth 3 gives 150)
-	RebirthStartingCashShare = 0.01, -- you restart with this share of the rebirth's cost (rebirth 2 at $250K → $2.5K)
+	RebirthStartingCashShare = 0.01, -- you restart with this share of the rebirth's cost (rebirth 1 at $50K → $500)
+	RebirthStartingCashMax = 1000, -- ...but never more than this
 	RebirthTitleMessageDelay = 3.5, -- seconds after rebirthing before "New title unlocked" shows (after the celebration)
 	-- Played on the rebirthing player's device with the celebration. "Rewards Level Up - Next
 	-- Tier" (Los Calientes Studio, unknown uploader; swap it if you prefer another).
