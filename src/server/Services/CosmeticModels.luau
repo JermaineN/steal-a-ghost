@@ -7,6 +7,7 @@
 --   flowers    a little model placed beside each grave
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
@@ -70,6 +71,8 @@ local AURAS = {
 	-- twinkling on and off, gold motes rising from the feet, a warm glow, a gold trail behind
 	-- you and a soft chiming loop.
 	aura_golden = {
+		-- The particles only show while the wearer is moving (see watchMovement).
+		movingOnly = true,
 		emitters = {
 			-- Glitter bursting out of the body.
 			{
@@ -148,6 +151,39 @@ local function apply(instance: Instance, settings: { [string]: any }, skip: { [s
 	end
 end
 
+-- Movement watchers for `movingOnly` auras, one per root part, so removeAura can stop them.
+local movementWatchers: { [BasePart]: RBXScriptConnection } = {}
+
+local function stopWatching(root: BasePart)
+	local connection = movementWatchers[root]
+	if connection then
+		connection:Disconnect()
+		movementWatchers[root] = nil
+	end
+end
+
+-- Turns the emitters on while the root part moves sideways faster than
+-- GameConfig.AuraMovingSpeed, and off while standing still (jumping on the spot doesn't count).
+-- Done on the server, so everyone sees the same thing.
+local function watchMovement(root: BasePart, emitters: { ParticleEmitter })
+	stopWatching(root)
+	local moving = nil
+	movementWatchers[root] = RunService.Heartbeat:Connect(function()
+		if not root.Parent then
+			stopWatching(root)
+			return
+		end
+		local velocity = root.AssemblyLinearVelocity
+		local nowMoving = Vector3.new(velocity.X, 0, velocity.Z).Magnitude > GameConfig.AuraMovingSpeed
+		if nowMoving ~= moving then
+			moving = nowMoving
+			for _, emitter in emitters do
+				emitter.Enabled = nowMoving
+			end
+		end
+	end)
+end
+
 -- Puts an aura on a character's root part (attachments only work directly on a part). Take it
 -- off with CosmeticModels.removeAura.
 function CosmeticModels.aura(cosmeticId: string, root: BasePart)
@@ -155,12 +191,17 @@ function CosmeticModels.aura(cosmeticId: string, root: BasePart)
 	if not aura then
 		return
 	end
+	local emitters = {}
 	for _, settings in aura.emitters do
 		for _, point in settings.points do
 			local emitter = Instance.new("ParticleEmitter")
 			apply(emitter, settings, { points = true })
 			emitter.Parent = auraAttachment(root, point)
+			table.insert(emitters, emitter)
 		end
+	end
+	if aura.movingOnly then
+		watchMovement(root, emitters)
 	end
 	if aura.light then
 		local light = Instance.new("PointLight")
@@ -189,6 +230,7 @@ function CosmeticModels.aura(cosmeticId: string, root: BasePart)
 end
 
 function CosmeticModels.removeAura(root: BasePart)
+	stopWatching(root)
 	for _, child in root:GetChildren() do
 		if child.Name == "CosmeticAura" then
 			child:Destroy()

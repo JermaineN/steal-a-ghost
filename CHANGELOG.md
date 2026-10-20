@@ -75,6 +75,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 63 | EARLY TESTER title (Divine) for the five early testers | #91 |
 | 64 | HALLOWEEN code turned on (until Nov 1) | #92 |
 | 65 | Data wipe for the public launch (fresh saves and leaderboards) | #93 |
+| 66 | Golden Sparkles only sparkle while you move | #94 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1703,3 +1704,15 @@ before the wipe (they were saved data).
 and jerizaxe still has THE GOAT, the Landmine and the VIP/NIGHTMARE titles; no new errors.
 **Not tested:** the live game (Studio can't reach DataStores); after publishing, join and check
 you start with the starting cash.
+
+## 66. Golden Sparkles only sparkle while you move (#94)
+
+The Golden Sparkles aura (game pass) now only sparkles while you're running or walking, and stops
+when you stand still. The glow, the chiming sound and the gold trail (which only shows when you
+move anyway) are unchanged. The server checks the wearer's sideways speed every frame and turns
+the aura's particle emitters on above `GameConfig.AuraMovingSpeed` (2 studs/s), so everyone sees
+the same thing; jumping on the spot doesn't count. Other auras can opt in with `movingOnly = true`
+in `CosmeticModels`.
+
+**Not tested:** Studio wasn't open, so this wasn't playtested. Wear Golden Sparkles in a playtest
+and check it stops when you stand still and starts again when you walk.
