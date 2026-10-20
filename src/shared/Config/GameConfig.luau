@@ -242,6 +242,7 @@ return {
 	-- Shop boosters and game passes (what they are and their prices: StoreConfig).
 	LuckBoostMultiplier = 2, -- Server Luck: ghosts of LuckBoostMinRarity or rarer are this many times as likely
 	LuckBoostMinRarity = "Epic",
+	MutationBoostMultiplier = 2, -- Server Mutations: every mutation's chance is this many times as high
 	SpeedBoostBonus = 0.3, -- Speed Boost: +30% walk speed (on top of the Speed upgrade)
 	PassMoneyMultiplier = 2, -- 2x Money pass: income × this, forever
 	VipIncomeBonus = 0.15, -- VIP pass: +15% income (added like the friend boost)

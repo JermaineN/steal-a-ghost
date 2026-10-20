@@ -265,13 +265,17 @@ end
 local boostMutations = RunService:IsStudio() and GameConfig.StudioBoostMutations == true
 
 -- Rolls a new walkway ghost's mutation: rarest first, and the first one that hits wins (so a
--- rarer mutation always takes precedence). Usually nil (no mutation).
+-- rarer mutation always takes precedence). Usually nil (no mutation). Someone's Server
+-- Mutations booster (StoreService) makes every chance GameConfig.MutationBoostMultiplier times
+-- as high.
 local function rollMutation(): string?
 	if boostMutations then
 		return MutationConfig.Mutations[math.random(#MutationConfig.Mutations)].id
 	end
+	local boosted = (ReplicatedStorage:GetAttribute("MutationBoostUntil") or 0) > workspace:GetServerTimeNow()
+	local multiplier = if boosted then GameConfig.MutationBoostMultiplier else 1
 	for _, mutation in MutationConfig.Mutations do
-		if math.random() < 1 / mutation.chance then
+		if math.random() < multiplier / mutation.chance then
 			return mutation.id
 		end
 	end
