@@ -1,5 +1,7 @@
 -- Income: every tick, each ghost in a base adds its earnings to the green collect pad in front of
 -- its grave. The owner steps on a pad to move that money into their balance.
+-- It also runs the broke safety net: someone left with no ghosts and not enough money for the
+-- cheapest one is topped up to its price (see topUpIfBroke).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -10,6 +12,7 @@ local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
+local Notify = require(script.Parent.Parent.Util.Notify)
 local DataService = require(script.Parent.DataService)
 local GhostService = require(script.Parent.GhostService)
 local PlotService = require(script.Parent.PlotService)
@@ -25,6 +28,14 @@ local ownerWasOn: { [BasePart]: boolean } = {}
 -- Whether each pad is currently drawn as a locked (not yet opened) grave.
 local padLocked: { [BasePart]: boolean } = {}
 local LOCKED_GREY = Color3.fromRGB(110, 105, 120)
+
+-- The cheapest ghost's price: the broke safety net tops players up to this.
+local CHEAPEST_GHOST_PRICE = math.huge
+for _, ghost in GhostConfig.Ghosts do
+	CHEAPEST_GHOST_PRICE = math.min(CHEAPEST_GHOST_PRICE, ghost.price)
+end
+-- When each player last got a top-up (os.clock), for GameConfig.BrokeTopUpCooldownSeconds.
+local lastTopUp: { [Player]: number } = {}
 
 -- Text with a thick black outline.
 local function outlinedText(gui: BillboardGui, props: { [string]: any }): TextLabel
@@ -88,6 +99,40 @@ local function isStandingOn(player: Player, pad: BasePart): boolean
 		and offset.Y < 6
 end
 
+-- The broke safety net. If the player has no ghosts at all (none in the base, flying in or
+-- being carried off, so a ghost that's being stolen still counts until it's delivered), isn't
+-- carrying one home themselves, and their cash plus their pads can't buy the cheapest ghost,
+-- their cash is topped up to its price. Never more often than BrokeTopUpCooldownSeconds.
+local function topUpIfBroke(player: Player, plot)
+	if not plot or player:GetAttribute("Carrying") then
+		return
+	end
+	local money = DataService.getCash(player)
+	for slot = 1, #plot.slots do
+		if GhostService.getEntry(player, slot) then
+			return
+		end
+		money += DataService.getStored(player, slot)
+	end
+	if money >= CHEAPEST_GHOST_PRICE then
+		return
+	end
+	local last = lastTopUp[player]
+	if last and os.clock() - last < GameConfig.BrokeTopUpCooldownSeconds then
+		return
+	end
+	lastTopUp[player] = os.clock()
+	-- Only their cash is made up to the price; anything on their pads stays there to collect.
+	local gift = CHEAPEST_GHOST_PRICE - DataService.getCash(player)
+	DataService.addCash(player, gift)
+	Notify.send(
+		player,
+		`The graveyard took pity on you: +${Format.cash(gift)}!`,
+		"success",
+		{ note = "Out of ghosts and cash", seconds = 6 }
+	)
+end
+
 -- Every income tick: each ghost in a base (not being carried off) adds to its pad, boosted by
 -- the owner's rebirths, their friends in the server, VIP, a money boost (Spin Wheel or Shop
 -- booster) and the 2x Money pass. With the Auto Collect pass it goes straight to their cash.
@@ -122,6 +167,7 @@ local function incomeTick()
 			end
 		end
 		player:SetAttribute("IncomePerSecond", income)
+		topUpIfBroke(player, plot)
 	end
 end
 
@@ -195,6 +241,9 @@ function EconomyService.start(plots)
 		end
 	end
 
+	Players.PlayerRemoving:Connect(function(player)
+		lastTopUp[player] = nil
+	end)
 	task.spawn(function()
 		while true do
 			task.wait(GameConfig.IncomeTickSeconds)
