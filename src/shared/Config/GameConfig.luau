@@ -390,6 +390,9 @@ return {
 	-- Golden Sparkles aura: a soft chiming loop around the wearer, heard up to maxDistance studs
 	-- away. "Wind Chimes 2 (SFX)" (Pro Sound Effects), glass and ceramic clinks, 43 s.
 	GoldenAuraSound = { soundId = 9120749909, volume = 0.3, maxDistance = 40 },
+	-- Auras marked movingOnly (Golden Sparkles) only sparkle while the wearer moves sideways faster
+	-- than this many studs per second (walking is 16+), not while standing still.
+	AuraMovingSpeed = 2,
 
 	-- Ghost Buddy pet (CosmeticConfig pet_ghost): a found ghost, this fraction of its normal size.
 	GhostPetScale = 0.5,
