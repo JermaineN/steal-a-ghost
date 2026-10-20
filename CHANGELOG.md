@@ -78,6 +78,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 66 | Golden Sparkles only sparkle while you move | #94 |
 | 67 | Mega Mallet running-pose fix, $1K rebirth starting cash cap, Golden Sparkles sound only while moving | #95 |
 | 68 | Big spawn announcements in chat, Server Mutations booster, server boost timers | #96 |
+| 69 | "THE <GHOST>" mutation titles, event lines in chat (Haunted Hour, boosters, Nuke) | #97 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1759,3 +1760,26 @@ Mutations ran out the attribute cleared and its pill hid while Server Luck's sta
 card is there. No errors. **Not tested:** the higher mutation rate itself (it's a chance, so it
 needs many spawns), the "started"/"ended" messages on another player's screen (2-player test),
 and the pills on a phone screen.
+
+## 69. Ghost mutation titles, event lines in chat (#97)
+
+- **"THE <GHOST>" titles:** every ghost has a title, earned by finding it in all four mutations
+  (Eerie, Spooky, Undead, Shiny; the Index's mutation finds). Common, Uncommon and Rare ghosts
+  give an Epic title ("THE WISP"), Epic and Legendary ghosts a Legendary one ("THE BANSHEE"),
+  and Mythic, Divine and Secret ghosts a title of their own rarity with its shiny colours. They
+  show in Inventory → Titles while locked, with a "2/4 mutations" bar, and unlock with a
+  message the moment the last mutation is found. Generated from GhostConfig in `TitleConfig`
+  (`ghostMutations`, ids `ghost_<ghostId>`), so a new ghost gets its title automatically.
+- **Event lines in chat:** a coloured "[TAG]" system line for server events: Haunted Hour
+  starting soon, begun (with what's boosted) and over (with when the next one is); Server Luck
+  and Server Mutations started (by whom) and ended; and the Nuke ("X has launched a NUKE!").
+  New client module `SystemChat` (also used by the rare spawn lines now) and a `SystemChat`
+  remote for lines the server sends. Also fixes a stray "Haunted Hour starts in 30 seconds"
+  message for players who joined during a Haunted Hour, shown as it ended.
+
+**Tested** in a solo Studio playtest: Wisp title unlocked on its 4th mutation with the message,
+Banshee showed Legendary at 2/4, Mythic+ cards use their gradients; the three Haunted Hour
+lines, a rare spawn line, a booster line and the Nuke line all appeared in chat (booster and
+Nuke fired from the server rather than bought/launched). No errors. **Not tested:** buying a
+real booster with gems, a real Nuke launch, and finding mutations the normal way (attributes
+were set from the server); saving only works in the live game.

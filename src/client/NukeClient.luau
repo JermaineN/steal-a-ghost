@@ -16,6 +16,7 @@ local TweenService = game:GetService("TweenService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local SystemChat = require(script.Parent.SystemChat)
 
 local NukeClient = {}
 
@@ -395,6 +396,12 @@ local function onLaunched(launcherName: string, cutsceneAt: number, explodeAt: n
 		return
 	end
 	playing = true
+	SystemChat.post(
+		"NUKE",
+		RED,
+		`{SystemChat.escape(launcherName)} has launched a NUKE! Impact in `
+			.. `{math.max(0, math.round(explodeAt - workspace:GetServerTimeNow()))} seconds!`
+	)
 	gui.Enabled = true
 	banner.Text = "☢ " .. string.upper(launcherName) .. " HAS LAUNCHED A NUKE! ☢"
 	banner.Visible = true

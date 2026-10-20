@@ -5,6 +5,7 @@
 --               world turns red. The pill turns red and counts down the time left, with what's
 --               boosted under it.
 --   It ends:    the red fades away and a message says it's over.
+-- Each of these (starting soon, begun, over) also puts a line in chat (SystemChat).
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -15,6 +16,7 @@ local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 local HauntedHour = require(ReplicatedStorage.Shared.HauntedHour)
 local Hud = require(script.Parent.Hud)
 local Mobile = require(script.Parent.Mobile)
+local SystemChat = require(script.Parent.Parent.SystemChat)
 
 local HauntedHourHud = {}
 
@@ -223,9 +225,15 @@ function HauntedHourHud.start()
 			pillText.Text = "HAUNTED HOUR  " .. HauntedHour.formatTime(endAt - now)
 		else
 			pillText.Text = "Haunted Hour in " .. HauntedHour.formatTime(startAt - now)
-			if startAt - now <= GameConfig.HauntedHourWarnSeconds and warnedFor ~= startAt then
+			-- (startAt > now: not the one that just ended, before the server writes the next time)
+			if startAt > now and startAt - now <= GameConfig.HauntedHourWarnSeconds and warnedFor ~= startAt then
 				warnedFor = startAt
 				Hud.showToast(`Haunted Hour starts in {GameConfig.HauntedHourWarnSeconds} seconds!`, "info")
+				SystemChat.post(
+					"HAUNTED HOUR",
+					PUMPKIN,
+					`The Haunted Hour starts in {GameConfig.HauntedHourWarnSeconds} seconds! Get to the walkway!`
+				)
 			end
 		end
 
@@ -236,8 +244,23 @@ function HauntedHourHud.start()
 			TweenService:Create(tint, TweenInfo.new(2), if active then RED_WORLD else NORMAL_WORLD):Play()
 			if active and now - startAt < 5 then
 				announce(gui) -- only for a fresh start, not when joining mid-event
+				SystemChat.post(
+					"HAUNTED HOUR",
+					BLOOD,
+					`The Haunted Hour has begun! {GameConfig.HauntedHourLuckMinRarity}+ ghosts are `
+						.. `{GameConfig.HauntedHourLuck}x as likely and spawn {GameConfig.HauntedHourSpawnSpeed}x `
+						.. `faster for {HauntedHour.formatTime(endAt - startAt)}.`
+				)
 			elseif wasActive then
 				Hud.showToast("Haunted Hour is over!", "info")
+				SystemChat.post(
+					"HAUNTED HOUR",
+					BLOOD,
+					-- From the config: the server may not have written the next start time yet.
+					`The Haunted Hour is over. The next one is in {HauntedHour.formatTime(
+						GameConfig.HauntedHourEverySeconds
+					)}.`
+				)
 			end
 		end
 	end

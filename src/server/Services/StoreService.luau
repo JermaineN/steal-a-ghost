@@ -72,6 +72,11 @@ local function buyBooster(player: Player, boosterId: unknown)
 				{ note = `{what} for everyone, {minutesText(booster.seconds)}` }
 			)
 		end
+		Remotes.SystemChat:FireAllClients(
+			string.upper(booster.name),
+			booster.color,
+			`{player.DisplayName} started {booster.name}! {what} for everyone, {minutesText(booster.seconds)}.`
+		)
 	end
 end
 
@@ -96,6 +101,7 @@ local function tick()
 			for _, player in Players:GetPlayers() do
 				Notify.send(player, `{booster.name} has ended.`, "info")
 			end
+			Remotes.SystemChat:FireAllClients(string.upper(booster.name), booster.color, `{booster.name} has ended.`)
 		end
 	end
 end

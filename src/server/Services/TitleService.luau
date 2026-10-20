@@ -1,7 +1,8 @@
 -- Titles (TitleConfig): a word above a player's head that everyone sees, like "THE GOAT". A
 -- player owns a title if their UserId is on its allow-list, they've earned it
 -- (DataService.grantTitle), they have enough rebirths for a rebirth title, they've reached a
--- milestone title's goal (DataService stats, "Stat_<name>" attributes), they own its game
+-- milestone title's goal (DataService stats, "Stat_<name>" attributes), they've found a
+-- ghost in every mutation (its "THE <GHOST>" title), they own its game
 -- pass (VIP) or they bought it in the Shop (CosmeticConfig). They pick which
 -- one to show in the Inventory (EquipTitle remote); the choice is saved. Owned titles are shown to the player's device as "Title_<id>" = true
 -- attributes, and the one they're showing as the "Title" attribute.
@@ -10,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local CosmeticConfig = require(ReplicatedStorage.Shared.Config.CosmeticConfig)
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
+local MutationConfig = require(ReplicatedStorage.Shared.Config.MutationConfig)
 local StoreConfig = require(ReplicatedStorage.Shared.Config.StoreConfig)
 local TitleConfig = require(ReplicatedStorage.Shared.Config.TitleConfig)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -35,6 +37,12 @@ local function owns(player: Player, titleId: string): boolean
 		return true
 	end
 	if title.milestone and DataService.getStat(player, title.milestone.stat) >= title.milestone.goal then
+		return true
+	end
+	if
+		title.ghostMutations
+		and TitleConfig.mutationsFound(player, title.ghostMutations) >= #MutationConfig.Mutations
+	then
 		return true
 	end
 	if title.gamePass and StoreConfig.ownsPass(player, title.gamePass) then
@@ -103,20 +111,20 @@ function TitleService.playerLoaded(player: Player)
 		character:WaitForChild("Head", 10)
 		decorate(player)
 	end)
-	-- A milestone stat went up (DataService): unlock any milestone title it has just reached.
+	-- A milestone stat went up or a ghost was found in a new mutation (DataService): unlock any
+	-- milestone or ghost mutation title it has just completed.
 	player.AttributeChanged:Connect(function(attribute)
-		if string.sub(attribute, 1, 5) ~= "Stat_" then
+		if string.sub(attribute, 1, 5) ~= "Stat_" and string.sub(attribute, 1, 9) ~= "IndexMut_" then
 			return
 		end
 		for _, title in TitleConfig.Titles do
-			if title.milestone and not player:GetAttribute("Title_" .. title.id) and owns(player, title.id) then
+			local earnable = title.milestone or title.ghostMutations
+			if earnable and not player:GetAttribute("Title_" .. title.id) and owns(player, title.id) then
 				player:SetAttribute("Title_" .. title.id, true)
-				Notify.send(
-					player,
-					`New title unlocked: {title.text}!`,
-					"success",
-					{ note = TitleConfig.milestoneText(title), seconds = 5 }
-				)
+				local note = if title.milestone
+					then TitleConfig.milestoneText(title)
+					else TitleConfig.ghostMutationsText(title)
+				Notify.send(player, `New title unlocked: {title.text}!`, "success", { note = note, seconds = 5 })
 				if DataService.getTitle(player) == nil then
 					setTitle(player, title.id)
 				end

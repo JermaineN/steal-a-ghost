@@ -14,7 +14,6 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
-local TextChatService = game:GetService("TextChatService")
 local TweenService = game:GetService("TweenService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
@@ -24,6 +23,7 @@ local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local GradientAnimator = require(script.Parent.Parent.GradientAnimator)
+local SystemChat = require(script.Parent.Parent.SystemChat)
 
 local player = Players.LocalPlayer
 
@@ -73,24 +73,17 @@ end
 -- the tag in the rarity's (or the announced mutation's) colour. Every device gets RareSpawn, so
 -- everyone sees it.
 local function postToChat(def, mutation, bigMutation)
-	local channels = TextChatService:FindFirstChild("TextChannels")
-	local channel = channels and (channels:FindFirstChild("RBXSystem") or channels:FindFirstChild("RBXGeneral"))
-	if not channel then
-		return
-	end
 	local tag = string.upper(def.rarity)
 	if bigMutation then
 		tag = string.upper(bigMutation.name) .. " " .. tag
 	end
 	local color = if bigMutation then bigMutation.color else GhostConfig.Rarities[def.rarity].color
 	local name = if mutation then mutation.name .. " " .. def.name else def.name
-	local money = Theme.MoneyGreen:ToHex()
-	local line = `<font color="#{color:ToHex()}"><b>[{tag}]</b></font> {name} has spawned! `
-		.. `<font color="#{money}">(${Format.cash(def.price)})</font>`
-	-- Don't let a chat hiccup stop the banner.
-	pcall(function()
-		(channel :: TextChannel):DisplaySystemMessage(line)
-	end)
+	SystemChat.post(
+		tag,
+		color,
+		`{name} has spawned! ` .. SystemChat.colored(`(${Format.cash(def.price)})`, Theme.MoneyGreen)
+	)
 end
 
 local function playSound(announcement)
