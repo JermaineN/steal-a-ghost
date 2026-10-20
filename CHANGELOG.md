@@ -77,6 +77,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 65 | Data wipe for the public launch (fresh saves and leaderboards) | #93 |
 | 66 | Golden Sparkles only sparkle while you move | #94 |
 | 67 | Mega Mallet running-pose fix, $1K rebirth starting cash cap, Golden Sparkles sound only while moving | #95 |
+| 68 | Big spawn announcements in chat, Server Mutations booster, server boost timers | #96 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1735,3 +1736,26 @@ wearing Golden Sparkles, the sound is off standing still, on while walking, off 
 stopping; replaying the mallet swing (server-fired `MalletSwing`) while running, the legs held the
 swing pose instead of the run cycle. No new errors. **Not tested:** an actual rebirth, and what
 other players see and hear (2-player test).
+
+## 68. Spawn announcements in chat, Server Mutations booster, boost timers (#96)
+
+- **Chat announcements:** every big spawn banner (Mythic, Divine, Secret, and Shiny on any ghost)
+  also puts a system line in chat, e.g. "**[MYTHIC]** Spectre King has spawned! ($500K)", with
+  the tag in the rarity's colour (or the mutation's, "[SHINY MYTHIC]"). Legendary and Undead
+  below Mythic (the smaller banner) don't post. Done on each device in `RareSpawnBanner`
+  (`postToChat`, `TextChannel:DisplaySystemMessage` on `RBXSystem`).
+- **Server Mutations booster** (Shop → Boosters, 250 gems, 15 min, stacks like Server Luck):
+  every walkway mutation is `GameConfig.MutationBoostMultiplier` (2×) as likely for everyone in
+  the server. It sets `MutationBoostUntil` on ReplicatedStorage; `GhostService.rollMutation`
+  reads it. Server boosters are now any `StoreConfig.Boosters` row with a `serverAttribute`, so
+  StoreService's buy message, the "has ended" message and the Shop card's timer work for both.
+- **Boost timers:** while Server Luck or Server Mutations runs, everyone sees a pill at the top
+  right counting down ("🍀 Server Luck 14:57"), stacked if both run (`UI/ServerBoostHud`).
+
+**Tested** in a solo Studio playtest: chat lines for a Mythic, a Shiny Oni and the Grim Reaper
+(fired from the server), none for a Legendary; bought both boosters with test gems (500 gems
+taken, both attributes set to 15 min), both pills showed and counted down, and when Server
+Mutations ran out the attribute cleared and its pill hid while Server Luck's stayed; the Shop
+card is there. No errors. **Not tested:** the higher mutation rate itself (it's a chance, so it
+needs many spawns), the "started"/"ended" messages on another player's screen (2-player test),
+and the pills on a phone screen.

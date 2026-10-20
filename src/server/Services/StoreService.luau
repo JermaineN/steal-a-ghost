@@ -1,8 +1,10 @@
 -- The Shop's Boosters, Currency and Gamepasses tabs (StoreConfig; the Items tab is ShopService).
 --   Boosters (gems, BuyBooster remote): 2x Money adds to the Spin Wheel's money boost
 --   (SpinService); Speed Boost sets the "SpeedBoostUntil" player attribute (Shared.Upgrades adds
---   the speed, UpgradeService applies it) and is saved as time left, so it pauses offline; Server
---   Luck sets "LuckBoostUntil" on ReplicatedStorage for the whole server (GhostService reads it).
+--   the speed, UpgradeService applies it) and is saved as time left, so it pauses offline; the server
+--   boosters (Server Luck, Server Mutations) set their `serverAttribute` ("LuckBoostUntil" /
+--   "MutationBoostUntil") on ReplicatedStorage for everyone (GhostService reads them,
+--   ServerBoostHud shows their timers).
 --   Gem packs (Robux Developer Products): paid out in ProcessReceipt. Roblox keeps calling it
 --   until we say PurchaseGranted, and each purchase id is remembered so none is paid twice.
 --   Game passes (Robux): owned passes are "Pass_<id>" = true player attributes, checked on join
@@ -59,14 +61,15 @@ local function buyBooster(player: Player, boosterId: unknown)
 		local untilTime = extend(player, "SpeedBoostUntil", booster.seconds)
 		DataService.setBoostLeft(player, "speed", untilTime - now())
 		Notify.send(player, `Speed Boost for {minutesText(booster.seconds)}!`, "success")
-	elseif booster.id == "luck" then
-		extend(ReplicatedStorage, "LuckBoostUntil", booster.seconds)
+	elseif booster.serverAttribute then
+		extend(ReplicatedStorage, booster.serverAttribute, booster.seconds)
+		local what = if booster.id == "luck" then "Rarer ghosts" else "More mutations"
 		for _, other in Players:GetPlayers() do
 			Notify.send(
 				other,
-				`{player.DisplayName} started Server Luck!`,
+				`{player.DisplayName} started {booster.name}!`,
 				"success",
-				{ note = `Rarer ghosts for everyone, {minutesText(booster.seconds)}` }
+				{ note = `{what} for everyone, {minutesText(booster.seconds)}` }
 			)
 		end
 	end
@@ -86,11 +89,13 @@ local function tick()
 			end
 		end
 	end
-	local luckUntil = ReplicatedStorage:GetAttribute("LuckBoostUntil")
-	if luckUntil and time >= luckUntil then
-		ReplicatedStorage:SetAttribute("LuckBoostUntil", nil)
-		for _, player in Players:GetPlayers() do
-			Notify.send(player, "Server Luck has ended.", "info")
+	for _, booster in StoreConfig.Boosters do
+		local untilTime = booster.serverAttribute and ReplicatedStorage:GetAttribute(booster.serverAttribute)
+		if untilTime and time >= untilTime then
+			ReplicatedStorage:SetAttribute(booster.serverAttribute, nil)
+			for _, player in Players:GetPlayers() do
+				Notify.send(player, `{booster.name} has ended.`, "info")
+			end
 		end
 	end
 end

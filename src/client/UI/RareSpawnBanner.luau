@@ -7,12 +7,14 @@
 --              or "SHINY MYTHIC GHOST SPAWNED!" on a rare one).
 --   Undead mutation: the smaller (Legendary-style) banner in Undead's colours, or the big one
 --              when the ghost is Mythic or rarer ("UNDEAD MYTHIC GHOST SPAWNED!").
+-- Every big banner also puts a line in chat: "[MYTHIC] Spectre King has spawned! ($500K)".
 -- The server only says which ghost spawned (Remotes.RareSpawn); everything here is visual.
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
+local TextChatService = game:GetService("TextChatService")
 local TweenService = game:GetService("TweenService")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
@@ -65,6 +67,30 @@ local function nameAndPrice(def, mutation): string
 	local hex = Theme.MoneyGreen:ToHex()
 	local name = if mutation then mutation.name .. " " .. def.name else def.name
 	return `{name}  ·  <font color="#{hex}">${Format.cash(def.price)}</font>`
+end
+
+-- A system line in this device's chat, e.g. "[SHINY MYTHIC] Shiny Oni has spawned! ($1M)", with
+-- the tag in the rarity's (or the announced mutation's) colour. Every device gets RareSpawn, so
+-- everyone sees it.
+local function postToChat(def, mutation, bigMutation)
+	local channels = TextChatService:FindFirstChild("TextChannels")
+	local channel = channels and (channels:FindFirstChild("RBXSystem") or channels:FindFirstChild("RBXGeneral"))
+	if not channel then
+		return
+	end
+	local tag = string.upper(def.rarity)
+	if bigMutation then
+		tag = string.upper(bigMutation.name) .. " " .. tag
+	end
+	local color = if bigMutation then bigMutation.color else GhostConfig.Rarities[def.rarity].color
+	local name = if mutation then mutation.name .. " " .. def.name else def.name
+	local money = Theme.MoneyGreen:ToHex()
+	local line = `<font color="#{color:ToHex()}"><b>[{tag}]</b></font> {name} has spawned! `
+		.. `<font color="#{money}">(${Format.cash(def.price)})</font>`
+	-- Don't let a chat hiccup stop the banner.
+	pcall(function()
+		(channel :: TextChannel):DisplaySystemMessage(line)
+	end)
 end
 
 local function playSound(announcement)
@@ -324,6 +350,7 @@ function RareSpawnBanner.start()
 				flashColor = if bigMutation then MUTATION_FLASH[bigMutation.id] else BIG_BANNERS[def.rarity].flashColor,
 				nameText = nameText,
 			}, announcement)
+			postToChat(def, mutation, bigMutation)
 		else
 			current = showSmall(announcement, nameText, title, gradient)
 		end
