@@ -30,6 +30,10 @@ return {
 	SellConfirmMinRarity = "Mythic",
 	SellConfirmSeconds = 15, -- the question goes away (and nothing is sold) after this long
 	IncomeTickSeconds = 1,
+	-- Safety net: a player with no ghosts whose cash plus everything on their pads can't buy the
+	-- cheapest ghost is topped up to its price (EconomyService), so a stolen first ghost can't
+	-- leave them stuck. At most once per this many seconds.
+	BrokeTopUpCooldownSeconds = 120,
 	-- Each ghost's income piles up on the green pad in front of its grave until the owner
 	-- steps on the pad to collect it.
 	CollectPadMargin = 0.5, -- extra studs around a pad that still count as standing on it

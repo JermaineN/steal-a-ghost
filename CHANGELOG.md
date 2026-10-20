@@ -79,6 +79,7 @@ Remember: merged changes only reach players after you **publish** from Studio
 | 67 | Mega Mallet running-pose fix, $1K rebirth starting cash cap, Golden Sparkles sound only while moving | #95 |
 | 68 | Big spawn announcements in chat, Server Mutations booster, server boost timers | #96 |
 | 69 | "THE <GHOST>" mutation titles, event lines in chat (Haunted Hour, boosters, Nuke) | #97 |
+| 70 | Broke safety net: no more getting stuck after your only ghost is stolen | #98 |
 
 **Your to-do list:**
 1. **Publish** from Studio so players get all of this.
@@ -1783,3 +1784,20 @@ lines, a rare spawn line, a booster line and the Nuke line all appeared in chat 
 Nuke fired from the server rather than bought/launched). No errors. **Not tested:** buying a
 real booster with gems, a real Nuke launch, and finding mutations the normal way (attributes
 were set from the server); saving only works in the live game.
+
+## 70. Broke safety net (#98)
+
+- **The problem:** a new player starts with $100. If they spend it all on a Boo and it's stolen
+  before they collect anything, they have no ghosts and less than the cheapest ghost costs
+  ($25 Wisp). Nothing else pays cash, so they were stuck for good.
+- **The fix:** every income tick, a player with no ghosts (one being carried off still counts
+  until it's delivered), who isn't carrying a stolen ghost home, and whose cash plus everything
+  on their pads is below the cheapest ghost's price gets their cash topped up to that price,
+  with a message ("The graveyard took pity on you: +$25!"). At most once per
+  `GameConfig.BrokeTopUpCooldownSeconds` (120 s). The price is read from GhostConfig, so it
+  follows any price change. In `EconomyService` (`topUpIfBroke`).
+
+**Tested** in a solo Studio playtest with starting cash temporarily set to $0: topped up to $25
+with the message on the first tick; after buying a $25 Wisp (cash $0, owns a ghost) no top-up.
+No errors. **Not tested:** the real case of a ghost stolen by another player (2-player test),
+and the 120 s cooldown (the test account owns Auto Collect, so its cash kept rising).
